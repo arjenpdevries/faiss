@@ -20,8 +20,18 @@ The main binaries that will be built are:
 - `unittest` is the test runner of duckdb. Again, the extension is already linked into the binary.
 - `faiss.duckdb_extension` is the loadable binary as it would be distributed.
 
-## Running the extension
-To run the extension code, simply start the shell with `build/release/duckdb`.
+### Building the extension for Python
+
+If you want to create the Python extension as well, then build that too:
+```
+cd duckdb && BUILD_PYTHON=1 make release && cd ../
+```
+
+_Note: probably best to do this step within a `virtualenv` environment._
+
+## Using the extension
+
+To use the extension in the CLI, simply start the shell with `build/release/duckdb`.
 
 Now we can use the features from the extension directly in DuckDB. For example, we can execute a faiss index using the following:
 ```
@@ -43,7 +53,20 @@ https://github.com/facebookresearch/faiss/wiki/The-index-factory
 
 https://github.com/facebookresearch/faiss/wiki/Faiss-indexes
 
+### Using the extension in Python
+
+Assuming that you build the extension in a virtualenv, first activate it.
+
+Then you can use the extension from python as follows:
+
+```python
+import duckdb
+con = duckdb.connect(config = {'allow_unsigned_extensions': 'true'})
+con.sql("LOAD 'build/release/repository/v1.0.0/linux_amd64/faiss.duckdb_extension'")
+```
+
 ## Running the tests
+
 Sql test:
 ```sh
 make test
