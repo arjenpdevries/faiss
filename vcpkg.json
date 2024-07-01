@@ -1,6 +1,7 @@
 {
     "dependencies": [
         "openblas",
-        "lapack"
+        "lapack",
+		"pthreads"
     ]
 }
