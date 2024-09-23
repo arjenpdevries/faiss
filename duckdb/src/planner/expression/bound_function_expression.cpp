@@ -1,11 +1,12 @@
 #include "duckdb/planner/expression/bound_function_expression.hpp"
-#include "duckdb/parser/expression/function_expression.hpp"
+
 #include "duckdb/catalog/catalog_entry/scalar_function_catalog_entry.hpp"
-#include "duckdb/common/types/hash.hpp"
-#include "duckdb/function/function_serialization.hpp"
-#include "duckdb/common/serializer/serializer.hpp"
 #include "duckdb/common/serializer/deserializer.hpp"
+#include "duckdb/common/serializer/serializer.hpp"
+#include "duckdb/common/types/hash.hpp"
 #include "duckdb/core_functions/lambda_functions.hpp"
+#include "duckdb/function/function_serialization.hpp"
+#include "duckdb/parser/expression/function_expression.hpp"
 
 namespace duckdb {
 
@@ -111,7 +112,6 @@ unique_ptr<Expression> BoundFunctionExpression::Deserialize(Deserializer &deseri
 	if (result->return_type != return_type) {
 		// return type mismatch - push a cast
 		auto &context = deserializer.Get<ClientContext &>();
-		return BoundCastExpression::AddCastToType(context, std::move(result), return_type);
 	}
 	return std::move(result);
 }

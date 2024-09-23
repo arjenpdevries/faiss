@@ -1,24 +1,21 @@
+#include "duckdb/catalog/catalog_entry/collate_catalog_entry.hpp"
+#include "duckdb/common/string_util.hpp"
+#include "duckdb/common/types/decimal.hpp"
+#include "duckdb/function/scalar/string_functions.hpp"
 #include "duckdb/parser/expression/comparison_expression.hpp"
+#include "duckdb/planner/collation_binding.hpp"
 #include "duckdb/planner/expression/bound_cast_expression.hpp"
-#include "duckdb/planner/expression/bound_constant_expression.hpp"
 #include "duckdb/planner/expression/bound_comparison_expression.hpp"
+#include "duckdb/planner/expression/bound_constant_expression.hpp"
 #include "duckdb/planner/expression/bound_function_expression.hpp"
 #include "duckdb/planner/expression/bound_parameter_expression.hpp"
 #include "duckdb/planner/expression_binder.hpp"
-#include "duckdb/catalog/catalog_entry/collate_catalog_entry.hpp"
-#include "duckdb/common/string_util.hpp"
-
-#include "duckdb/function/scalar/string_functions.hpp"
-
-#include "duckdb/common/types/decimal.hpp"
-#include "duckdb/planner/collation_binding.hpp"
 
 namespace duckdb {
 
 bool ExpressionBinder::PushCollation(ClientContext &context, unique_ptr<Expression> &source,
                                      const LogicalType &sql_type) {
-	auto &collation_binding = CollationBinding::Get(context);
-	return collation_binding.PushCollation(context, source, sql_type);
+	return false;
 }
 
 void ExpressionBinder::TestCollation(ClientContext &context, const string &collation) {
@@ -176,10 +173,6 @@ BindResult ExpressionBinder::BindExpression(ComparisonExpression &expr, idx_t de
 		                                  left_sql_type.ToString(), right_sql_type.ToString()));
 	}
 	// add casts (if necessary)
-	left = BoundCastExpression::AddCastToType(context, std::move(left), input_type,
-	                                          input_type.id() == LogicalTypeId::ENUM);
-	right = BoundCastExpression::AddCastToType(context, std::move(right), input_type,
-	                                           input_type.id() == LogicalTypeId::ENUM);
 
 	PushCollation(context, left, input_type);
 	PushCollation(context, right, input_type);

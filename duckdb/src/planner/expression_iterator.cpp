@@ -1,13 +1,13 @@
 #include "duckdb/planner/expression_iterator.hpp"
 
+#include "duckdb/common/enum_util.hpp"
 #include "duckdb/planner/bound_query_node.hpp"
 #include "duckdb/planner/expression/list.hpp"
+#include "duckdb/planner/query_node/bound_cte_node.hpp"
+#include "duckdb/planner/query_node/bound_recursive_cte_node.hpp"
 #include "duckdb/planner/query_node/bound_select_node.hpp"
 #include "duckdb/planner/query_node/bound_set_operation_node.hpp"
-#include "duckdb/planner/query_node/bound_recursive_cte_node.hpp"
-#include "duckdb/planner/query_node/bound_cte_node.hpp"
 #include "duckdb/planner/tableref/list.hpp"
-#include "duckdb/common/enum_util.hpp"
 
 namespace duckdb {
 
@@ -52,11 +52,6 @@ void ExpressionIterator::EnumerateChildren(Expression &expr,
 			callback(case_check.then_expr);
 		}
 		callback(case_expr.else_expr);
-		break;
-	}
-	case ExpressionClass::BOUND_CAST: {
-		auto &cast_expr = expr.Cast<BoundCastExpression>();
-		callback(cast_expr.child);
 		break;
 	}
 	case ExpressionClass::BOUND_COMPARISON: {

@@ -1,26 +1,37 @@
 #include "duckdb/catalog/catalog.hpp"
-#include "duckdb/catalog/catalog_search_path.hpp"
 #include "duckdb/catalog/catalog_entry/duck_table_entry.hpp"
 #include "duckdb/catalog/catalog_entry/schema_catalog_entry.hpp"
 #include "duckdb/catalog/catalog_entry/type_catalog_entry.hpp"
-#include "duckdb/main/secret/secret_manager.hpp"
+#include "duckdb/catalog/catalog_search_path.hpp"
+#include "duckdb/catalog/duck_catalog.hpp"
+#include "duckdb/function/scalar_macro_function.hpp"
+#include "duckdb/function/table/table_scan.hpp"
+#include "duckdb/main/attached_database.hpp"
 #include "duckdb/main/client_context.hpp"
+#include "duckdb/main/client_data.hpp"
 #include "duckdb/main/database.hpp"
+#include "duckdb/main/database_manager.hpp"
+#include "duckdb/main/secret/secret_manager.hpp"
+#include "duckdb/parser/constraints/foreign_key_constraint.hpp"
+#include "duckdb/parser/constraints/list.hpp"
+#include "duckdb/parser/constraints/unique_constraint.hpp"
 #include "duckdb/parser/expression/constant_expression.hpp"
 #include "duckdb/parser/expression/function_expression.hpp"
 #include "duckdb/parser/expression/subquery_expression.hpp"
-#include "duckdb/planner/expression/bound_cast_expression.hpp"
-#include "duckdb/planner/expression/bound_columnref_expression.hpp"
 #include "duckdb/parser/parsed_data/create_index_info.hpp"
 #include "duckdb/parser/parsed_data/create_macro_info.hpp"
-#include "duckdb/parser/parsed_data/create_view_info.hpp"
-#include "duckdb/parser/tableref/table_function_ref.hpp"
 #include "duckdb/parser/parsed_data/create_secret_info.hpp"
+#include "duckdb/parser/parsed_data/create_view_info.hpp"
 #include "duckdb/parser/parsed_expression_iterator.hpp"
 #include "duckdb/parser/statement/create_statement.hpp"
+#include "duckdb/parser/tableref/basetableref.hpp"
+#include "duckdb/parser/tableref/table_function_ref.hpp"
 #include "duckdb/planner/binder.hpp"
 #include "duckdb/planner/bound_query_node.hpp"
+#include "duckdb/planner/expression/bound_cast_expression.hpp"
+#include "duckdb/planner/expression/bound_columnref_expression.hpp"
 #include "duckdb/planner/expression_binder/index_binder.hpp"
+#include "duckdb/planner/expression_binder/select_bind_state.hpp"
 #include "duckdb/planner/expression_binder/select_binder.hpp"
 #include "duckdb/planner/operator/logical_create.hpp"
 #include "duckdb/planner/operator/logical_create_index.hpp"
@@ -30,19 +41,8 @@
 #include "duckdb/planner/parsed_data/bound_create_table_info.hpp"
 #include "duckdb/planner/query_node/bound_select_node.hpp"
 #include "duckdb/planner/tableref/bound_basetableref.hpp"
-#include "duckdb/parser/constraints/foreign_key_constraint.hpp"
-#include "duckdb/function/scalar_macro_function.hpp"
 #include "duckdb/storage/data_table.hpp"
 #include "duckdb/storage/storage_extension.hpp"
-#include "duckdb/main/client_data.hpp"
-#include "duckdb/parser/constraints/unique_constraint.hpp"
-#include "duckdb/parser/constraints/list.hpp"
-#include "duckdb/main/database_manager.hpp"
-#include "duckdb/main/attached_database.hpp"
-#include "duckdb/catalog/duck_catalog.hpp"
-#include "duckdb/function/table/table_scan.hpp"
-#include "duckdb/parser/tableref/basetableref.hpp"
-#include "duckdb/planner/expression_binder/select_bind_state.hpp"
 
 namespace duckdb {
 
@@ -361,8 +361,6 @@ void Binder::BindLogicalType(LogicalType &type, optional_ptr<Catalog> catalog, c
 				auto &type_mod = type_mods[i];
 				auto user_type_mod = user_type_mods[i];
 				if (type_mod.type() == user_type_mod.type()) {
-					type_mod = std::move(user_type_mod);
-				} else if (user_type_mod.DefaultTryCastAs(type_mod.type())) {
 					type_mod = std::move(user_type_mod);
 				} else {
 					throw BinderException("Cannot apply type modifier '%s' to type '%s', expected value of type '%s'",
@@ -764,8 +762,6 @@ BoundStatement Binder::Bind(CreateStatement &stmt) {
 				// push a projection casting to varchar
 				vector<unique_ptr<Expression>> select_list;
 				auto ref = make_uniq<BoundColumnRefExpression>(sql_types[0], query->GetColumnBindings()[0]);
-				auto cast_expr = BoundCastExpression::AddCastToType(context, std::move(ref), LogicalType::VARCHAR);
-				select_list.push_back(std::move(cast_expr));
 				auto proj = make_uniq<LogicalProjection>(GenerateTableIndex(), std::move(select_list));
 				proj->AddChild(std::move(query));
 				query = std::move(proj);

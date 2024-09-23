@@ -1,11 +1,10 @@
-add_subdirectory(system)
-add_subdirectory(version)
-add_subdirectory(arrow)
+# add_subdirectory(system)
+# add_subdirectory(version)
+# add_subdirectory(arrow)
 add_library_unity(
   duckdb_func_table
   OBJECT
-  arrow.cpp
-  arrow_conversion.cpp
+  # arrow_conversion.cpp
   checkpoint.cpp
   glob.cpp
   query_function.cpp
@@ -13,7 +12,7 @@ add_library_unity(
   repeat.cpp
   repeat_row.cpp
   read_file.cpp
-  system_functions.cpp
+  # system_functions.cpp
   summary.cpp
   table_scan.cpp
   unnest.cpp)

@@ -2,10 +2,10 @@
 
 #include "duckdb/catalog/catalog.hpp"
 #include "duckdb/catalog/catalog_entry/schema_catalog_entry.hpp"
-#include "duckdb/common/exception.hpp"
-#include "duckdb/parser/parsed_data/create_sequence_info.hpp"
 #include "duckdb/catalog/dependency_manager.hpp"
+#include "duckdb/common/exception.hpp"
 #include "duckdb/common/operator/add.hpp"
+#include "duckdb/parser/parsed_data/create_sequence_info.hpp"
 #include "duckdb/transaction/duck_transaction.hpp"
 
 #include <algorithm>
@@ -54,23 +54,6 @@ int64_t SequenceCatalogEntry::NextValue(DuckTransaction &transaction) {
 	lock_guard<mutex> seqlock(lock);
 	int64_t result;
 	result = data.counter;
-	bool overflow = !TryAddOperator::Operation(data.counter, data.increment, data.counter);
-	if (data.cycle) {
-		if (overflow) {
-			data.counter = data.increment < 0 ? data.max_value : data.min_value;
-		} else if (data.counter < data.min_value) {
-			data.counter = data.max_value;
-		} else if (data.counter > data.max_value) {
-			data.counter = data.min_value;
-		}
-	} else {
-		if (result < data.min_value || (overflow && data.increment < 0)) {
-			throw SequenceException("nextval: reached minimum value of sequence \"%s\" (%lld)", name, data.min_value);
-		}
-		if (result > data.max_value || overflow) {
-			throw SequenceException("nextval: reached maximum value of sequence \"%s\" (%lld)", name, data.max_value);
-		}
-	}
 	data.last_value = result;
 	data.usage_count++;
 	if (!temporary) {

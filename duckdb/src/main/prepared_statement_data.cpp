@@ -1,10 +1,11 @@
 #include "duckdb/main/prepared_statement_data.hpp"
-#include "duckdb/execution/physical_operator.hpp"
-#include "duckdb/parser/sql_statement.hpp"
+
 #include "duckdb/catalog/catalog.hpp"
 #include "duckdb/common/exception/binder_exception.hpp"
+#include "duckdb/execution/physical_operator.hpp"
 #include "duckdb/main/attached_database.hpp"
 #include "duckdb/main/database_manager.hpp"
+#include "duckdb/parser/sql_statement.hpp"
 #include "duckdb/transaction/transaction.hpp"
 
 namespace duckdb {
@@ -93,11 +94,6 @@ void PreparedStatementData::Bind(case_insensitive_map_t<BoundParameterData> valu
 		}
 		D_ASSERT(it.second);
 		auto value = lookup->second.GetValue();
-		if (!value.DefaultTryCastAs(it.second->return_type)) {
-			throw BinderException(
-			    "Type mismatch for binding parameter with identifier %s, expected type %s but got type %s", identifier,
-			    it.second->return_type.ToString().c_str(), value.type().ToString().c_str());
-		}
 		it.second->SetValue(std::move(value));
 	}
 }

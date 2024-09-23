@@ -1,7 +1,11 @@
 #include "duckdb/catalog/catalog.hpp"
+#include "duckdb/catalog/catalog_entry/table_catalog_entry.hpp"
+#include "duckdb/catalog/catalog_entry/table_function_catalog_entry.hpp"
 #include "duckdb/catalog/catalog_entry/table_macro_catalog_entry.hpp"
 #include "duckdb/common/algorithm.hpp"
 #include "duckdb/execution/expression_executor.hpp"
+#include "duckdb/function/function_binder.hpp"
+#include "duckdb/function/table/read_csv.hpp"
 #include "duckdb/parser/expression/columnref_expression.hpp"
 #include "duckdb/parser/expression/comparison_expression.hpp"
 #include "duckdb/parser/expression/function_expression.hpp"
@@ -10,16 +14,12 @@
 #include "duckdb/parser/tableref/emptytableref.hpp"
 #include "duckdb/parser/tableref/table_function_ref.hpp"
 #include "duckdb/planner/binder.hpp"
-#include "duckdb/planner/expression_binder/table_function_binder.hpp"
 #include "duckdb/planner/expression_binder/select_binder.hpp"
+#include "duckdb/planner/expression_binder/table_function_binder.hpp"
 #include "duckdb/planner/operator/logical_get.hpp"
 #include "duckdb/planner/query_node/bound_select_node.hpp"
 #include "duckdb/planner/tableref/bound_subqueryref.hpp"
 #include "duckdb/planner/tableref/bound_table_function.hpp"
-#include "duckdb/function/function_binder.hpp"
-#include "duckdb/catalog/catalog_entry/table_function_catalog_entry.hpp"
-#include "duckdb/catalog/catalog_entry/table_catalog_entry.hpp"
-#include "duckdb/function/table/read_csv.hpp"
 
 namespace duckdb {
 
@@ -337,7 +337,6 @@ unique_ptr<BoundTableRef> Binder::Bind(TableFunctionRef &ref) {
 
 			if (target_type != LogicalType::ANY && target_type != LogicalType::POINTER &&
 			    target_type.id() != LogicalTypeId::LIST && target_type != LogicalType::TABLE) {
-				parameters[i] = parameters[i].CastAs(context, target_type);
 			}
 		}
 	} else if (subquery) {

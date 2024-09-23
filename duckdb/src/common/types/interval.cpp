@@ -1,18 +1,18 @@
 #include "duckdb/common/types/interval.hpp"
-#include "duckdb/common/operator/cast_operators.hpp"
-#include "duckdb/common/exception.hpp"
+
 #include "duckdb/common/enums/date_part_specifier.hpp"
-#include "duckdb/common/types/date.hpp"
-#include "duckdb/common/types/timestamp.hpp"
-#include "duckdb/common/types/time.hpp"
-#include "duckdb/common/types/cast_helpers.hpp"
+#include "duckdb/common/exception.hpp"
 #include "duckdb/common/operator/add.hpp"
+#include "duckdb/common/operator/cast_operators.hpp"
 #include "duckdb/common/operator/multiply.hpp"
 #include "duckdb/common/operator/subtract.hpp"
-#include "duckdb/common/string_util.hpp"
-
-#include "duckdb/common/serializer/serializer.hpp"
 #include "duckdb/common/serializer/deserializer.hpp"
+#include "duckdb/common/serializer/serializer.hpp"
+#include "duckdb/common/string_util.hpp"
+#include "duckdb/common/types/cast_helpers.hpp"
+#include "duckdb/common/types/date.hpp"
+#include "duckdb/common/types/time.hpp"
+#include "duckdb/common/types/timestamp.hpp"
 
 namespace duckdb {
 
@@ -131,7 +131,7 @@ interval_parse_number:
 		}
 	}
 	goto end_of_string;
-interval_parse_time : {
+interval_parse_time: {
 	// parse the remainder of the time as a Time type
 	dtime_t time;
 	idx_t pos;
@@ -186,8 +186,6 @@ interval_parse_identifier:
 	}
 
 	if (!TryGetDatePartSpecifier(specifier_str, specifier)) {
-		HandleCastError::AssignError(StringUtil::Format("extract specifier \"%s\" not recognized", specifier_str),
-		                             error_message);
 		return false;
 	}
 	// add the specifier to the interval
@@ -244,8 +242,6 @@ interval_parse_identifier:
 		IntervalTryAddition<int64_t>(result.micros, number, MICROS_PER_HOUR, fraction);
 		break;
 	default:
-		HandleCastError::AssignError(
-		    StringUtil::Format("extract specifier \"%s\" not supported for interval", specifier_str), error_message);
 		return false;
 	}
 	found_any = true;

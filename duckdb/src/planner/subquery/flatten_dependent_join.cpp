@@ -2,17 +2,17 @@
 
 #include "duckdb/catalog/catalog_entry/aggregate_function_catalog_entry.hpp"
 #include "duckdb/common/operator/add.hpp"
+#include "duckdb/execution/column_binding_resolver.hpp"
 #include "duckdb/function/aggregate/distributive_functions.hpp"
 #include "duckdb/planner/binder.hpp"
 #include "duckdb/planner/expression/bound_aggregate_expression.hpp"
 #include "duckdb/planner/expression/list.hpp"
 #include "duckdb/planner/logical_operator_visitor.hpp"
 #include "duckdb/planner/operator/list.hpp"
+#include "duckdb/planner/operator/logical_dependent_join.hpp"
 #include "duckdb/planner/subquery/has_correlated_expressions.hpp"
 #include "duckdb/planner/subquery/rewrite_correlated_expressions.hpp"
 #include "duckdb/planner/subquery/rewrite_cte_scan.hpp"
-#include "duckdb/planner/operator/logical_dependent_join.hpp"
-#include "duckdb/execution/column_binding_resolver.hpp"
 
 namespace duckdb {
 
@@ -240,15 +240,6 @@ unique_ptr<LogicalOperator> FlattenDependentJoins::PushDownDependentJoinInternal
 			delim_data_offset = aggr.groups.size();
 			for (idx_t i = 0; i < correlated_columns.size(); i++) {
 				auto &col = correlated_columns[i];
-				auto first_aggregate = FirstFun::GetFunction(col.type);
-				auto colref = make_uniq<BoundColumnRefExpression>(
-				    col.name, col.type, ColumnBinding(base_binding.table_index, base_binding.column_index + i));
-				vector<unique_ptr<Expression>> aggr_children;
-				aggr_children.push_back(std::move(colref));
-				auto first_fun =
-				    make_uniq<BoundAggregateExpression>(std::move(first_aggregate), std::move(aggr_children), nullptr,
-				                                        nullptr, AggregateType::NON_DISTINCT);
-				aggr.expressions.push_back(std::move(first_fun));
 			}
 		} else {
 			delim_table_index = aggr.group_index;
@@ -300,10 +291,6 @@ unique_ptr<LogicalOperator> FlattenDependentJoins::PushDownDependentJoinInternal
 				D_ASSERT(aggr.expressions[i]->GetExpressionClass() == ExpressionClass::BOUND_AGGREGATE);
 				auto &bound = aggr.expressions[i]->Cast<BoundAggregateExpression>();
 				vector<LogicalType> arguments;
-				if (bound.function == CountFun::GetFunction() || bound.function == CountStarFun::GetFunction()) {
-					// have to replace this ColumnBinding with the CASE expression
-					replacement_map[ColumnBinding(aggr.aggregate_index, i)] = i;
-				}
 			}
 			// now we update the delim_index
 			base_binding.table_index = left_index;

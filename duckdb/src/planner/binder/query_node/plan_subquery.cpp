@@ -1,4 +1,7 @@
+#include "duckdb/common/enums/logical_operator_type.hpp"
+#include "duckdb/core_functions/scalar/generic_functions.hpp"
 #include "duckdb/function/aggregate/distributive_functions.hpp"
+#include "duckdb/function/function_binder.hpp"
 #include "duckdb/main/client_config.hpp"
 #include "duckdb/planner/binder.hpp"
 #include "duckdb/planner/expression/bound_aggregate_expression.hpp"
@@ -11,13 +14,10 @@
 #include "duckdb/planner/expression/bound_window_expression.hpp"
 #include "duckdb/planner/expression_iterator.hpp"
 #include "duckdb/planner/operator/list.hpp"
-#include "duckdb/planner/operator/logical_window.hpp"
-#include "duckdb/function/function_binder.hpp"
-#include "duckdb/planner/subquery/flatten_dependent_join.hpp"
-#include "duckdb/common/enums/logical_operator_type.hpp"
 #include "duckdb/planner/operator/logical_dependent_join.hpp"
+#include "duckdb/planner/operator/logical_window.hpp"
+#include "duckdb/planner/subquery/flatten_dependent_join.hpp"
 #include "duckdb/planner/subquery/recursive_dependent_join_planner.hpp"
-#include "duckdb/core_functions/scalar/generic_functions.hpp"
 
 namespace duckdb {
 
@@ -34,41 +34,6 @@ static unique_ptr<Expression> PlanUncorrelatedSubquery(Binder &binder, BoundSubq
 		plan = std::move(limit);
 
 		// now we push a COUNT(*) aggregate onto the limit, this will be either 0 or 1 (EXISTS or NOT EXISTS)
-		auto count_star_fun = CountStarFun::GetFunction();
-
-		FunctionBinder function_binder(binder.context);
-		auto count_star =
-		    function_binder.BindAggregateFunction(count_star_fun, {}, nullptr, AggregateType::NON_DISTINCT);
-		auto idx_type = count_star->return_type;
-		vector<unique_ptr<Expression>> aggregate_list;
-		aggregate_list.push_back(std::move(count_star));
-		auto aggregate_index = binder.GenerateTableIndex();
-		auto aggregate =
-		    make_uniq<LogicalAggregate>(binder.GenerateTableIndex(), aggregate_index, std::move(aggregate_list));
-		aggregate->AddChild(std::move(plan));
-		plan = std::move(aggregate);
-
-		// now we push a projection with a comparison to 1
-		auto left_child = make_uniq<BoundColumnRefExpression>(idx_type, ColumnBinding(aggregate_index, 0));
-		auto right_child = make_uniq<BoundConstantExpression>(Value::Numeric(idx_type, 1));
-		auto comparison = make_uniq<BoundComparisonExpression>(ExpressionType::COMPARE_EQUAL, std::move(left_child),
-		                                                       std::move(right_child));
-
-		vector<unique_ptr<Expression>> projection_list;
-		projection_list.push_back(std::move(comparison));
-		auto projection_index = binder.GenerateTableIndex();
-		auto projection = make_uniq<LogicalProjection>(projection_index, std::move(projection_list));
-		projection->AddChild(std::move(plan));
-		plan = std::move(projection);
-
-		// we add it to the main query by adding a cross product
-		// FIXME: should use something else besides cross product as we always add only one scalar constant
-		root = LogicalCrossProduct::Create(std::move(root), std::move(plan));
-
-		// we replace the original subquery with a ColumnRefExpression referring to the result of the projection (either
-		// TRUE or FALSE)
-		return make_uniq<BoundColumnRefExpression>(expr.GetName(), LogicalType::BOOLEAN,
-		                                           ColumnBinding(projection_index, 0));
 	}
 	case SubqueryType::SCALAR: {
 		// uncorrelated scalar, we want to return the first entry
@@ -87,15 +52,7 @@ static unique_ptr<Expression> PlanUncorrelatedSubquery(Binder &binder, BoundSubq
 		first_children.push_back(std::move(bound));
 
 		FunctionBinder function_binder(binder.context);
-		auto first_agg = function_binder.BindAggregateFunction(
-		    FirstFun::GetFunction(expr.return_type), std::move(first_children), nullptr, AggregateType::NON_DISTINCT);
-
-		expressions.push_back(std::move(first_agg));
 		if (error_on_multiple_rows) {
-			vector<unique_ptr<Expression>> count_children;
-			auto count_agg = function_binder.BindAggregateFunction(
-			    CountStarFun::GetFunction(), std::move(count_children), nullptr, AggregateType::NON_DISTINCT);
-			expressions.push_back(std::move(count_agg));
 		}
 		auto aggr_index = binder.GenerateTableIndex();
 
@@ -121,19 +78,6 @@ static unique_ptr<Expression> PlanUncorrelatedSubquery(Binder &binder, BoundSubq
 			    Value("More than one row returned by a subquery used as an expression - scalar subqueries can only "
 			          "return a single row.\n\nUse \"SET scalar_subquery_error_on_multiple_rows=false\" to revert to "
 			          "previous behavior of returning a random row.")));
-			auto error_expr = function_binder.BindScalarFunction(ErrorFun::GetFunction(), std::move(error_children));
-			error_expr->return_type = first_ref->return_type;
-			auto case_expr =
-			    make_uniq<BoundCaseExpression>(std::move(count_check), std::move(error_expr), std::move(first_ref));
-
-			vector<unique_ptr<Expression>> proj_expressions;
-			proj_expressions.push_back(std::move(case_expr));
-
-			auto proj = make_uniq<LogicalProjection>(proj_index, std::move(proj_expressions));
-			proj->AddChild(std::move(plan));
-			plan = std::move(proj);
-
-			aggr_index = proj_index;
 		}
 
 		// in the uncorrelated case, we add the value to the main query through a cross product
@@ -163,8 +107,6 @@ static unique_ptr<Expression> PlanUncorrelatedSubquery(Binder &binder, BoundSubq
 		// create the JOIN condition
 		JoinCondition cond;
 		cond.left = std::move(expr.child);
-		cond.right = BoundCastExpression::AddDefaultCastToType(
-		    make_uniq<BoundColumnRefExpression>(expr.child_type, plan_columns[0]), expr.child_target);
 		cond.comparison = expr.comparison_type;
 		join->conditions.push_back(std::move(cond));
 		root = std::move(join);
@@ -355,8 +297,6 @@ static unique_ptr<Expression> PlanCorrelatedSubquery(Binder &binder, BoundSubque
 		// add the actual condition based on the ANY/ALL predicate
 		JoinCondition compare_cond;
 		compare_cond.left = std::move(expr.child);
-		compare_cond.right = BoundCastExpression::AddDefaultCastToType(
-		    make_uniq<BoundColumnRefExpression>(expr.child_type, plan_columns[0]), expr.child_target);
 		compare_cond.comparison = expr.comparison_type;
 		delim_join->conditions.push_back(std::move(compare_cond));
 

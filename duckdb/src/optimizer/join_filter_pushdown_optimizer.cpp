@@ -1,14 +1,15 @@
 #include "duckdb/optimizer/join_filter_pushdown_optimizer.hpp"
+
+#include "duckdb/core_functions/aggregate/distributive_functions.hpp"
+#include "duckdb/execution/operator/join/join_filter_pushdown.hpp"
+#include "duckdb/execution/operator/join/physical_comparison_join.hpp"
+#include "duckdb/function/function_binder.hpp"
+#include "duckdb/optimizer/optimizer.hpp"
+#include "duckdb/planner/expression/bound_aggregate_expression.hpp"
+#include "duckdb/planner/expression/bound_columnref_expression.hpp"
 #include "duckdb/planner/operator/logical_comparison_join.hpp"
 #include "duckdb/planner/operator/logical_get.hpp"
 #include "duckdb/planner/operator/logical_projection.hpp"
-#include "duckdb/execution/operator/join/join_filter_pushdown.hpp"
-#include "duckdb/planner/expression/bound_columnref_expression.hpp"
-#include "duckdb/core_functions/aggregate/distributive_functions.hpp"
-#include "duckdb/optimizer/optimizer.hpp"
-#include "duckdb/function/function_binder.hpp"
-#include "duckdb/execution/operator/join/physical_comparison_join.hpp"
-#include "duckdb/planner/expression/bound_aggregate_expression.hpp"
 
 namespace duckdb {
 
@@ -33,7 +34,6 @@ void JoinFilterPushdownOptimizer::GenerateJoinFilters(LogicalComparisonJoin &joi
 		break;
 	}
 	// re-order conditions here - otherwise this will happen later on and invalidate the indexes we generate
-	PhysicalComparisonJoin::ReorderConditions(join.conditions);
 	auto pushdown_info = make_uniq<JoinFilterPushdownInfo>();
 	for (idx_t cond_idx = 0; cond_idx < join.conditions.size(); cond_idx++) {
 		auto &cond = join.conditions[cond_idx];
@@ -126,8 +126,6 @@ void JoinFilterPushdownOptimizer::GenerateJoinFilters(LogicalComparisonJoin &joi
 
 	// set up the min/max aggregates for each of the filters
 	vector<AggregateFunction> aggr_functions;
-	aggr_functions.push_back(MinFun::GetFunction());
-	aggr_functions.push_back(MaxFun::GetFunction());
 	for (auto &filter : pushdown_info->filters) {
 		for (auto &aggr : aggr_functions) {
 			FunctionBinder function_binder(optimizer.GetContext());

@@ -1,4 +1,3 @@
-add_subdirectory(aggregate)
 add_subdirectory(scalar)
 
 add_library_unity(duckdb_core_functions OBJECT core_functions.cpp

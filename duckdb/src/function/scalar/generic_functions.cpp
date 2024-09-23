@@ -3,9 +3,6 @@
 namespace duckdb {
 
 void BuiltinFunctions::RegisterGenericFunctions() {
-	Register<ConstantOrNull>();
-	Register<ExportAggregateFunction>();
-	Register<GetVariableFun>();
 }
 
 } // namespace duckdb

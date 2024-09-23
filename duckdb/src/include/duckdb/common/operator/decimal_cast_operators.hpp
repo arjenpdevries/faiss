@@ -9,8 +9,8 @@
 #pragma once
 
 #include "duckdb/common/operator/cast_operators.hpp"
-#include "duckdb/common/types/decimal.hpp"
 #include "duckdb/common/operator/integer_cast_operator.hpp"
+#include "duckdb/common/types/decimal.hpp"
 
 namespace duckdb {
 
@@ -684,7 +684,6 @@ bool TryDecimalStringCast(const char *string_ptr, idx_t string_size, T &result, 
 		string_t value(string_ptr, (uint32_t)string_size);
 		string error = StringUtil::Format("Could not convert string \"%s\" to DECIMAL(%d,%d)", value.GetString(),
 		                                  (int)width, (int)scale);
-		HandleCastError::AssignError(error, parameters);
 		return false;
 	}
 	result = state.result;

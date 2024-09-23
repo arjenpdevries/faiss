@@ -86,27 +86,6 @@ string BaseScalarFunction::ToString() const {
 
 // add your initializer for new functions here
 void BuiltinFunctions::Initialize() {
-	RegisterTableScanFunctions();
-	RegisterSQLiteFunctions();
-	RegisterTableFunctions();
-	RegisterArrowFunctions();
-
-	RegisterDistributiveAggregates();
-
-	RegisterCompressedMaterializationFunctions();
-
-	RegisterGenericFunctions();
-	RegisterOperators();
-	RegisterSequenceFunctions();
-	RegisterStringFunctions();
-	RegisterNestedFunctions();
-
-	RegisterPragmaFunctions();
-
-	// initialize collations
-	AddCollation("nocase", LowerFun::GetFunction(), true);
-	AddCollation("noaccent", StripAccentsFun::GetFunction());
-	AddCollation("nfc", NFCNormalizeFun::GetFunction());
 }
 
 hash_t BaseScalarFunction::Hash() const {

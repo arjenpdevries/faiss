@@ -1,11 +1,11 @@
 #include "duckdb/parser/expression/between_expression.hpp"
+#include "duckdb/planner/binder.hpp"
 #include "duckdb/planner/expression/bound_between_expression.hpp"
 #include "duckdb/planner/expression/bound_cast_expression.hpp"
 #include "duckdb/planner/expression/bound_comparison_expression.hpp"
 #include "duckdb/planner/expression/bound_conjunction_expression.hpp"
 #include "duckdb/planner/expression/bound_parameter_expression.hpp"
 #include "duckdb/planner/expression_binder.hpp"
-#include "duckdb/planner/binder.hpp"
 
 namespace duckdb {
 
@@ -42,9 +42,6 @@ BindResult ExpressionBinder::BindExpression(BetweenExpression &expr, idx_t depth
 		                      input_type.ToString(), upper_sql_type.ToString());
 	}
 	// add casts (if necessary)
-	input = BoundCastExpression::AddCastToType(context, std::move(input), input_type);
-	lower = BoundCastExpression::AddCastToType(context, std::move(lower), input_type);
-	upper = BoundCastExpression::AddCastToType(context, std::move(upper), input_type);
 	// handle collation
 	PushCollation(context, input, input_type);
 	PushCollation(context, lower, input_type);

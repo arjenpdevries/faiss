@@ -3,10 +3,10 @@
 #include "duckdb/catalog/catalog.hpp"
 #include "duckdb/main/attached_database.hpp"
 #include "duckdb/main/database_manager.hpp"
+#include "duckdb/main/database_path_and_type.hpp"
 #include "duckdb/main/extension_helper.hpp"
 #include "duckdb/parser/parsed_data/attach_info.hpp"
 #include "duckdb/storage/storage_extension.hpp"
-#include "duckdb/main/database_path_and_type.hpp"
 
 namespace duckdb {
 
@@ -53,10 +53,6 @@ SourceResultType PhysicalAttach::GetData(ExecutionContext &context, DataChunk &c
 
 	string extension = "";
 	if (FileSystem::IsRemoteFile(path, extension)) {
-		if (!ExtensionHelper::TryAutoLoadExtension(context.client, extension)) {
-			throw MissingExtensionException("Attaching path '%s' requires extension '%s' to be loaded", path,
-			                                extension);
-		}
 		if (options.access_mode == AccessMode::AUTOMATIC) {
 			// Attaching of remote files gets bumped to READ_ONLY
 			// This is due to the fact that on most (all?) remote files writes to DB are not available

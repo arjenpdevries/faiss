@@ -1,4 +1,5 @@
 #include "duckdb/optimizer/expression_heuristics.hpp"
+
 #include "duckdb/planner/expression/list.hpp"
 
 namespace duckdb {
@@ -159,10 +160,6 @@ idx_t ExpressionHeuristics::Cost(Expression &expr) {
 	case ExpressionClass::BOUND_BETWEEN: {
 		auto &between_expr = expr.Cast<BoundBetweenExpression>();
 		return ExpressionCost(between_expr);
-	}
-	case ExpressionClass::BOUND_CAST: {
-		auto &cast_expr = expr.Cast<BoundCastExpression>();
-		return ExpressionCost(cast_expr);
 	}
 	case ExpressionClass::BOUND_COMPARISON: {
 		auto &comp_expr = expr.Cast<BoundComparisonExpression>();

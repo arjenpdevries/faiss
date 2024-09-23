@@ -10,10 +10,6 @@ static unique_ptr<BaseStatistics> StatisticsOperationsNumericNumericCast(const B
 	}
 	Value min = NumericStats::Min(input);
 	Value max = NumericStats::Max(input);
-	if (!min.DefaultTryCastAs(target) || !max.DefaultTryCastAs(target)) {
-		// overflow in cast: bailout
-		return nullptr;
-	}
 	auto result = NumericStats::CreateEmpty(target);
 	result.CopyBase(input);
 	NumericStats::SetMin(result, min);

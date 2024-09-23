@@ -1,0 +1,27 @@
+diff --git a/benchmark/interpreted_benchmark.cpp b/benchmark/interpreted_benchmark.cpp
+index 8e38eed018..9dcf338c8d 100644
+--- a/benchmark/interpreted_benchmark.cpp
++++ b/benchmark/interpreted_benchmark.cpp
+@@ -2,12 +2,12 @@
+ 
+ #include "benchmark_runner.hpp"
+ #include "duckdb.hpp"
++#include "duckdb/common/helper.hpp"
+ #include "duckdb/common/string_util.hpp"
+ #include "duckdb/main/client_context.hpp"
+ #include "duckdb/main/extension_helper.hpp"
+ #include "duckdb/main/query_profiler.hpp"
+ #include "test_helpers.hpp"
+-#include "duckdb/common/helper.hpp"
+ 
+ #include <fstream>
+ #include <sstream>
+@@ -51,6 +51,8 @@ struct InterpretedBenchmarkState : public BenchmarkState {
+ 	duckdb::unique_ptr<DBConfig> GetBenchmarkConfig() {
+ 		auto result = make_uniq<DBConfig>();
+ 		result->options.load_extensions = false;
++		result->options.allow_unsigned_extensions = true;
++
+ 		return result;
+ 	}
+ };

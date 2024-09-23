@@ -20,7 +20,7 @@
 namespace duckdb {
 
 const string GetDefaultUserAgent() {
-	return StringUtil::Format("duckdb/%s(%s)", DuckDB::LibraryVersion(), DuckDB::Platform());
+	return StringUtil::Format("duckdb");
 }
 
 //===--------------------------------------------------------------------===//
@@ -66,8 +66,6 @@ Value AccessModeSetting::GetSetting(const ClientContext &context) {
 // Allow Persistent Secrets
 //===--------------------------------------------------------------------===//
 void AllowPersistentSecrets::SetGlobal(DatabaseInstance *db, DBConfig &config, const Value &input) {
-	auto value = input.DefaultCastAs(LogicalType::BOOLEAN);
-	config.secret_manager->SetEnablePersistentSecrets(value.GetValue<bool>());
 }
 
 void AllowPersistentSecrets::ResetGlobal(DatabaseInstance *db, DBConfig &config) {

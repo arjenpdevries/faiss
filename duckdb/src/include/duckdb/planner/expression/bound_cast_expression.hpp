@@ -8,18 +8,14 @@
 
 #pragma once
 
-#include "duckdb/planner/expression.hpp"
 #include "duckdb/function/cast/default_casts.hpp"
+#include "duckdb/planner/expression.hpp"
 
 namespace duckdb {
 
 class BoundCastExpression : public Expression {
 public:
 	static constexpr const ExpressionClass TYPE = ExpressionClass::BOUND_CAST;
-
-public:
-	BoundCastExpression(unique_ptr<Expression> child, LogicalType target_type, BoundCastInfo bound_cast,
-	                    bool try_cast = false);
 
 	//! The child type
 	unique_ptr<Expression> child;

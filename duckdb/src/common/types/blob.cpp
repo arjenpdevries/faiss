@@ -81,14 +81,12 @@ bool Blob::TryGetBlobSize(string_t str, idx_t &str_len, CastParameters &paramete
 				string error = StringUtil::Format("Invalid hex escape code encountered in string -> blob conversion of "
 				                                  "string \"%s\": unterminated escape code at end of blob",
 				                                  str.GetString());
-				HandleCastError::AssignError(error, parameters);
 				return false;
 			}
 			if (data[i + 1] != 'x' || Blob::HEX_MAP[data[i + 2]] < 0 || Blob::HEX_MAP[data[i + 3]] < 0) {
 				string error = StringUtil::Format(
 				    "Invalid hex escape code encountered in string -> blob conversion of string \"%s\": %s",
 				    str.GetString(), string(const_char_ptr_cast(data) + i, 4));
-				HandleCastError::AssignError(error, parameters);
 				return false;
 			}
 			str_len++;
@@ -100,7 +98,6 @@ bool Blob::TryGetBlobSize(string_t str, idx_t &str_len, CastParameters &paramete
 			    "Invalid byte encountered in STRING -> BLOB conversion of string \"%s\". All non-ascii characters "
 			    "must be escaped with hex codes (e.g. \\xAA)",
 			    str.GetString());
-			HandleCastError::AssignError(error, parameters);
 			return false;
 		}
 	}

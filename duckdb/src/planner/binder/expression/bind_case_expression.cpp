@@ -1,8 +1,8 @@
 #include "duckdb/parser/expression/case_expression.hpp"
+#include "duckdb/planner/binder.hpp"
 #include "duckdb/planner/expression/bound_case_expression.hpp"
 #include "duckdb/planner/expression/bound_cast_expression.hpp"
 #include "duckdb/planner/expression_binder.hpp"
-#include "duckdb/planner/binder.hpp"
 
 namespace duckdb {
 
@@ -37,12 +37,7 @@ BindResult ExpressionBinder::BindExpression(CaseExpression &expr, idx_t depth) {
 		auto &when_expr = BoundExpression::GetExpression(*check.when_expr);
 		auto &then_expr = BoundExpression::GetExpression(*check.then_expr);
 		BoundCaseCheck result_check;
-		result_check.when_expr =
-		    BoundCastExpression::AddCastToType(context, std::move(when_expr), LogicalType::BOOLEAN);
-		result_check.then_expr = BoundCastExpression::AddCastToType(context, std::move(then_expr), return_type);
-		result->case_checks.push_back(std::move(result_check));
 	}
-	result->else_expr = BoundCastExpression::AddCastToType(context, std::move(else_expr), return_type);
 	return BindResult(std::move(result));
 }
 } // namespace duckdb

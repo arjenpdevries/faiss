@@ -1,4 +1,4 @@
-add_subdirectory(distributive)
+# add_subdirectory(distributive)
 
 add_library_unity(duckdb_func_aggr OBJECT distributive_functions.cpp
                   sorted_aggregate_function.cpp)

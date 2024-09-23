@@ -51,8 +51,7 @@ bool CastExpressionMatcher::Match(Expression &expr_p, vector<reference<Expressio
 	if (!matcher) {
 		return true;
 	}
-	auto &expr = expr_p.Cast<BoundCastExpression>();
-	return matcher->Match(*expr.child, bindings);
+	return false;
 }
 
 bool InClauseExpressionMatcher::Match(Expression &expr_p, vector<reference<Expression>> &bindings) {

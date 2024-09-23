@@ -1,16 +1,16 @@
-#include "duckdb/execution/operator/scan/physical_expression_scan.hpp"
-#include "duckdb/execution/operator/scan/physical_dummy_scan.hpp"
+#include "duckdb/execution/operator/filter/physical_filter.hpp"
 #include "duckdb/execution/operator/projection/physical_projection.hpp"
 #include "duckdb/execution/operator/projection/physical_tableinout_function.hpp"
+#include "duckdb/execution/operator/scan/physical_dummy_scan.hpp"
+#include "duckdb/execution/operator/scan/physical_expression_scan.hpp"
 #include "duckdb/execution/operator/scan/physical_table_scan.hpp"
 #include "duckdb/execution/physical_plan_generator.hpp"
 #include "duckdb/function/table/table_scan.hpp"
 #include "duckdb/planner/expression/bound_cast_expression.hpp"
+#include "duckdb/planner/expression/bound_conjunction_expression.hpp"
 #include "duckdb/planner/expression/bound_constant_expression.hpp"
 #include "duckdb/planner/expression/bound_reference_expression.hpp"
 #include "duckdb/planner/operator/logical_get.hpp"
-#include "duckdb/planner/expression/bound_conjunction_expression.hpp"
-#include "duckdb/execution/operator/filter/physical_filter.hpp"
 
 namespace duckdb {
 
@@ -55,8 +55,6 @@ unique_ptr<PhysicalOperator> PhysicalPlanGenerator::CreatePlan(LogicalGet &op) {
 			if (child_node->types[proj_idx] != target_type) {
 				// cast is required - push a cast
 				any_cast_required = true;
-				auto cast = BoundCastExpression::AddCastToType(context, std::move(ref), target_type);
-				expressions.push_back(std::move(cast));
 			} else {
 				expressions.push_back(std::move(ref));
 			}
@@ -86,7 +84,6 @@ unique_ptr<PhysicalOperator> PhysicalPlanGenerator::CreatePlan(LogicalGet &op) {
 	if (op.function.dependency) {
 		op.function.dependency(dependencies, op.bind_data.get());
 	}
-	unique_ptr<PhysicalFilter> filter;
 
 	auto &projection_ids = op.projection_ids;
 
@@ -125,7 +122,6 @@ unique_ptr<PhysicalOperator> PhysicalPlanGenerator::CreatePlan(LogicalGet &op) {
 			for (auto &c : projection_ids) {
 				filter_types.push_back(op.returned_types[column_ids[c]]);
 			}
-			filter = make_uniq<PhysicalFilter>(filter_types, std::move(select_list), op.estimated_cardinality);
 		}
 	}
 	op.ResolveOperatorTypes();
@@ -147,10 +143,6 @@ unique_ptr<PhysicalOperator> PhysicalPlanGenerator::CreatePlan(LogicalGet &op) {
 			if (!projection_necessary) {
 				// a projection is not necessary if all columns have been requested in-order
 				// in that case we just return the node
-				if (filter) {
-					filter->children.push_back(std::move(node));
-					return std::move(filter);
-				}
 				return std::move(node);
 			}
 		}
@@ -169,22 +161,12 @@ unique_ptr<PhysicalOperator> PhysicalPlanGenerator::CreatePlan(LogicalGet &op) {
 		}
 		unique_ptr<PhysicalProjection> projection =
 		    make_uniq<PhysicalProjection>(std::move(types), std::move(expressions), op.estimated_cardinality);
-		if (filter) {
-			filter->children.push_back(std::move(node));
-			projection->children.push_back(std::move(filter));
-		} else {
-			projection->children.push_back(std::move(node));
-		}
 		return std::move(projection);
 	} else {
 		auto node = make_uniq<PhysicalTableScan>(op.types, op.function, std::move(op.bind_data), op.returned_types,
 		                                         column_ids, op.projection_ids, op.names, std::move(table_filters),
 		                                         op.estimated_cardinality, op.extra_info, std::move(op.parameters));
 		node->dynamic_filters = op.dynamic_filters;
-		if (filter) {
-			filter->children.push_back(std::move(node));
-			return std::move(filter);
-		}
 		return std::move(node);
 	}
 }

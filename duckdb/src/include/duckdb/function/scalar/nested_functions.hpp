@@ -8,13 +8,13 @@
 
 #pragma once
 
-#include "duckdb/function/function_set.hpp"
-#include "duckdb/function/scalar_function.hpp"
 #include "duckdb/common/map.hpp"
+#include "duckdb/common/serializer/deserializer.hpp"
+#include "duckdb/common/serializer/serializer.hpp"
 #include "duckdb/common/unordered_map.hpp"
 #include "duckdb/function/built_in_functions.hpp"
-#include "duckdb/common/serializer/serializer.hpp"
-#include "duckdb/common/serializer/deserializer.hpp"
+#include "duckdb/function/function_set.hpp"
+#include "duckdb/function/scalar_function.hpp"
 
 namespace duckdb {
 
@@ -80,39 +80,6 @@ struct VariableReturnBindData : public FunctionData {
 template <class T, class MAP_TYPE = map<T, idx_t>>
 struct HistogramAggState {
 	MAP_TYPE *hist;
-};
-
-struct ListExtractFun {
-	static void RegisterFunction(BuiltinFunctions &set);
-};
-
-struct ListConcatFun {
-	static ScalarFunction GetFunction();
-	static void RegisterFunction(BuiltinFunctions &set);
-};
-
-struct ListContainsFun {
-	static ScalarFunction GetFunction();
-	static void RegisterFunction(BuiltinFunctions &set);
-};
-
-struct ListPositionFun {
-	static ScalarFunction GetFunction();
-	static void RegisterFunction(BuiltinFunctions &set);
-};
-
-struct ListResizeFun {
-	static void RegisterFunction(BuiltinFunctions &set);
-};
-
-struct ListZipFun {
-	static ScalarFunction GetFunction();
-	static void RegisterFunction(BuiltinFunctions &set);
-};
-
-struct ListSelectFun {
-	static ScalarFunction GetFunction();
-	static void RegisterFunction(BuiltinFunctions &set);
 };
 
 struct ListWhereFun {

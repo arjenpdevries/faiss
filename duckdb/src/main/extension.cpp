@@ -1,8 +1,9 @@
 #include "duckdb/main/extension.hpp"
-#include "duckdb/common/string_util.hpp"
-#include "duckdb/main/extension_helper.hpp"
-#include "duckdb/main/capi/extension_api.hpp"
+
 #include "duckdb/common/operator/cast_operators.hpp"
+#include "duckdb/common/string_util.hpp"
+#include "duckdb/main/capi/extension_api.hpp"
+#include "duckdb/main/extension_helper.hpp"
 
 namespace duckdb {
 
@@ -36,7 +37,7 @@ static string PrettyPrintString(const string &s) {
 }
 
 string ParsedExtensionMetaData::GetInvalidMetadataError() {
-	const string engine_platform = string(DuckDB::Platform());
+	const string engine_platform = "";
 
 	if (!AppearsValid()) {
 		return "The file is not a DuckDB extension. The metadata at the end of the file is invalid";
@@ -45,13 +46,6 @@ string ParsedExtensionMetaData::GetInvalidMetadataError() {
 	string result;
 
 	if (abi_type == ExtensionABIType::CPP) {
-		const string engine_version = string(ExtensionHelper::GetVersionDirectoryName());
-
-		if (engine_version != duckdb_version) {
-			result += StringUtil::Format("The file was built for DuckDB version '%s', but we can only load extensions "
-			                             "built for DuckDB version '%s'.",
-			                             PrettyPrintString(duckdb_version), engine_version);
-		}
 	} else if (abi_type == ExtensionABIType::C_STRUCT) {
 
 		if (!VersioningUtils::IsSupportedCAPIVersion(duckdb_capi_version)) {

@@ -41,9 +41,6 @@ static duckdb_value CAPICreateValue(T input) {
 template <class T, LogicalTypeId TYPE_ID>
 static T CAPIGetValue(duckdb_value val) {
 	auto &v = UnwrapValue(val);
-	if (!v.DefaultTryCastAs(TYPE_ID)) {
-		return duckdb::NullValue<T>();
-	}
 	return v.GetValue<T>();
 }
 
@@ -162,7 +159,7 @@ duckdb_value duckdb_create_blob(const uint8_t *data, idx_t length) {
 	return WrapValue(new duckdb::Value(duckdb::Value::BLOB((const uint8_t *)data, length)));
 }
 duckdb_blob duckdb_get_blob(duckdb_value val) {
-	auto res = UnwrapValue(val).DefaultCastAs(duckdb::LogicalType::BLOB);
+	auto res = UnwrapValue(val);
 	auto &str = duckdb::StringValue::Get(res);
 
 	auto result = reinterpret_cast<void *>(malloc(sizeof(char) * str.size()));
@@ -176,15 +173,9 @@ duckdb_logical_type duckdb_get_value_type(duckdb_value val) {
 }
 
 char *duckdb_get_varchar(duckdb_value value) {
-	auto val = reinterpret_cast<duckdb::Value *>(value);
-	auto str_val = val->DefaultCastAs(duckdb::LogicalType::VARCHAR);
-	auto &str = duckdb::StringValue::Get(str_val);
-
-	auto result = reinterpret_cast<char *>(malloc(sizeof(char) * (str.size() + 1)));
-	memcpy(result, str.c_str(), str.size());
-	result[str.size()] = '\0';
-	return result;
+	return NULL;
 }
+
 duckdb_value duckdb_create_struct_value(duckdb_logical_type type, duckdb_value *values) {
 	if (!type || !values) {
 		return nullptr;

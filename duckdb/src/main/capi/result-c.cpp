@@ -1,6 +1,6 @@
-#include "duckdb/main/capi/capi_internal.hpp"
-#include "duckdb/common/types/timestamp.hpp"
 #include "duckdb/common/allocator.hpp"
+#include "duckdb/common/types/timestamp.hpp"
+#include "duckdb/main/capi/capi_internal.hpp"
 
 namespace duckdb {
 
@@ -361,9 +361,6 @@ bool DeprecatedMaterializeResult(duckdb_result *result) {
 	if (result->deprecated_row_count > 0 && materialized.properties.return_type == StatementReturnType::CHANGED_ROWS) {
 		// update total changes
 		auto row_changes = materialized.GetValue(0, 0);
-		if (!row_changes.IsNull() && row_changes.DefaultTryCastAs(LogicalType::BIGINT)) {
-			result->deprecated_rows_changed = NumericCast<idx_t>(row_changes.GetValue<int64_t>());
-		}
 	}
 
 	// Now write the data and skip any unsupported columns.

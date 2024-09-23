@@ -4,15 +4,15 @@
 #include "duckdb/common/exception.hpp"
 #include "duckdb/common/file_opener.hpp"
 #include "duckdb/common/helper.hpp"
+#include "duckdb/common/operator/multiply.hpp"
 #include "duckdb/common/string_util.hpp"
 #include "duckdb/common/windows.hpp"
+#include "duckdb/common/windows_util.hpp"
 #include "duckdb/function/scalar/string_functions.hpp"
 #include "duckdb/main/client_context.hpp"
 #include "duckdb/main/client_data.hpp"
 #include "duckdb/main/database.hpp"
 #include "duckdb/main/extension_helper.hpp"
-#include "duckdb/common/windows_util.hpp"
-#include "duckdb/common/operator/multiply.hpp"
 
 #include <cstdint>
 #include <cstdio>
@@ -20,8 +20,8 @@
 #ifndef _WIN32
 #include <dirent.h>
 #include <fcntl.h>
-#include <string.h>
 #include <limits.h>
+#include <string.h>
 #include <sys/stat.h>
 #include <sys/statvfs.h>
 #include <sys/types.h>
@@ -497,16 +497,7 @@ vector<string> FileSystem::GlobFiles(const string &pattern, ClientContext &conte
 		string required_extension = LookupExtensionForPattern(pattern);
 		if (!required_extension.empty() && !context.db->ExtensionIsLoaded(required_extension)) {
 			auto &dbconfig = DBConfig::GetConfig(context);
-			if (!ExtensionHelper::CanAutoloadExtension(required_extension) ||
-			    !dbconfig.options.autoload_known_extensions) {
-				auto error_message =
-				    "File " + pattern + " requires the extension " + required_extension + " to be loaded";
-				error_message =
-				    ExtensionHelper::AddExtensionInstallHintToErrorMsg(context, error_message, required_extension);
-				throw MissingExtensionException(error_message);
-			}
 			// an extension is required to read this file, but it is not loaded - try to load it
-			ExtensionHelper::AutoLoadExtension(context, required_extension);
 			// success! glob again
 			// check the extension is loaded just in case to prevent an infinite loop here
 			if (!context.db->ExtensionIsLoaded(required_extension)) {

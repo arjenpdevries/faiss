@@ -68,7 +68,6 @@ unique_ptr<ConstantExpression> Transformer::TransformValue(duckdb_libpgquery::PG
 			if (width <= Decimal::MAX_WIDTH_DECIMAL) {
 				// we can cast the value as a decimal
 				Value val = Value(str_val);
-				val = val.DefaultCastAs(LogicalType::DECIMAL(width, scale));
 				return make_uniq<ConstantExpression>(std::move(val));
 			}
 		}
@@ -164,10 +163,6 @@ bool Transformer::ConstructConstantFromExpression(const ParsedExpression &expr, 
 		}
 
 		string error_message;
-		if (!dummy_value.DefaultTryCastAs(cast.cast_type, value, &error_message)) {
-			throw ConversionException("Unable to cast %s to %s", dummy_value.ToString(),
-			                          EnumUtil::ToString(cast.cast_type.id()));
-		}
 		return true;
 	}
 	default:

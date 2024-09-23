@@ -2,8 +2,8 @@
 
 #include "duckdb/common/vector_operations/vector_operations.hpp"
 #include "duckdb/execution/execution_context.hpp"
-#include "duckdb/storage/statistics/base_statistics.hpp"
 #include "duckdb/planner/expression/list.hpp"
+#include "duckdb/storage/statistics/base_statistics.hpp"
 
 namespace duckdb {
 
@@ -148,8 +148,6 @@ unique_ptr<ExpressionState> ExpressionExecutor::InitializeState(const Expression
 		return InitializeState(expr.Cast<BoundBetweenExpression>(), state);
 	case ExpressionClass::BOUND_CASE:
 		return InitializeState(expr.Cast<BoundCaseExpression>(), state);
-	case ExpressionClass::BOUND_CAST:
-		return InitializeState(expr.Cast<BoundCastExpression>(), state);
 	case ExpressionClass::BOUND_COMPARISON:
 		return InitializeState(expr.Cast<BoundComparisonExpression>(), state);
 	case ExpressionClass::BOUND_CONJUNCTION:
@@ -194,9 +192,6 @@ void ExpressionExecutor::Execute(const Expression &expr, ExpressionState *state,
 		break;
 	case ExpressionClass::BOUND_CASE:
 		Execute(expr.Cast<BoundCaseExpression>(), state, sel, count, result);
-		break;
-	case ExpressionClass::BOUND_CAST:
-		Execute(expr.Cast<BoundCastExpression>(), state, sel, count, result);
 		break;
 	case ExpressionClass::BOUND_COMPARISON:
 		Execute(expr.Cast<BoundComparisonExpression>(), state, sel, count, result);

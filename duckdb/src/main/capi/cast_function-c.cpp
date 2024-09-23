@@ -1,7 +1,7 @@
-#include "duckdb/common/type_visitor.hpp"
-#include "duckdb/common/types.hpp"
 #include "duckdb/common/helper.hpp"
 #include "duckdb/common/operator/cast_operators.hpp"
+#include "duckdb/common/type_visitor.hpp"
+#include "duckdb/common/types.hpp"
 #include "duckdb/function/cast/cast_function_set.hpp"
 #include "duckdb/main/capi/capi_internal.hpp"
 
@@ -42,42 +42,18 @@ struct CCastFunctionUserData {
 	}
 };
 
-struct CCastFunctionData final : public BoundCastData {
-	duckdb_cast_function_t function;
-	shared_ptr<CCastFunctionUserData> extra_info;
-
-	explicit CCastFunctionData(duckdb_cast_function_t function_p, shared_ptr<CCastFunctionUserData> extra_info_p)
-	    : function(function_p), extra_info(std::move(extra_info_p)) {
-	}
-
-	unique_ptr<BoundCastData> Copy() const override {
-		return make_uniq<CCastFunctionData>(function, extra_info);
-	}
-};
-
 static bool CAPICastFunction(Vector &input, Vector &output, idx_t count, CastParameters &parameters) {
 
 	const auto is_const = input.GetVectorType() == VectorType::CONSTANT_VECTOR;
 	input.Flatten(count);
 
 	CCastExecuteInfo exec_info(parameters);
-	const auto &data = parameters.cast_data->Cast<CCastFunctionData>();
 
 	auto c_input = reinterpret_cast<duckdb_vector>(&input);
 	auto c_output = reinterpret_cast<duckdb_vector>(&output);
 	auto c_info = reinterpret_cast<duckdb_function_info>(&exec_info);
 
-	const auto success = data.function(c_info, count, c_input, c_output);
-
-	if (!success) {
-		HandleCastError::AssignError(exec_info.error_message, parameters);
-	}
-
-	if (is_const && count == 1 && (success || !parameters.strict)) {
-		output.SetVectorType(VectorType::CONSTANT_VECTOR);
-	}
-
-	return success;
+	return false;
 }
 
 } // namespace duckdb
@@ -156,8 +132,7 @@ void *duckdb_cast_function_get_extra_info(duckdb_function_info info) {
 		return nullptr;
 	}
 	auto &cast_info = *reinterpret_cast<duckdb::CCastExecuteInfo *>(info);
-	auto &cast_data = cast_info.parameters.cast_data->Cast<duckdb::CCastFunctionData>();
-	return cast_data.extra_info->data_ptr;
+	return NULL;
 }
 
 duckdb_state duckdb_register_cast_function(duckdb_connection connection, duckdb_cast_function cast_function) {
@@ -190,9 +165,6 @@ duckdb_state duckdb_register_cast_function(duckdb_connection connection, duckdb_
 
 			auto extra_info =
 			    duckdb::make_shared_ptr<duckdb::CCastFunctionUserData>(cast.extra_info, cast.delete_callback);
-			auto cast_data = duckdb::make_uniq<duckdb::CCastFunctionData>(cast.function, std::move(extra_info));
-			duckdb::BoundCastInfo cast_info(duckdb::CAPICastFunction, std::move(cast_data));
-			casts.RegisterCastFunction(source_type, target_type, std::move(cast_info), cast.implicit_cast_cost);
 		});
 	} catch (...) {
 		return DuckDBError;

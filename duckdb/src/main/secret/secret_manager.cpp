@@ -13,8 +13,8 @@
 #include "duckdb/function/function_set.hpp"
 #include "duckdb/main/client_context.hpp"
 #include "duckdb/main/extension_helper.hpp"
-#include "duckdb/main/secret/secret_storage.hpp"
 #include "duckdb/main/secret/default_secrets.hpp"
+#include "duckdb/main/secret/secret_storage.hpp"
 #include "duckdb/parser/parsed_data/create_secret_info.hpp"
 #include "duckdb/parser/statement/create_statement.hpp"
 #include "duckdb/planner/operator/logical_create_secret.hpp"
@@ -277,10 +277,6 @@ BoundStatement SecretManager::BindCreateSecret(CatalogTransaction transaction, C
 		// Cast the provided value to the expected type
 		string error_msg;
 		Value cast_value;
-		if (!param.second.DefaultTryCastAs(matched_param->second, cast_value, &error_msg)) {
-			throw BinderException("Failed to cast option '%s' to type '%s': '%s'", matched_param->first,
-			                      matched_param->second.ToString(), error_msg);
-		}
 
 		bound_info.options[matched_param->first] = {cast_value};
 	}
@@ -544,52 +540,15 @@ void SecretManager::InitializeSecrets(CatalogTransaction transaction) {
 }
 
 void SecretManager::AutoloadExtensionForType(const string &type) {
-	ExtensionHelper::TryAutoloadFromEntry(*db, StringUtil::Lower(type), EXTENSION_SECRET_TYPES);
 }
 
 void SecretManager::ThrowTypeNotFoundError(const string &type, const string &secret_path) {
-	auto entry = ExtensionHelper::FindExtensionInEntries(StringUtil::Lower(type), EXTENSION_SECRET_TYPES);
-	string error_message;
-
-	if (!entry.empty() && db) {
-		error_message = "Secret type '" + type + "' does not exist, but it exists in the " + entry + " extension.";
-		error_message = ExtensionHelper::AddExtensionInstallHintToErrorMsg(*db, error_message, entry);
-
-		if (!secret_path.empty()) {
-			error_message += "\n\nAlternatively, ";
-		}
-	} else {
-		error_message = StringUtil::Format("Secret type '%s' not found", type);
-
-		if (!secret_path.empty()) {
-			error_message += ", ";
-		}
-	}
-
-	if (!secret_path.empty()) {
-		error_message += StringUtil::Format("try removing the secret at path '%s'.", secret_path);
-	}
-
-	throw InvalidInputException(error_message);
 }
 
 void SecretManager::AutoloadExtensionForFunction(const string &type, const string &provider) {
-	ExtensionHelper::TryAutoloadFromEntry(*db, StringUtil::Lower(type) + "/" + StringUtil::Lower(provider),
-	                                      EXTENSION_SECRET_PROVIDERS);
 }
 
 void SecretManager::ThrowProviderNotFoundError(const string &type, const string &provider, bool was_default) {
-	auto entry = ExtensionHelper::FindExtensionInEntries(StringUtil::Lower(type) + "/" + StringUtil::Lower(provider),
-	                                                     EXTENSION_SECRET_PROVIDERS);
-	if (!entry.empty() && db) {
-		string error_message = was_default ? "Default secret provider" : "Secret provider";
-		error_message +=
-		    " '" + provider + "' for type '" + type + "' does not exist, but it exists in the " + entry + " extension.";
-		error_message = ExtensionHelper::AddExtensionInstallHintToErrorMsg(*db, error_message, entry);
-
-		throw InvalidInputException(error_message);
-	}
-	throw InvalidInputException("Secret provider '%s' not found for type '%s'", provider, type);
 }
 
 optional_ptr<SecretStorage> SecretManager::GetSecretStorage(const string &name) {

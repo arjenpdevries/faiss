@@ -1,6 +1,7 @@
 #include "duckdb/optimizer/filter_combiner.hpp"
 
 #include "duckdb/execution/expression_executor.hpp"
+#include "duckdb/optimizer/optimizer.hpp"
 #include "duckdb/planner/expression.hpp"
 #include "duckdb/planner/expression/bound_between_expression.hpp"
 #include "duckdb/planner/expression/bound_cast_expression.hpp"
@@ -10,11 +11,10 @@
 #include "duckdb/planner/expression/bound_constant_expression.hpp"
 #include "duckdb/planner/expression/bound_function_expression.hpp"
 #include "duckdb/planner/expression/bound_operator_expression.hpp"
-#include "duckdb/planner/table_filter.hpp"
 #include "duckdb/planner/filter/constant_filter.hpp"
 #include "duckdb/planner/filter/null_filter.hpp"
 #include "duckdb/planner/filter/struct_filter.hpp"
-#include "duckdb/optimizer/optimizer.hpp"
+#include "duckdb/planner/table_filter.hpp"
 
 namespace duckdb {
 
@@ -752,15 +752,6 @@ FilterResult FilterCombiner::AddFilter(Expression &expr) {
 		if (!ExpressionExecutor::TryEvaluateScalar(context, expr, result)) {
 			return FilterResult::UNSUPPORTED;
 		}
-		result = result.DefaultCastAs(LogicalType::BOOLEAN);
-		// check if the filter passes
-		if (result.IsNull() || !BooleanValue::Get(result)) {
-			// the filter does not pass the scalar test, create an empty result
-			return FilterResult::UNSATISFIABLE;
-		} else {
-			// the filter passes the scalar test, just remove the condition
-			return FilterResult::SUCCESS;
-		}
 	}
 	D_ASSERT(!expr.IsFoldable());
 	if (expr.GetExpressionClass() == ExpressionClass::BOUND_BETWEEN) {
@@ -863,30 +854,6 @@ FilterResult FilterCombiner::AddTransitiveFilters(BoundComparisonExpression &com
 	// In case with filters like CAST(i) = j and i = 5 we replace the COLUMN_REF i with the constant 5
 	do {
 		if (right_node.get().type != ExpressionType::OPERATOR_CAST) {
-			break;
-		}
-		auto &bound_cast_expr = right_node.get().Cast<BoundCastExpression>();
-		if (bound_cast_expr.child->type != ExpressionType::BOUND_COLUMN_REF) {
-			break;
-		}
-		auto &col_ref = bound_cast_expr.child->Cast<BoundColumnRefExpression>();
-		for (auto &stored_exp : stored_expressions) {
-			reference<Expression> expr = stored_exp.first;
-			if (expr.get().type == ExpressionType::OPERATOR_CAST) {
-				expr = *(right_node.get().Cast<BoundCastExpression>().child);
-			}
-			if (expr.get().type != ExpressionType::BOUND_COLUMN_REF) {
-				continue;
-			}
-			auto &st_col_ref = expr.get().Cast<BoundColumnRefExpression>();
-			if (st_col_ref.binding != col_ref.binding) {
-				continue;
-			}
-			if (bound_cast_expr.return_type != stored_exp.second->return_type) {
-				continue;
-			}
-			bound_cast_expr.child = stored_exp.second->Copy();
-			right_node = GetNode(*bound_cast_expr.child);
 			break;
 		}
 	} while (false);

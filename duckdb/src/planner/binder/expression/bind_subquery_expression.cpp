@@ -1,9 +1,9 @@
+#include "duckdb/common/string_util.hpp"
 #include "duckdb/parser/expression/subquery_expression.hpp"
 #include "duckdb/planner/binder.hpp"
 #include "duckdb/planner/expression/bound_cast_expression.hpp"
 #include "duckdb/planner/expression/bound_subquery_expression.hpp"
 #include "duckdb/planner/expression_binder.hpp"
-#include "duckdb/common/string_util.hpp"
 
 namespace duckdb {
 
@@ -94,7 +94,6 @@ BindResult ExpressionBinder::BindExpression(SubqueryExpression &expr, idx_t dept
 			    expr, "Cannot compare values of type %s and %s in IN/ANY/ALL clause - an explicit cast is required",
 			    child_type.ToString(), bound_node->types[0]);
 		}
-		child = BoundCastExpression::AddCastToType(context, std::move(child), compare_type);
 		result->child_type = bound_node->types[0];
 		result->child_target = compare_type;
 		result->child = std::move(child);

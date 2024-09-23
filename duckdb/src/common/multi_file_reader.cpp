@@ -2,13 +2,13 @@
 
 #include "duckdb/common/exception.hpp"
 #include "duckdb/common/hive_partitioning.hpp"
+#include "duckdb/common/string_util.hpp"
 #include "duckdb/common/types.hpp"
 #include "duckdb/common/types/value.hpp"
 #include "duckdb/function/function_set.hpp"
 #include "duckdb/function/table_function.hpp"
 #include "duckdb/main/config.hpp"
 #include "duckdb/planner/expression/bound_columnref_expression.hpp"
-#include "duckdb/common/string_util.hpp"
 
 #include <algorithm>
 
@@ -110,10 +110,6 @@ bool MultiFileReader::ParseOption(const string &key, const Value &val, MultiFile
 		} else {
 			Value boolean_value;
 			string error_message;
-			if (val.DefaultTryCastAs(LogicalType::BOOLEAN, boolean_value, &error_message)) {
-				// If the argument can be cast to boolean, we just interpret it as a boolean
-				options.filename = BooleanValue::Get(boolean_value);
-			}
 		}
 	} else if (loption == "hive_partitioning") {
 		options.hive_partitioning = BooleanValue::Get(val);
@@ -494,11 +490,6 @@ void MultiFileReaderOptions::AutoDetectHiveTypesInternal(MultiFileList &files, C
 			LogicalType detected_type = LogicalType::VARCHAR;
 			Value value(part.second);
 			for (auto &candidate : candidates) {
-				const bool success = value.TryCastAs(context, candidate, true);
-				if (success) {
-					detected_type = candidate;
-					break;
-				}
 			}
 			auto entry = detected_types.find(name);
 			if (entry == detected_types.end()) {

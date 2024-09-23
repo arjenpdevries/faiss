@@ -1,31 +1,13 @@
 #include "duckdb/planner/expression/bound_cast_expression.hpp"
+
+#include "duckdb/function/cast/cast_function_set.hpp"
+#include "duckdb/function/cast_rules.hpp"
+#include "duckdb/main/config.hpp"
+#include "duckdb/planner/expression/bound_constant_expression.hpp"
 #include "duckdb/planner/expression/bound_default_expression.hpp"
 #include "duckdb/planner/expression/bound_parameter_expression.hpp"
-#include "duckdb/planner/expression/bound_constant_expression.hpp"
-#include "duckdb/function/cast_rules.hpp"
-#include "duckdb/function/cast/cast_function_set.hpp"
-#include "duckdb/main/config.hpp"
 
 namespace duckdb {
-
-static BoundCastInfo BindCastFunction(ClientContext &context, const LogicalType &source, const LogicalType &target) {
-	auto &cast_functions = DBConfig::GetConfig(context).GetCastFunctions();
-	GetCastFunctionInput input(context);
-	return cast_functions.GetCastFunction(source, target, input);
-}
-
-BoundCastExpression::BoundCastExpression(unique_ptr<Expression> child_p, LogicalType target_type_p,
-                                         BoundCastInfo bound_cast_p, bool try_cast_p)
-    : Expression(ExpressionType::OPERATOR_CAST, ExpressionClass::BOUND_CAST, std::move(target_type_p)),
-      child(std::move(child_p)), try_cast(try_cast_p), bound_cast(std::move(bound_cast_p)) {
-}
-
-BoundCastExpression::BoundCastExpression(ClientContext &context, unique_ptr<Expression> child_p,
-                                         LogicalType target_type_p)
-    : Expression(ExpressionType::OPERATOR_CAST, ExpressionClass::BOUND_CAST, std::move(target_type_p)),
-      child(std::move(child_p)), try_cast(false),
-      bound_cast(BindCastFunction(context, child->return_type, return_type)) {
-}
 
 unique_ptr<Expression> AddCastExpressionInternal(unique_ptr<Expression> expr, const LogicalType &target_type,
                                                  BoundCastInfo bound_cast, bool try_cast) {
@@ -40,9 +22,7 @@ unique_ptr<Expression> AddCastExpressionInternal(unique_ptr<Expression> expr, co
 			return expr;
 		}
 	}
-	auto result = make_uniq<BoundCastExpression>(std::move(expr), target_type, std::move(bound_cast), try_cast);
-	result->query_location = result->child->query_location;
-	return std::move(result);
+	return nullptr;
 }
 
 unique_ptr<Expression> AddCastToTypeInternal(unique_ptr<Expression> expr, const LogicalType &target_type,
@@ -87,16 +67,12 @@ unique_ptr<Expression> AddCastToTypeInternal(unique_ptr<Expression> expr, const 
 		return expr;
 	}
 
-	auto cast_function = cast_functions.GetCastFunction(expr->return_type, target_type, get_input);
-	return AddCastExpressionInternal(std::move(expr), target_type, std::move(cast_function), try_cast);
+	return nullptr;
 }
 
 unique_ptr<Expression> BoundCastExpression::AddDefaultCastToType(unique_ptr<Expression> expr,
                                                                  const LogicalType &target_type, bool try_cast) {
-	CastFunctionSet default_set;
-	GetCastFunctionInput get_input;
-	get_input.query_location = expr->query_location;
-	return AddCastToTypeInternal(std::move(expr), target_type, default_set, get_input, try_cast);
+	return nullptr;
 }
 
 unique_ptr<Expression> BoundCastExpression::AddCastToType(ClientContext &context, unique_ptr<Expression> expr,
@@ -211,9 +187,7 @@ bool BoundCastExpression::Equals(const BaseExpression &other_p) const {
 }
 
 unique_ptr<Expression> BoundCastExpression::Copy() const {
-	auto copy = make_uniq<BoundCastExpression>(child->Copy(), return_type, bound_cast.Copy(), try_cast);
-	copy->CopyProperties(*this);
-	return std::move(copy);
+	return nullptr;
 }
 
 } // namespace duckdb

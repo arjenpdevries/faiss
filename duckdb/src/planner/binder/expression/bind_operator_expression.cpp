@@ -1,9 +1,9 @@
 #include "duckdb/parser/expression/function_expression.hpp"
 #include "duckdb/parser/expression/operator_expression.hpp"
+#include "duckdb/planner/binder.hpp"
 #include "duckdb/planner/expression/bound_case_expression.hpp"
 #include "duckdb/planner/expression/bound_cast_expression.hpp"
 #include "duckdb/planner/expression/bound_comparison_expression.hpp"
-#include "duckdb/planner/binder.hpp"
 #include "duckdb/planner/expression/bound_constant_expression.hpp"
 #include "duckdb/planner/expression/bound_operator_expression.hpp"
 #include "duckdb/planner/expression/bound_parameter_expression.hpp"
@@ -14,7 +14,6 @@ namespace duckdb {
 LogicalType ExpressionBinder::ResolveNotType(OperatorExpression &op, vector<unique_ptr<Expression>> &children) {
 	// NOT expression, cast child to BOOLEAN
 	D_ASSERT(children.size() == 1);
-	children[0] = BoundCastExpression::AddCastToType(context, std::move(children[0]), LogicalType::BOOLEAN);
 	return LogicalType(LogicalTypeId::BOOLEAN);
 }
 
@@ -47,11 +46,6 @@ LogicalType ExpressionBinder::ResolveCoalesceType(OperatorExpression &op, vector
 
 	// cast all children to the same type
 	for (auto &child : children) {
-		child = BoundCastExpression::AddCastToType(context, std::move(child), max_type);
-		if (is_in_operator) {
-			// If it's IN/NOT_IN operator, push collation functions.
-			ExpressionBinder::PushCollation(context, child, max_type);
-		}
 	}
 	return max_type;
 }

@@ -1,42 +1,43 @@
 #include "duckdb/catalog/catalog.hpp"
 
-#include "duckdb/catalog/catalog_search_path.hpp"
 #include "duckdb/catalog/catalog_entry/list.hpp"
 #include "duckdb/catalog/catalog_entry/table_catalog_entry.hpp"
+#include "duckdb/catalog/catalog_entry/type_catalog_entry.hpp"
+#include "duckdb/catalog/catalog_search_path.hpp"
 #include "duckdb/catalog/catalog_set.hpp"
 #include "duckdb/catalog/default/default_schemas.hpp"
-#include "duckdb/catalog/catalog_entry/type_catalog_entry.hpp"
+#include "duckdb/catalog/default/default_types.hpp"
+#include "duckdb/catalog/similar_catalog_entry.hpp"
 #include "duckdb/common/exception.hpp"
+#include "duckdb/function/built_in_functions.hpp"
+#include "duckdb/main/attached_database.hpp"
 #include "duckdb/main/client_context.hpp"
 #include "duckdb/main/client_data.hpp"
+#include "duckdb/main/connection.hpp"
 #include "duckdb/main/database.hpp"
-#include "duckdb/parser/expression/function_expression.hpp"
+#include "duckdb/main/database_manager.hpp"
+#include "duckdb/main/extension/generated_extension_loader.hpp"
+#include "duckdb/main/extension_entries.hpp"
 #include "duckdb/main/extension_helper.hpp"
+#include "duckdb/parser/expression/function_expression.hpp"
 #include "duckdb/parser/parsed_data/alter_table_info.hpp"
 #include "duckdb/parser/parsed_data/create_aggregate_function_info.hpp"
 #include "duckdb/parser/parsed_data/create_collation_info.hpp"
 #include "duckdb/parser/parsed_data/create_copy_function_info.hpp"
 #include "duckdb/parser/parsed_data/create_index_info.hpp"
 #include "duckdb/parser/parsed_data/create_pragma_function_info.hpp"
-#include "duckdb/parser/parsed_data/create_secret_info.hpp"
 #include "duckdb/parser/parsed_data/create_scalar_function_info.hpp"
 #include "duckdb/parser/parsed_data/create_schema_info.hpp"
+#include "duckdb/parser/parsed_data/create_secret_info.hpp"
 #include "duckdb/parser/parsed_data/create_sequence_info.hpp"
 #include "duckdb/parser/parsed_data/create_table_function_info.hpp"
 #include "duckdb/parser/parsed_data/create_type_info.hpp"
 #include "duckdb/parser/parsed_data/create_view_info.hpp"
 #include "duckdb/parser/parsed_data/drop_info.hpp"
-#include "duckdb/planner/parsed_data/bound_create_table_info.hpp"
 #include "duckdb/planner/binder.hpp"
-#include "duckdb/catalog/default/default_types.hpp"
-#include "duckdb/main/extension_entries.hpp"
-#include "duckdb/main/extension/generated_extension_loader.hpp"
-#include "duckdb/main/connection.hpp"
-#include "duckdb/main/attached_database.hpp"
-#include "duckdb/main/database_manager.hpp"
-#include "duckdb/function/built_in_functions.hpp"
-#include "duckdb/catalog/similar_catalog_entry.hpp"
+#include "duckdb/planner/parsed_data/bound_create_table_info.hpp"
 #include "duckdb/storage/database_size.hpp"
+
 #include <algorithm>
 
 namespace duckdb {
@@ -436,23 +437,6 @@ void FindMinimalQualification(ClientContext &context, const string &catalog_name
 }
 
 bool Catalog::TryAutoLoad(ClientContext &context, const string &original_name) noexcept {
-	string extension_name = ExtensionHelper::ApplyExtensionAlias(original_name);
-	if (context.db->ExtensionIsLoaded(extension_name)) {
-		return true;
-	}
-#ifndef DUCKDB_DISABLE_EXTENSION_LOAD
-	auto &dbconfig = DBConfig::GetConfig(context);
-	if (!dbconfig.options.autoload_known_extensions) {
-		return false;
-	}
-	try {
-		if (ExtensionHelper::CanAutoloadExtension(extension_name)) {
-			return ExtensionHelper::TryAutoLoadExtension(context, extension_name);
-		}
-	} catch (...) {
-		return false;
-	}
-#endif
 	return false;
 }
 
@@ -460,11 +444,6 @@ void Catalog::AutoloadExtensionByConfigName(ClientContext &context, const string
 #ifndef DUCKDB_DISABLE_EXTENSION_LOAD
 	auto &dbconfig = DBConfig::GetConfig(context);
 	if (dbconfig.options.autoload_known_extensions) {
-		auto extension_name = ExtensionHelper::FindExtensionInEntries(configuration_name, EXTENSION_SETTINGS);
-		if (ExtensionHelper::CanAutoloadExtension(extension_name)) {
-			ExtensionHelper::AutoLoadExtension(context, extension_name);
-			return;
-		}
 	}
 #endif
 
@@ -500,57 +479,13 @@ static bool CompareCatalogTypes(CatalogType type_a, CatalogType type_b) {
 }
 
 bool Catalog::AutoLoadExtensionByCatalogEntry(DatabaseInstance &db, CatalogType type, const string &entry_name) {
-#ifndef DUCKDB_DISABLE_EXTENSION_LOAD
-	auto &dbconfig = DBConfig::GetConfig(db);
-	if (dbconfig.options.autoload_known_extensions) {
-		string extension_name;
-		if (IsAutoloadableFunction(type)) {
-			auto lookup_result = ExtensionHelper::FindExtensionInFunctionEntries(entry_name, EXTENSION_FUNCTIONS);
-			if (lookup_result.empty()) {
-				return false;
-			}
-			for (auto &function : lookup_result) {
-				auto function_type = function.second;
-				// FIXME: what if there are two functions with the same name, from different extensions?
-				if (CompareCatalogTypes(type, function_type)) {
-					extension_name = function.first;
-					break;
-				}
-			}
-		} else if (type == CatalogType::COPY_FUNCTION_ENTRY) {
-			extension_name = ExtensionHelper::FindExtensionInEntries(entry_name, EXTENSION_COPY_FUNCTIONS);
-		} else if (type == CatalogType::TYPE_ENTRY) {
-			extension_name = ExtensionHelper::FindExtensionInEntries(entry_name, EXTENSION_TYPES);
-		} else if (type == CatalogType::COLLATION_ENTRY) {
-			extension_name = ExtensionHelper::FindExtensionInEntries(entry_name, EXTENSION_COLLATIONS);
-		}
-
-		if (!extension_name.empty() && ExtensionHelper::CanAutoloadExtension(extension_name)) {
-			ExtensionHelper::AutoLoadExtension(db, extension_name);
-			return true;
-		}
-	}
-#endif
-
 	return false;
 }
 
 CatalogException Catalog::UnrecognizedConfigurationError(ClientContext &context, const string &name) {
-	// check if the setting exists in any extensions
-	auto extension_name = ExtensionHelper::FindExtensionInEntries(name, EXTENSION_SETTINGS);
-	if (!extension_name.empty()) {
-		auto error_message = "Setting with name \"" + name + "\" is not in the catalog, but it exists in the " +
-		                     extension_name + " extension.";
-		error_message = ExtensionHelper::AddExtensionInstallHintToErrorMsg(context, error_message, extension_name);
-		return CatalogException(error_message);
-	}
-	// the setting is not in an extension
-	// get a list of all options
-	vector<string> potential_names = DBConfig::GetOptionNames();
-	for (auto &entry : DBConfig::GetConfig(context).extension_parameters) {
-		potential_names.push_back(entry.first);
-	}
-	throw CatalogException::MissingEntry("configuration parameter", name, potential_names);
+	auto error_message =
+	    "Setting with name \"" + name + "\" is not in the catalog, but it exists in the " + +" extension.";
+	return CatalogException(error_message);
 }
 
 CatalogException Catalog::CreateMissingEntryException(ClientContext &context, const string &entry_name,
@@ -580,57 +515,11 @@ CatalogException Catalog::CreateMissingEntryException(ClientContext &context, co
 	}
 	// check if the entry exists in any extension
 	string extension_name;
-	if (type == CatalogType::TABLE_FUNCTION_ENTRY || type == CatalogType::SCALAR_FUNCTION_ENTRY ||
-	    type == CatalogType::AGGREGATE_FUNCTION_ENTRY || type == CatalogType::PRAGMA_FUNCTION_ENTRY) {
-		auto lookup_result = ExtensionHelper::FindExtensionInFunctionEntries(entry_name, EXTENSION_FUNCTIONS);
-		do {
-			if (lookup_result.empty()) {
-				break;
-			}
-			vector<string> other_types;
-			string extension_for_error;
-			for (auto &function : lookup_result) {
-				auto function_type = function.second;
-				if (CompareCatalogTypes(type, function_type)) {
-					extension_name = function.first;
-					break;
-				}
-				extension_for_error = function.first;
-				other_types.push_back(CatalogTypeToString(function_type));
-			}
-			if (!extension_name.empty()) {
-				break;
-			}
-			if (other_types.size() == 1) {
-				auto &function_type = other_types[0];
-				auto error =
-				    CatalogException("%s with name \"%s\" is not in the catalog, a function by this name exists "
-				                     "in the %s extension, but it's of a different type, namely %s",
-				                     CatalogTypeToString(type), entry_name, extension_for_error, function_type);
-				return error;
-			} else {
-				D_ASSERT(!other_types.empty());
-				auto list_of_types = StringUtil::Join(other_types, ", ");
-				auto error =
-				    CatalogException("%s with name \"%s\" is not in the catalog, functions with this name exist "
-				                     "in the %s extension, but they are of different types, namely %s",
-				                     CatalogTypeToString(type), entry_name, extension_for_error, list_of_types);
-				return error;
-			}
-		} while (false);
-	} else if (type == CatalogType::TYPE_ENTRY) {
-		extension_name = ExtensionHelper::FindExtensionInEntries(entry_name, EXTENSION_TYPES);
-	} else if (type == CatalogType::COPY_FUNCTION_ENTRY) {
-		extension_name = ExtensionHelper::FindExtensionInEntries(entry_name, EXTENSION_COPY_FUNCTIONS);
-	} else if (type == CatalogType::COLLATION_ENTRY) {
-		extension_name = ExtensionHelper::FindExtensionInEntries(entry_name, EXTENSION_COLLATIONS);
-	}
 
 	// if we found an extension that can handle this catalog entry, create an error hinting the user
 	if (!extension_name.empty()) {
 		auto error_message = CatalogTypeToString(type) + " with name \"" + entry_name +
 		                     "\" is not in the catalog, but it exists in the " + extension_name + " extension.";
-		error_message = ExtensionHelper::AddExtensionInstallHintToErrorMsg(context, error_message, extension_name);
 		return CatalogException(error_message);
 	}
 

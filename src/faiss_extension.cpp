@@ -42,7 +42,7 @@ DUCKDB_EXTENSION_API void faiss_init(duckdb::DatabaseInstance &db) {
 }
 
 DUCKDB_EXTENSION_API const char *faiss_version() {
-	return duckdb::DuckDB::LibraryVersion();
+	return NULL;
 }
 }
 

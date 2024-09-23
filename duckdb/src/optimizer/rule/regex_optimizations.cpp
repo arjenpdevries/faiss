@@ -1,26 +1,15 @@
 #include "duckdb/optimizer/rule/regex_optimizations.hpp"
 
 #include "duckdb/execution/expression_executor.hpp"
-#include "duckdb/planner/expression/bound_function_expression.hpp"
-#include "duckdb/planner/expression/bound_constant_expression.hpp"
-#include "duckdb/function/scalar/string_functions.hpp"
 #include "duckdb/function/scalar/regexp.hpp"
-#include "utf8proc_wrapper.hpp"
-
+#include "duckdb/function/scalar/string_functions.hpp"
+#include "duckdb/planner/expression/bound_constant_expression.hpp"
+#include "duckdb/planner/expression/bound_function_expression.hpp"
 #include "re2/re2.h"
 #include "re2/regexp.h"
+#include "utf8proc_wrapper.hpp"
 
 namespace duckdb {
-
-RegexOptimizationRule::RegexOptimizationRule(ExpressionRewriter &rewriter) : Rule(rewriter) {
-	auto func = make_uniq<FunctionExpressionMatcher>();
-	func->function = make_uniq<SpecificFunctionMatcher>("regexp_matches");
-	func->policy = SetMatcher::Policy::SOME_ORDERED;
-	func->matchers.push_back(make_uniq<ExpressionMatcher>());
-	func->matchers.push_back(make_uniq<ConstantExpressionMatcher>());
-
-	root = std::move(func);
-}
 
 struct LikeString {
 	bool exists = true;
@@ -151,12 +140,9 @@ unique_ptr<Expression> RegexOptimizationRule::Apply(LogicalOperator &op, vector<
 	auto &root = bindings[0].get().Cast<BoundFunctionExpression>();
 	auto &constant_expr = bindings[2].get().Cast<BoundConstantExpression>();
 	D_ASSERT(root.children.size() == 2 || root.children.size() == 3);
-	auto regexp_bind_data = root.bind_info.get()->Cast<RegexpMatchesBindData>();
 
 	auto constant_value = ExpressionExecutor::EvaluateScalar(GetContext(), constant_expr);
 	D_ASSERT(constant_value.type() == constant_expr.return_type);
-
-	duckdb_re2::RE2::Options parsed_options = regexp_bind_data.options;
 
 	if (constant_expr.value.IsNull()) {
 		return make_uniq<BoundConstantExpression>(Value(root.return_type));
@@ -167,33 +153,9 @@ unique_ptr<Expression> RegexOptimizationRule::Apply(LogicalOperator &op, vector<
 	if (!constant_expr.IsFoldable()) {
 		return nullptr;
 	};
-
-	duckdb_re2::RE2 pattern(patt_str, parsed_options);
-	if (!pattern.ok()) {
-		return nullptr; // this should fail somewhere else
-	}
-
 	LikeString like_string;
 	// check for a like string. If we can convert it to a like string, the like string
 	// optimizer will further optimize suffix and prefix things.
-	if (pattern.Regexp()->op() == duckdb_re2::kRegexpLiteralString ||
-	    pattern.Regexp()->op() == duckdb_re2::kRegexpLiteral) {
-		// convert to contains.
-		LikeString escaped_like_string = GetLikeStringEscaped(pattern.Regexp(), true);
-		if (!escaped_like_string.exists) {
-			return nullptr;
-		}
-		auto parameter = make_uniq<BoundConstantExpression>(Value(std::move(escaped_like_string.like_string)));
-		auto contains = make_uniq<BoundFunctionExpression>(root.return_type, ContainsFun::GetStringContains(),
-		                                                   std::move(root.children), nullptr);
-		contains->children[1] = std::move(parameter);
-
-		return std::move(contains);
-	} else if (pattern.Regexp()->op() == duckdb_re2::kRegexpConcat) {
-		like_string = LikeMatchFromRegex(pattern);
-	} else {
-		like_string.exists = false;
-	}
 
 	if (!like_string.exists) {
 		return nullptr;
@@ -205,11 +167,7 @@ unique_ptr<Expression> RegexOptimizationRule::Apply(LogicalOperator &op, vector<
 		D_ASSERT(root.children.size() == 2);
 	}
 
-	auto like_expression = make_uniq<BoundFunctionExpression>(root.return_type, LikeFun::GetLikeFunction(),
-	                                                          std::move(root.children), nullptr);
-	auto parameter = make_uniq<BoundConstantExpression>(Value(std::move(like_string.like_string)));
-	like_expression->children[1] = std::move(parameter);
-	return std::move(like_expression);
+	return nullptr;
 }
 
 } // namespace duckdb

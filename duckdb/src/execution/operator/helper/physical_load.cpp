@@ -1,4 +1,5 @@
 #include "duckdb/execution/operator/helper/physical_load.hpp"
+
 #include "duckdb/main/extension_helper.hpp"
 
 namespace duckdb {
@@ -21,8 +22,6 @@ static void InstallFromRepository(ClientContext &context, const LoadInfo &info) 
 	options.throw_on_origin_mismatch = true;
 	options.version = info.version;
 	options.repository = repository;
-
-	ExtensionHelper::InstallExtension(context, info.filename, options);
 }
 
 SourceResultType PhysicalLoad::GetData(ExecutionContext &context, DataChunk &chunk, OperatorSourceInput &input) const {
@@ -32,13 +31,11 @@ SourceResultType PhysicalLoad::GetData(ExecutionContext &context, DataChunk &chu
 			options.force_install = info->load_type == LoadType::FORCE_INSTALL;
 			options.throw_on_origin_mismatch = true;
 			options.version = info->version;
-			ExtensionHelper::InstallExtension(context.client, info->filename, options);
 		} else {
 			InstallFromRepository(context.client, *info);
 		}
 
 	} else {
-		ExtensionHelper::LoadExternalExtension(context.client, info->filename);
 	}
 
 	return SourceResultType::FINISHED;

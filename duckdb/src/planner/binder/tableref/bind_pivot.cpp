@@ -1,7 +1,8 @@
-#include "duckdb/planner/binder.hpp"
-#include "duckdb/parser/tableref/pivotref.hpp"
-#include "duckdb/parser/tableref/subqueryref.hpp"
-#include "duckdb/parser/query_node/select_node.hpp"
+#include "duckdb/catalog/catalog_entry/aggregate_function_catalog_entry.hpp"
+#include "duckdb/catalog/catalog_entry/type_catalog_entry.hpp"
+#include "duckdb/common/types/value_map.hpp"
+#include "duckdb/main/client_config.hpp"
+#include "duckdb/main/query_result.hpp"
 #include "duckdb/parser/expression/case_expression.hpp"
 #include "duckdb/parser/expression/cast_expression.hpp"
 #include "duckdb/parser/expression/columnref_expression.hpp"
@@ -9,18 +10,17 @@
 #include "duckdb/parser/expression/conjunction_expression.hpp"
 #include "duckdb/parser/expression/constant_expression.hpp"
 #include "duckdb/parser/expression/function_expression.hpp"
-#include "duckdb/planner/query_node/bound_select_node.hpp"
-#include "duckdb/parser/expression/star_expression.hpp"
-#include "duckdb/common/types/value_map.hpp"
-#include "duckdb/parser/parsed_expression_iterator.hpp"
 #include "duckdb/parser/expression/operator_expression.hpp"
-#include "duckdb/planner/tableref/bound_subqueryref.hpp"
-#include "duckdb/planner/tableref/bound_pivotref.hpp"
+#include "duckdb/parser/expression/star_expression.hpp"
+#include "duckdb/parser/parsed_expression_iterator.hpp"
+#include "duckdb/parser/query_node/select_node.hpp"
+#include "duckdb/parser/tableref/pivotref.hpp"
+#include "duckdb/parser/tableref/subqueryref.hpp"
+#include "duckdb/planner/binder.hpp"
 #include "duckdb/planner/expression/bound_aggregate_expression.hpp"
-#include "duckdb/main/client_config.hpp"
-#include "duckdb/catalog/catalog_entry/aggregate_function_catalog_entry.hpp"
-#include "duckdb/catalog/catalog_entry/type_catalog_entry.hpp"
-#include "duckdb/main/query_result.hpp"
+#include "duckdb/planner/query_node/bound_select_node.hpp"
+#include "duckdb/planner/tableref/bound_pivotref.hpp"
+#include "duckdb/planner/tableref/bound_subqueryref.hpp"
 
 namespace duckdb {
 
@@ -110,8 +110,7 @@ static unique_ptr<SelectNode> PivotFilteredAggregate(PivotRef &ref, vector<uniqu
 		for (auto &pivot_column : ref.pivots) {
 			for (auto &pivot_expr : pivot_column.pivot_expressions) {
 				auto column_ref = make_uniq<CastExpression>(LogicalType::VARCHAR, pivot_expr->Copy());
-				auto constant_value = make_uniq<ConstantExpression>(
-				    pivot_value.values[pivot_value_idx++].DefaultCastAs(LogicalType::VARCHAR));
+				auto constant_value = nullptr;
 				auto comp_expr = make_uniq<ComparisonExpression>(ExpressionType::COMPARE_NOT_DISTINCT_FROM,
 				                                                 std::move(column_ref), std::move(constant_value));
 				if (filter) {

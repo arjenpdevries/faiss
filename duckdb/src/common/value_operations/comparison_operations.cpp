@@ -104,9 +104,6 @@ static bool TemplatedBooleanOperation(const Value &left, const Value &right) {
 		Value right_copy = right;
 
 		auto comparison_type = LogicalType::ForceMaxLogicalType(left_type, right_type);
-		if (!left_copy.DefaultTryCastAs(comparison_type) || !right_copy.DefaultTryCastAs(comparison_type)) {
-			return false;
-		}
 		D_ASSERT(left_copy.type() == right_copy.type());
 		return TemplatedBooleanOperation<OP>(left_copy, right_copy);
 	}

@@ -15,6 +15,7 @@
 #include "duckdb/common/types/sel_cache.hpp"
 #include "duckdb/common/types/value.hpp"
 #include "duckdb/common/types/value_map.hpp"
+#include "duckdb/common/types/varint.hpp"
 #include "duckdb/common/types/vector_cache.hpp"
 #include "duckdb/common/uhugeint.hpp"
 #include "duckdb/common/vector_operations/vector_operations.hpp"
@@ -22,7 +23,6 @@
 #include "duckdb/storage/buffer/buffer_handle.hpp"
 #include "duckdb/storage/string_uncompressed.hpp"
 #include "fsst.h"
-#include "duckdb/common/types/varint.hpp"
 
 #include <cstring> // strlen() on Solaris
 
@@ -401,10 +401,6 @@ void Vector::SetValue(idx_t index, const Value &val) {
 		auto &sel_vector = DictionaryVector::SelVector(*this);
 		auto &child = DictionaryVector::Child(*this);
 		return child.SetValue(sel_vector.get_index(index), val);
-	}
-	if (!val.IsNull() && val.type() != GetType()) {
-		SetValue(index, val.DefaultCastAs(GetType()));
-		return;
 	}
 	D_ASSERT(val.IsNull() || (val.type().InternalType() == GetType().InternalType()));
 

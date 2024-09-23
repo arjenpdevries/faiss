@@ -26,7 +26,6 @@ struct HandleVectorCastError {
 	template <class RESULT_TYPE>
 	static RESULT_TYPE Operation(const string &error_message, ValidityMask &mask, idx_t idx,
 	                             VectorTryCastData &cast_data) {
-		HandleCastError::AssignError(error_message, cast_data.parameters);
 		cast_data.all_converted = false;
 		mask.SetInvalid(idx);
 		return NullValue<RESULT_TYPE>();

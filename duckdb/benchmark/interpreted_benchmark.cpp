@@ -372,7 +372,6 @@ unique_ptr<BenchmarkState> InterpretedBenchmark::Initialize(BenchmarkConfigurati
 		state = make_uniq<InterpretedBenchmarkState>(full_db_path);
 	}
 	for (auto &extension : extensions) {
-		auto result = ExtensionHelper::LoadExtension(state->db, extension);
 		if (result == ExtensionLoadResult::EXTENSION_UNKNOWN) {
 			throw InvalidInputException("Unknown extension " + extension);
 		} else if (result == ExtensionLoadResult::NOT_LOADED) {
@@ -551,10 +550,6 @@ string InterpretedBenchmark::VerifyInternal(BenchmarkState *state_p, Materialize
 			}
 
 			Value verify_val(result_values[r][c]);
-			try {
-				verify_val = verify_val.CastAs(*state.con.context, value.type());
-			} catch (...) {
-			}
 			if (!Value::ValuesAreEqual(*state.con.context, verify_val, value)) {
 				return StringUtil::Format("Error in result on row %lld column %lld: expected value \"%s\" but got "
 				                          "value \"%s\"\nObtained result:\n%s",

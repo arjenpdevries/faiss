@@ -1,14 +1,14 @@
 #include "duckdb/catalog/catalog_entry/table_catalog_entry.hpp"
-#include "duckdb/execution/operator/projection/physical_projection.hpp"
 #include "duckdb/execution/operator/filter/physical_filter.hpp"
+#include "duckdb/execution/operator/order/physical_order.hpp"
+#include "duckdb/execution/operator/projection/physical_projection.hpp"
 #include "duckdb/execution/operator/scan/physical_table_scan.hpp"
 #include "duckdb/execution/operator/schema/physical_create_art_index.hpp"
-#include "duckdb/execution/operator/order/physical_order.hpp"
 #include "duckdb/execution/physical_plan_generator.hpp"
-#include "duckdb/planner/operator/logical_create_index.hpp"
-#include "duckdb/planner/operator/logical_get.hpp"
 #include "duckdb/planner/expression/bound_operator_expression.hpp"
 #include "duckdb/planner/expression/bound_reference_expression.hpp"
+#include "duckdb/planner/operator/logical_create_index.hpp"
+#include "duckdb/planner/operator/logical_get.hpp"
 #include "duckdb/planner/table_filter.hpp"
 
 namespace duckdb {
@@ -71,11 +71,6 @@ unique_ptr<PhysicalOperator> PhysicalPlanGenerator::CreatePlan(LogicalCreateInde
 		filter_select_list.push_back(std::move(is_not_null_expr));
 	}
 
-	auto null_filter =
-	    make_uniq<PhysicalFilter>(std::move(filter_types), std::move(filter_select_list), op.estimated_cardinality);
-	null_filter->types.emplace_back(LogicalType::ROW_TYPE);
-	null_filter->children.push_back(std::move(projection));
-
 	// determine if we sort the data prior to index creation
 	// we don't sort, if either VARCHAR or compound key
 	auto perform_sorting = true;
@@ -105,13 +100,8 @@ unique_ptr<PhysicalOperator> PhysicalPlanGenerator::CreatePlan(LogicalCreateInde
 
 		auto physical_order = make_uniq<PhysicalOrder>(new_column_types, std::move(orders), std::move(projections),
 		                                               op.estimated_cardinality);
-		physical_order->children.push_back(std::move(null_filter));
-
 		physical_create_index->children.push_back(std::move(physical_order));
 	} else {
-
-		// no ordering
-		physical_create_index->children.push_back(std::move(null_filter));
 	}
 
 	return std::move(physical_create_index);

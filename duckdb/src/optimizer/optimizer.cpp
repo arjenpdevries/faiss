@@ -14,6 +14,7 @@
 #include "duckdb/optimizer/filter_pullup.hpp"
 #include "duckdb/optimizer/filter_pushdown.hpp"
 #include "duckdb/optimizer/in_clause_rewriter.hpp"
+#include "duckdb/optimizer/join_filter_pushdown_optimizer.hpp"
 #include "duckdb/optimizer/join_order/join_order_optimizer.hpp"
 #include "duckdb/optimizer/limit_pushdown.hpp"
 #include "duckdb/optimizer/regex_range_filter.hpp"
@@ -26,7 +27,6 @@
 #include "duckdb/optimizer/statistics_propagator.hpp"
 #include "duckdb/optimizer/topn_optimizer.hpp"
 #include "duckdb/optimizer/unnest_rewriter.hpp"
-#include "duckdb/optimizer/join_filter_pushdown_optimizer.hpp"
 #include "duckdb/planner/binder.hpp"
 #include "duckdb/planner/planner.hpp"
 
@@ -40,14 +40,6 @@ Optimizer::Optimizer(Binder &binder, ClientContext &context) : context(context),
 	rewriter.rules.push_back(make_uniq<ConjunctionSimplificationRule>(rewriter));
 	rewriter.rules.push_back(make_uniq<DatePartSimplificationRule>(rewriter));
 	rewriter.rules.push_back(make_uniq<ComparisonSimplificationRule>(rewriter));
-	rewriter.rules.push_back(make_uniq<InClauseSimplificationRule>(rewriter));
-	rewriter.rules.push_back(make_uniq<EqualOrNullSimplification>(rewriter));
-	rewriter.rules.push_back(make_uniq<MoveConstantsRule>(rewriter));
-	rewriter.rules.push_back(make_uniq<LikeOptimizationRule>(rewriter));
-	rewriter.rules.push_back(make_uniq<OrderedAggregateOptimizer>(rewriter));
-	rewriter.rules.push_back(make_uniq<RegexOptimizationRule>(rewriter));
-	rewriter.rules.push_back(make_uniq<EmptyNeedleRemovalRule>(rewriter));
-	rewriter.rules.push_back(make_uniq<EnumComparisonRule>(rewriter));
 	rewriter.rules.push_back(make_uniq<JoinDependentFilterRule>(rewriter));
 	rewriter.rules.push_back(make_uniq<TimeStampComparison>(context, rewriter));
 

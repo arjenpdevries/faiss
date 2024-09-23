@@ -24,11 +24,12 @@
 #include "duckdb/main/attached_database.hpp"
 #include "duckdb/main/client_context.hpp"
 #include "duckdb/main/client_data.hpp"
+#include "duckdb/main/config.hpp"
 #include "duckdb/main/database.hpp"
 #include "duckdb/main/database_manager.hpp"
 #include "duckdb/parser/keyword_helper.hpp"
 #include "duckdb/parser/parser.hpp"
-#include "duckdb/main/config.hpp"
+
 #include <cmath>
 
 namespace duckdb {
@@ -1766,7 +1767,7 @@ bool IntegerLiteral::FitsInType(const LogicalType &type, const LogicalType &targ
 	D_ASSERT(info && info->type == ExtraTypeInfoType::INTEGER_LITERAL_TYPE_INFO);
 	auto &literal_info = info->Cast<IntegerLiteralTypeInfo>();
 	Value copy = literal_info.constant_value;
-	return copy.DefaultTryCastAs(target);
+	return false;
 }
 
 LogicalType LogicalType::INTEGER_LITERAL(const Value &constant) { // NOLINT

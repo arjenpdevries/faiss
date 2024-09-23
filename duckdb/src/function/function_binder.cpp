@@ -6,13 +6,13 @@
 #include "duckdb/execution/expression_executor.hpp"
 #include "duckdb/function/aggregate_function.hpp"
 #include "duckdb/function/cast_rules.hpp"
+#include "duckdb/function/scalar/generic_functions.hpp"
 #include "duckdb/parser/parsed_data/create_secret_info.hpp"
 #include "duckdb/planner/expression/bound_aggregate_expression.hpp"
 #include "duckdb/planner/expression/bound_cast_expression.hpp"
 #include "duckdb/planner/expression/bound_constant_expression.hpp"
 #include "duckdb/planner/expression/bound_function_expression.hpp"
 #include "duckdb/planner/expression_binder.hpp"
-#include "duckdb/function/scalar/generic_functions.hpp"
 
 namespace duckdb {
 
@@ -30,14 +30,6 @@ optional_idx FunctionBinder::BindVarArgsFunctionCost(const SimpleFunction &func,
 		if (arguments[i] == arg_type) {
 			// arguments match: do nothing
 			continue;
-		}
-		int64_t cast_cost = CastFunctionSet::Get(context).ImplicitCastCost(arguments[i], arg_type);
-		if (cast_cost >= 0) {
-			// we can implicitly cast, add the cost to the total cost
-			cost += idx_t(cast_cost);
-		} else {
-			// we can't implicitly cast: throw an error
-			return optional_idx();
 		}
 	}
 	return cost;
@@ -58,14 +50,6 @@ optional_idx FunctionBinder::BindFunctionCost(const SimpleFunction &func, const 
 		if (arguments[i].id() == LogicalTypeId::UNKNOWN) {
 			has_parameter = true;
 			continue;
-		}
-		int64_t cast_cost = CastFunctionSet::Get(context).ImplicitCastCost(arguments[i], func.arguments[i]);
-		if (cast_cost >= 0) {
-			// we can implicitly cast, add the cost to the total cost
-			cost += idx_t(cast_cost);
-		} else {
-			// we can't implicitly cast: throw an error
-			return optional_idx();
 		}
 	}
 	if (has_parameter) {
@@ -189,7 +173,6 @@ optional_idx FunctionBinder::BindFunction(const string &name, PragmaFunctionSet 
 	for (idx_t i = 0; i < parameters.size(); i++) {
 		auto target_type =
 		    i < candidate_function.arguments.size() ? candidate_function.arguments[i] : candidate_function.varargs;
-		parameters[i] = parameters[i].CastAs(context, target_type);
 	}
 	return entry;
 }
@@ -289,9 +272,6 @@ void FunctionBinder::CastToFunctionArguments(SimpleFunction &function, vector<un
 		auto cast_result = RequiresCast(children[i]->return_type, target_type);
 		// except for one special case: if the function accepts ANY argument
 		// in that case we don't add a cast
-		if (cast_result == LogicalTypeComparisonResult::DIFFERENT_TYPES) {
-			children[i] = BoundCastExpression::AddCastToType(context, std::move(children[i]), target_type);
-		}
 	}
 }
 

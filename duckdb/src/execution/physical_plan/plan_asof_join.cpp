@@ -42,10 +42,6 @@ unique_ptr<PhysicalOperator> PhysicalPlanGenerator::PlanAsOfJoin(LogicalComparis
 	}
 	D_ASSERT(asof_idx < op.conditions.size());
 
-	if (!ClientConfig::GetConfig(context).force_asof_iejoin) {
-		return make_uniq<PhysicalAsOfJoin>(op, std::move(left), std::move(right));
-	}
-
 	//	Strip extra column from rhs projections
 	auto &right_projection_map = op.right_projection_map;
 	if (right_projection_map.empty()) {
@@ -118,8 +114,7 @@ unique_ptr<PhysicalOperator> PhysicalPlanGenerator::PlanAsOfJoin(LogicalComparis
 
 	op.conditions.emplace_back(std::move(asof_upper));
 
-	return make_uniq<PhysicalIEJoin>(op, std::move(left), std::move(window), std::move(op.conditions), op.join_type,
-	                                 lhs_cardinality);
+	return nullptr;
 }
 
 } // namespace duckdb

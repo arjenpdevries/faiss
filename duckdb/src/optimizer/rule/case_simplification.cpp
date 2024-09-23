@@ -20,21 +20,6 @@ unique_ptr<Expression> CaseSimplificationRule::Apply(LogicalOperator &op, vector
 			// the WHEN check is a foldable expression
 			// use an ExpressionExecutor to execute the expression
 			auto constant_value = ExpressionExecutor::EvaluateScalar(GetContext(), *case_check.when_expr);
-
-			// fold based on the constant condition
-			auto condition = constant_value.DefaultCastAs(LogicalType::BOOLEAN);
-			if (condition.IsNull() || !BooleanValue::Get(condition)) {
-				// the condition is always false: remove this case check
-				root.case_checks.erase_at(i);
-				i--;
-			} else {
-				// the condition is always true
-				// move the THEN clause to the ELSE of the case
-				root.else_expr = std::move(case_check.then_expr);
-				// remove this case check and any case checks after this one
-				root.case_checks.erase(root.case_checks.begin() + NumericCast<int64_t>(i), root.case_checks.end());
-				break;
-			}
 		}
 	}
 	if (root.case_checks.empty()) {

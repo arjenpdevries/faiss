@@ -103,5 +103,5 @@ duckdb_state duckdb_query(duckdb_connection connection, const char *query, duckd
 }
 
 const char *duckdb_library_version() {
-	return DuckDB::LibraryVersion();
+	return NULL;
 }

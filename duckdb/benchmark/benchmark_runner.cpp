@@ -1,9 +1,9 @@
 #include "benchmark_runner.hpp"
 
-#include "duckdb/common/profiler.hpp"
-#include "duckdb/common/file_system.hpp"
-#include "duckdb/common/string_util.hpp"
 #include "duckdb.hpp"
+#include "duckdb/common/file_system.hpp"
+#include "duckdb/common/profiler.hpp"
+#include "duckdb/common/string_util.hpp"
 #include "duckdb_benchmark.hpp"
 #include "interpreted_benchmark.hpp"
 
@@ -249,9 +249,6 @@ void parse_arguments(const int arg_counter, char const *const *arg_values) {
 			// write info of benchmark
 			instance.configuration.profile_info = BenchmarkProfileInfo::DETAILED;
 		} else if (StringUtil::StartsWith(arg, "--threads=")) {
-			// write info of benchmark
-			auto splits = StringUtil::Split(arg, '=');
-			instance.threads = Value(splits[1]).DefaultCastAs(LogicalType::UINTEGER).GetValue<uint32_t>();
 		} else if (arg == "--root-dir") {
 			// We've already handled this, skip it
 			arg_index++;

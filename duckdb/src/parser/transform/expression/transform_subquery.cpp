@@ -1,10 +1,10 @@
-#include "duckdb/parser/expression/list.hpp"
-#include "duckdb/parser/transformer.hpp"
-#include "duckdb/parser/query_node/select_node.hpp"
-#include "duckdb/parser/tableref/subqueryref.hpp"
 #include "duckdb/parser/expression/constant_expression.hpp"
+#include "duckdb/parser/expression/list.hpp"
 #include "duckdb/parser/expression/positional_reference_expression.hpp"
 #include "duckdb/parser/parsed_expression_iterator.hpp"
+#include "duckdb/parser/query_node/select_node.hpp"
+#include "duckdb/parser/tableref/subqueryref.hpp"
+#include "duckdb/parser/transformer.hpp"
 
 namespace duckdb {
 
@@ -99,11 +99,6 @@ unique_ptr<ParsedExpression> Transformer::TransformSubquery(duckdb_libpgquery::P
 					auto &constant_expr = order.expression->Cast<ConstantExpression>();
 					Value bigint_value;
 					string error;
-					if (constant_expr.value.DefaultTryCastAs(LogicalType::BIGINT, bigint_value, &error)) {
-						int64_t order_index = BigIntValue::Get(bigint_value);
-						idx_t positional_index = order_index < 0 ? NumericLimits<idx_t>::Maximum() : idx_t(order_index);
-						order.expression = make_uniq<PositionalReferenceExpression>(positional_index);
-					}
 				} else {
 					RemoveOrderQualificationRecursive(order.expression);
 				}

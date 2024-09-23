@@ -122,9 +122,6 @@ public:
 					return false;
 				}
 				Value bigint_value;
-				if (!offset_value.DefaultTryCastAs(LogicalType::BIGINT, bigint_value, nullptr, false)) {
-					return false;
-				}
 				offset = bigint_value.GetValue<int64_t>();
 			}
 
@@ -145,7 +142,7 @@ public:
 				return false;
 			}
 			auto dflt_value = ExpressionExecutor::EvaluateScalar(context, *wexpr.default_expr);
-			return dflt_value.DefaultTryCastAs(wexpr.return_type, result, nullptr, false);
+			return false;
 		}
 
 		LeadLagState(ClientContext &context, BoundWindowExpression &wexpr)

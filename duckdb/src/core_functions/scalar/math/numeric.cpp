@@ -1,14 +1,15 @@
-#include "duckdb/core_functions/scalar/math_functions.hpp"
-#include "duckdb/common/vector_operations/vector_operations.hpp"
+#include "duckdb/common/algorithm.hpp"
+#include "duckdb/common/likely.hpp"
 #include "duckdb/common/operator/abs.hpp"
 #include "duckdb/common/operator/multiply.hpp"
-#include "duckdb/common/types/hugeint.hpp"
-#include "duckdb/common/types/cast_helpers.hpp"
-#include "duckdb/planner/expression/bound_function_expression.hpp"
-#include "duckdb/common/algorithm.hpp"
-#include "duckdb/execution/expression_executor.hpp"
-#include "duckdb/common/likely.hpp"
 #include "duckdb/common/types/bit.hpp"
+#include "duckdb/common/types/cast_helpers.hpp"
+#include "duckdb/common/types/hugeint.hpp"
+#include "duckdb/common/vector_operations/vector_operations.hpp"
+#include "duckdb/core_functions/scalar/math_functions.hpp"
+#include "duckdb/execution/expression_executor.hpp"
+#include "duckdb/planner/expression/bound_function_expression.hpp"
+
 #include <cmath>
 #include <errno.h>
 
@@ -622,61 +623,7 @@ unique_ptr<FunctionData> BindDecimalRoundPrecision(ClientContext &context, Scala
 	if (!arguments[1]->IsFoldable()) {
 		throw NotImplementedException("ROUND(DECIMAL, INTEGER) with non-constant precision is not supported");
 	}
-	Value val = ExpressionExecutor::EvaluateScalar(context, *arguments[1]).DefaultCastAs(LogicalType::INTEGER);
-	if (val.IsNull()) {
-		throw NotImplementedException("ROUND(DECIMAL, INTEGER) with non-constant precision is not supported");
-	}
-	// our new precision becomes the round value
-	// e.g. ROUND(DECIMAL(18,3), 1) -> DECIMAL(18,1)
-	// but ONLY if the round value is positive
-	// if it is negative the scale becomes zero
-	// i.e. ROUND(DECIMAL(18,3), -1) -> DECIMAL(18,0)
-	int32_t round_value = IntegerValue::Get(val);
-	uint8_t target_scale;
-	auto width = DecimalType::GetWidth(decimal_type);
-	auto scale = DecimalType::GetScale(decimal_type);
-	if (round_value < 0) {
-		target_scale = 0;
-		switch (decimal_type.InternalType()) {
-		case PhysicalType::INT16:
-			bound_function.function = DecimalRoundNegativePrecisionFunction<int16_t, NumericHelper>;
-			break;
-		case PhysicalType::INT32:
-			bound_function.function = DecimalRoundNegativePrecisionFunction<int32_t, NumericHelper>;
-			break;
-		case PhysicalType::INT64:
-			bound_function.function = DecimalRoundNegativePrecisionFunction<int64_t, NumericHelper>;
-			break;
-		default:
-			bound_function.function = DecimalRoundNegativePrecisionFunction<hugeint_t, Hugeint>;
-			break;
-		}
-	} else {
-		if (round_value >= (int32_t)scale) {
-			// if round_value is bigger than or equal to scale we do nothing
-			bound_function.function = ScalarFunction::NopFunction;
-			target_scale = scale;
-		} else {
-			target_scale = NumericCast<uint8_t>(round_value);
-			switch (decimal_type.InternalType()) {
-			case PhysicalType::INT16:
-				bound_function.function = DecimalRoundPositivePrecisionFunction<int16_t, NumericHelper>;
-				break;
-			case PhysicalType::INT32:
-				bound_function.function = DecimalRoundPositivePrecisionFunction<int32_t, NumericHelper>;
-				break;
-			case PhysicalType::INT64:
-				bound_function.function = DecimalRoundPositivePrecisionFunction<int64_t, NumericHelper>;
-				break;
-			default:
-				bound_function.function = DecimalRoundPositivePrecisionFunction<hugeint_t, Hugeint>;
-				break;
-			}
-		}
-	}
-	bound_function.arguments[0] = decimal_type;
-	bound_function.return_type = LogicalType::DECIMAL(width, target_scale);
-	return make_uniq<RoundPrecisionFunctionData>(round_value);
+	return nullptr;
 }
 
 ScalarFunctionSet RoundFun::GetFunctions() {

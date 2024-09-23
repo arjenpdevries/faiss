@@ -1,46 +1,28 @@
 #include "duckdb/catalog/catalog_entry/aggregate_function_catalog_entry.hpp"
+#include "duckdb/execution/expression_executor.hpp"
+#include "duckdb/function/scalar/nested_functions.hpp"
 #include "duckdb/main/client_context.hpp"
 #include "duckdb/parser/expression/function_expression.hpp"
+#include "duckdb/planner/binder.hpp"
 #include "duckdb/planner/expression/bound_aggregate_expression.hpp"
 #include "duckdb/planner/expression/bound_columnref_expression.hpp"
 #include "duckdb/planner/expression/bound_constant_expression.hpp"
 #include "duckdb/planner/expression/bound_expanded_expression.hpp"
 #include "duckdb/planner/expression/bound_function_expression.hpp"
 #include "duckdb/planner/expression/bound_parameter_expression.hpp"
+#include "duckdb/planner/expression/bound_unnest_expression.hpp"
 #include "duckdb/planner/expression_binder/aggregate_binder.hpp"
 #include "duckdb/planner/expression_binder/select_binder.hpp"
 #include "duckdb/planner/query_node/bound_select_node.hpp"
-#include "duckdb/planner/expression/bound_unnest_expression.hpp"
-#include "duckdb/planner/binder.hpp"
-#include "duckdb/function/scalar/nested_functions.hpp"
-#include "duckdb/execution/expression_executor.hpp"
 
 namespace duckdb {
 
 unique_ptr<Expression> CreateBoundStructExtract(ClientContext &context, unique_ptr<Expression> expr, string key) {
-	vector<unique_ptr<Expression>> arguments;
-	arguments.push_back(std::move(expr));
-	arguments.push_back(make_uniq<BoundConstantExpression>(Value(key)));
-	auto extract_function = StructExtractFun::KeyExtractFunction();
-	auto bind_info = extract_function.bind(context, extract_function, arguments);
-	auto return_type = extract_function.return_type;
-	auto result = make_uniq<BoundFunctionExpression>(return_type, std::move(extract_function), std::move(arguments),
-	                                                 std::move(bind_info));
-	result->alias = std::move(key);
-	return std::move(result);
+	return nullptr;
 }
 
 unique_ptr<Expression> CreateBoundStructExtractIndex(ClientContext &context, unique_ptr<Expression> expr, idx_t key) {
-	vector<unique_ptr<Expression>> arguments;
-	arguments.push_back(std::move(expr));
-	arguments.push_back(make_uniq<BoundConstantExpression>(Value::BIGINT(int64_t(key))));
-	auto extract_function = StructExtractFun::IndexExtractFunction();
-	auto bind_info = extract_function.bind(context, extract_function, arguments);
-	auto return_type = extract_function.return_type;
-	auto result = make_uniq<BoundFunctionExpression>(return_type, std::move(extract_function), std::move(arguments),
-	                                                 std::move(bind_info));
-	result->alias = "element" + to_string(key);
-	return std::move(result);
+	return nullptr;
 }
 
 BindResult SelectBinder::BindUnnest(FunctionExpression &function, idx_t depth, bool root_expression) {

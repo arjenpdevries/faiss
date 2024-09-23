@@ -353,9 +353,6 @@ unique_ptr<CompressExpression> CompressedMaterialization::GetIntegralCompress(un
 
 	// Get range and cast to UBIGINT (might fail for HUGEINT, in which case we just return)
 	Value range_value = GetIntegralRangeValue(context, type, stats);
-	if (!range_value.DefaultTryCastAs(LogicalType::UBIGINT)) {
-		return nullptr;
-	}
 
 	// Get the smallest type that the range can fit into
 	const auto range = UBigIntValue::Get(range_value);
@@ -387,8 +384,8 @@ unique_ptr<CompressExpression> CompressedMaterialization::GetIntegralCompress(un
 
 	auto compress_stats = BaseStatistics::CreateEmpty(cast_type);
 	compress_stats.CopyBase(stats);
-	NumericStats::SetMin(compress_stats, Value(0).DefaultCastAs(cast_type));
-	NumericStats::SetMax(compress_stats, range_value.DefaultCastAs(cast_type));
+	NumericStats::SetMin(compress_stats, Value(0));
+	NumericStats::SetMax(compress_stats, range_value);
 
 	return make_uniq<CompressExpression>(std::move(compress_expr), compress_stats.ToUnique());
 }

@@ -1,8 +1,8 @@
 #include "duckdb/parser/expression/cast_expression.hpp"
+#include "duckdb/planner/binder.hpp"
 #include "duckdb/planner/expression/bound_cast_expression.hpp"
 #include "duckdb/planner/expression/bound_parameter_expression.hpp"
 #include "duckdb/planner/expression_binder.hpp"
-#include "duckdb/planner/binder.hpp"
 
 namespace duckdb {
 
@@ -17,16 +17,6 @@ BindResult ExpressionBinder::BindExpression(CastExpression &expr, idx_t depth) {
 	binder.BindLogicalType(expr.cast_type);
 	// the children have been successfully resolved
 	auto &child = BoundExpression::GetExpression(*expr.child);
-	if (expr.try_cast) {
-		if (ExpressionBinder::GetExpressionReturnType(*child) == expr.cast_type) {
-			// no cast required: type matches
-			return BindResult(std::move(child));
-		}
-		child = BoundCastExpression::AddCastToType(context, std::move(child), expr.cast_type, true);
-	} else {
-		// otherwise add a cast to the target type
-		child = BoundCastExpression::AddCastToType(context, std::move(child), expr.cast_type);
-	}
 	return BindResult(std::move(child));
 }
 } // namespace duckdb

@@ -2,29 +2,29 @@
 
 #include "duckdb/catalog/catalog.hpp"
 #include "duckdb/common/virtual_file_system.hpp"
+#include "duckdb/execution/index/index_type_set.hpp"
 #include "duckdb/execution/operator/helper/physical_set.hpp"
 #include "duckdb/function/cast/cast_function_set.hpp"
 #include "duckdb/function/compression_function.hpp"
 #include "duckdb/main/attached_database.hpp"
 #include "duckdb/main/client_context.hpp"
 #include "duckdb/main/connection_manager.hpp"
+#include "duckdb/main/database_file_opener.hpp"
 #include "duckdb/main/database_manager.hpp"
 #include "duckdb/main/database_path_and_type.hpp"
+#include "duckdb/main/db_instance_cache.hpp"
 #include "duckdb/main/error_manager.hpp"
 #include "duckdb/main/extension_helper.hpp"
 #include "duckdb/main/secret/secret_manager.hpp"
 #include "duckdb/parallel/task_scheduler.hpp"
 #include "duckdb/parser/parsed_data/attach_info.hpp"
+#include "duckdb/planner/collation_binding.hpp"
 #include "duckdb/planner/extension_callback.hpp"
 #include "duckdb/storage/object_cache.hpp"
 #include "duckdb/storage/standard_buffer_manager.hpp"
 #include "duckdb/storage/storage_extension.hpp"
 #include "duckdb/storage/storage_manager.hpp"
 #include "duckdb/transaction/transaction_manager.hpp"
-#include "duckdb/execution/index/index_type_set.hpp"
-#include "duckdb/main/database_file_opener.hpp"
-#include "duckdb/planner/collation_binding.hpp"
-#include "duckdb/main/db_instance_cache.hpp"
 
 #ifndef DUCKDB_NO_THREADS
 #include "duckdb/common/thread.hpp"
@@ -34,8 +34,6 @@ namespace duckdb {
 
 DBConfig::DBConfig() {
 	compression_functions = make_uniq<CompressionFunctionSet>();
-	cast_functions = make_uniq<CastFunctionSet>(*this);
-	collation_bindings = make_uniq<CollationBinding>();
 	index_types = make_uniq<IndexTypeSet>();
 	error_manager = make_uniq<ErrorManager>();
 	secret_manager = make_uniq<SecretManager>();
@@ -160,25 +158,6 @@ unique_ptr<AttachedDatabase> DatabaseInstance::CreateAttachedDatabase(ClientCont
 	unique_ptr<AttachedDatabase> attached_database;
 	auto &catalog = Catalog::GetSystemCatalog(*this);
 
-	if (!options.db_type.empty()) {
-		// Find the storage extension for this database file.
-		auto extension_name = ExtensionHelper::ApplyExtensionAlias(options.db_type);
-		auto entry = config.storage_extensions.find(extension_name);
-		if (entry == config.storage_extensions.end()) {
-			throw BinderException("Unrecognized storage type \"%s\"", options.db_type);
-		}
-
-		if (entry->second->attach != nullptr && entry->second->create_transaction_manager != nullptr) {
-			// Use the storage extension to create the initial database.
-			attached_database =
-			    make_uniq<AttachedDatabase>(*this, catalog, *entry->second, context, info.name, info, options);
-			return attached_database;
-		}
-
-		attached_database = make_uniq<AttachedDatabase>(*this, catalog, info.name, info.path, options);
-		return attached_database;
-	}
-
 	// An empty db_type defaults to a duckdb database file.
 	attached_database = make_uniq<AttachedDatabase>(*this, catalog, info.name, info.path, options);
 	return attached_database;
@@ -229,23 +208,6 @@ void DatabaseInstance::LoadExtensionSettings() {
 		for (auto &option : unrecognized_options) {
 			auto &name = option.first;
 			auto &value = option.second;
-
-			auto extension_name = ExtensionHelper::FindExtensionInEntries(name, EXTENSION_SETTINGS);
-			if (extension_name.empty()) {
-				continue;
-			}
-			if (!ExtensionHelper::TryAutoLoadExtension(*this, extension_name)) {
-				throw InvalidInputException(
-				    "To set the %s setting, the %s extension needs to be loaded. But it could not be autoloaded.", name,
-				    extension_name);
-			}
-			auto it = config.extension_parameters.find(name);
-			if (it == config.extension_parameters.end()) {
-				throw InternalException("Extension %s did not provide the '%s' config setting", extension_name, name);
-			}
-			auto &context = *con.context;
-			PhysicalSet::SetExtensionVariable(context, it->second, name, SetScope::GLOBAL, value);
-			extension_options.push_back(name);
 		}
 
 		for (auto &option : extension_options) {
@@ -298,7 +260,6 @@ void DatabaseInstance::Initialize(const char *database_path, DBConfig *user_conf
 		if (!config.file_system) {
 			throw InternalException("No file system!?");
 		}
-		ExtensionHelper::LoadExternalExtension(*this, *config.file_system, config.options.database_type);
 	}
 
 	LoadExtensionSettings();
@@ -313,10 +274,6 @@ void DatabaseInstance::Initialize(const char *database_path, DBConfig *user_conf
 }
 
 DuckDB::DuckDB(const char *path, DBConfig *new_config) : instance(make_shared_ptr<DatabaseInstance>()) {
-	instance->Initialize(path, new_config);
-	if (instance->config.options.load_extensions) {
-		ExtensionHelper::LoadAllExtensions(*this);
-	}
 }
 
 DuckDB::DuckDB(const string &path, DBConfig *config) : DuckDB(path.c_str(), config) {
@@ -465,9 +422,7 @@ idx_t DuckDB::NumberOfThreads() {
 }
 
 bool DatabaseInstance::ExtensionIsLoaded(const std::string &name) {
-	auto extension_name = ExtensionHelper::GetExtensionName(name);
-	auto it = loaded_extensions_info.find(extension_name);
-	return it != loaded_extensions_info.end() && it->second.is_loaded;
+	return false;
 }
 
 bool DuckDB::ExtensionIsLoaded(const std::string &name) {
@@ -475,14 +430,6 @@ bool DuckDB::ExtensionIsLoaded(const std::string &name) {
 }
 
 void DatabaseInstance::SetExtensionLoaded(const string &name, ExtensionInstallInfo &install_info) {
-	auto extension_name = ExtensionHelper::GetExtensionName(name);
-	loaded_extensions_info[extension_name].is_loaded = true;
-	loaded_extensions_info[extension_name].install_info = make_uniq<ExtensionInstallInfo>(install_info);
-
-	auto &callbacks = DBConfig::GetConfig(*this).extension_callbacks;
-	for (auto &callback : callbacks) {
-		callback->OnExtensionLoaded(*this, name);
-	}
 }
 
 SettingLookupResult DatabaseInstance::TryGetCurrentSetting(const std::string &key, Value &result) const {

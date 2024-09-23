@@ -1,10 +1,11 @@
 #include "duckdb/planner/filter/struct_filter.hpp"
-#include "duckdb/storage/statistics/base_statistics.hpp"
-#include "duckdb/storage/statistics/struct_stats.hpp"
+
 #include "duckdb/common/string_util.hpp"
+#include "duckdb/function/scalar/nested_functions.hpp"
 #include "duckdb/planner/expression/bound_constant_expression.hpp"
 #include "duckdb/planner/expression/bound_function_expression.hpp"
-#include "duckdb/function/scalar/nested_functions.hpp"
+#include "duckdb/storage/statistics/base_statistics.hpp"
+#include "duckdb/storage/statistics/struct_stats.hpp"
 
 namespace duckdb {
 
@@ -38,12 +39,6 @@ unique_ptr<TableFilter> StructFilter::Copy() const {
 }
 
 unique_ptr<Expression> StructFilter::ToExpression(const Expression &column) const {
-	auto &child_type = StructType::GetChildType(column.return_type, child_idx);
-	vector<unique_ptr<Expression>> arguments;
-	arguments.push_back(column.Copy());
-	arguments.push_back(make_uniq<BoundConstantExpression>(Value::BIGINT(NumericCast<int64_t>(child_idx))));
-	auto child = make_uniq<BoundFunctionExpression>(child_type, StructExtractFun::IndexExtractFunction(),
-	                                                std::move(arguments), StructExtractFun::GetBindData(child_idx));
-	return child_filter->ToExpression(*child);
+	return nullptr;
 }
 } // namespace duckdb

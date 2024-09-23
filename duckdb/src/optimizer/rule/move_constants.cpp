@@ -2,10 +2,10 @@
 
 #include "duckdb/common/exception.hpp"
 #include "duckdb/common/value_operations/value_operations.hpp"
+#include "duckdb/optimizer/expression_rewriter.hpp"
 #include "duckdb/planner/expression/bound_comparison_expression.hpp"
 #include "duckdb/planner/expression/bound_constant_expression.hpp"
 #include "duckdb/planner/expression/bound_function_expression.hpp"
-#include "duckdb/optimizer/expression_rewriter.hpp"
 
 namespace duckdb {
 
@@ -61,16 +61,6 @@ unique_ptr<Expression> MoveConstantsRule::Apply(LogicalOperator &op, vector<refe
 			return nullptr;
 		}
 		auto result_value = Value::HUGEINT(outer_value);
-		if (!result_value.DefaultTryCastAs(constant_type)) {
-			if (comparison.type != ExpressionType::COMPARE_EQUAL) {
-				return nullptr;
-			}
-			// if the cast is not possible then the comparison is not possible
-			// for example, if we have x + 5 = 3, where x is an unsigned number, we will get x = -2
-			// since this is not possible we can remove the entire branch here
-			return ExpressionRewriter::ConstantOrNull(std::move(arithmetic.children[arithmetic_child_index]),
-			                                          Value::BOOLEAN(false));
-		}
 		outer_constant.value = std::move(result_value);
 	} else if (op_type == "-") {
 		// [x - 1 COMP 10] O R [1 - x COMP 10]
@@ -82,14 +72,6 @@ unique_ptr<Expression> MoveConstantsRule::Apply(LogicalOperator &op, vector<refe
 				return nullptr;
 			}
 			auto result_value = Value::HUGEINT(outer_value);
-			if (!result_value.DefaultTryCastAs(constant_type)) {
-				// if the cast is not possible then an equality comparison is not possible
-				if (comparison.type != ExpressionType::COMPARE_EQUAL) {
-					return nullptr;
-				}
-				return ExpressionRewriter::ConstantOrNull(std::move(arithmetic.children[arithmetic_child_index]),
-				                                          Value::BOOLEAN(false));
-			}
 			outer_constant.value = std::move(result_value);
 		} else {
 			// [1 - x COMP 10]
@@ -98,14 +80,6 @@ unique_ptr<Expression> MoveConstantsRule::Apply(LogicalOperator &op, vector<refe
 				return nullptr;
 			}
 			auto result_value = Value::HUGEINT(inner_value);
-			if (!result_value.DefaultTryCastAs(constant_type)) {
-				// if the cast is not possible then an equality comparison is not possible
-				if (comparison.type != ExpressionType::COMPARE_EQUAL) {
-					return nullptr;
-				}
-				return ExpressionRewriter::ConstantOrNull(std::move(arithmetic.children[arithmetic_child_index]),
-				                                          Value::BOOLEAN(false));
-			}
 			outer_constant.value = std::move(result_value);
 			// in this case, we should also flip the comparison
 			// e.g. if we have [4 - x < 2] then we should have [x > 2]
@@ -147,10 +121,6 @@ unique_ptr<Expression> MoveConstantsRule::Apply(LogicalOperator &op, vector<refe
 		// we need to do a range check on the cast even though we do a division
 		// because e.g. -128 / -1 = 128, which is out of range
 		auto result_value = Value::HUGEINT(outer_value / inner_value);
-		if (!result_value.DefaultTryCastAs(constant_type)) {
-			return ExpressionRewriter::ConstantOrNull(std::move(arithmetic.children[arithmetic_child_index]),
-			                                          Value::BOOLEAN(false));
-		}
 		outer_constant.value = std::move(result_value);
 	}
 	// replace left side with x

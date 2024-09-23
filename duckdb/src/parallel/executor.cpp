@@ -401,12 +401,6 @@ void Executor::InitializeInternal(PhysicalOperator &plan) {
 		root_pipeline->Build(*physical_plan);
 		root_pipeline->Ready();
 
-		// ready recursive cte pipelines too
-		for (auto &rec_cte_ref : recursive_ctes) {
-			auto &rec_cte = rec_cte_ref.get().Cast<PhysicalRecursiveCTE>();
-			rec_cte.recursive_meta_pipeline->Ready();
-		}
-
 		// set root pipelines, i.e., all pipelines that end in the final sink
 		root_pipeline->GetPipelines(root_pipelines, false);
 		root_pipeline_idx = 0;
@@ -435,10 +429,6 @@ void Executor::CancelTasks() {
 		// mark the query as cancelled so tasks will early-out
 		cancelled = true;
 		// destroy all pipelines, events and states
-		for (auto &rec_cte_ref : recursive_ctes) {
-			auto &rec_cte = rec_cte_ref.get().Cast<PhysicalRecursiveCTE>();
-			rec_cte.recursive_meta_pipeline.reset();
-		}
 		pipelines.clear();
 		root_pipelines.clear();
 		to_be_rescheduled_tasks.clear();

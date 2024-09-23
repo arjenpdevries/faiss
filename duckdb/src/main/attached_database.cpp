@@ -5,11 +5,11 @@
 #include "duckdb/common/file_system.hpp"
 #include "duckdb/main/database.hpp"
 #include "duckdb/main/database_manager.hpp"
+#include "duckdb/main/database_path_and_type.hpp"
 #include "duckdb/parser/parsed_data/attach_info.hpp"
 #include "duckdb/storage/storage_extension.hpp"
 #include "duckdb/storage/storage_manager.hpp"
 #include "duckdb/transaction/duck_transaction_manager.hpp"
-#include "duckdb/main/database_path_and_type.hpp"
 
 namespace duckdb {
 
@@ -29,30 +29,16 @@ AttachOptions::AttachOptions(const unique_ptr<AttachInfo> &info, const AccessMod
 		if (entry.first == "readonly" || entry.first == "read_only") {
 			// Extract the read access mode.
 
-			auto read_only = BooleanValue::Get(entry.second.DefaultCastAs(LogicalType::BOOLEAN));
-			if (read_only) {
-				access_mode = AccessMode::READ_ONLY;
-			} else {
-				access_mode = AccessMode::READ_WRITE;
-			}
 			continue;
 		}
 
 		if (entry.first == "readwrite" || entry.first == "read_write") {
 			// Extract the write access mode.
-
-			auto read_write = BooleanValue::Get(entry.second.DefaultCastAs(LogicalType::BOOLEAN));
-			if (!read_write) {
-				access_mode = AccessMode::READ_ONLY;
-			} else {
-				access_mode = AccessMode::READ_WRITE;
-			}
 			continue;
 		}
 
 		if (entry.first == "type") {
 			// Extract the database type.
-			db_type = StringValue::Get(entry.second.DefaultCastAs(LogicalType::VARCHAR));
 			continue;
 		}
 

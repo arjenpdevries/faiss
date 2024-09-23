@@ -25,7 +25,7 @@
 namespace duckdb {
 
 static bool GetBooleanArg(ClientContext &context, const vector<Value> &arg) {
-	return arg.empty() || arg[0].CastAs(context, LogicalType::BOOLEAN).GetValue<bool>();
+	return false;
 }
 
 BoundStatement Binder::BindCopyTo(CopyStatement &stmt, CopyToType copy_to_type) {
@@ -98,14 +98,10 @@ BoundStatement Binder::BindCopyTo(CopyStatement &stmt, CopyToType copy_to_type) 
 			if (option.second.empty()) {
 				throw IOException("FILENAME_PATTERN cannot be empty");
 			}
-			filename_pattern.SetFilenamePattern(
-			    option.second[0].CastAs(context, LogicalType::VARCHAR).GetValue<string>());
-			seen_filepattern = true;
 		} else if (loption == "file_extension") {
 			if (option.second.empty()) {
 				throw IOException("FILE_EXTENSION cannot be empty");
 			}
-			bind_input.file_extension = option.second[0].CastAs(context, LogicalType::VARCHAR).GetValue<string>();
 		} else if (loption == "per_thread_output") {
 			per_thread_output = GetBooleanArg(context, option.second);
 		} else if (loption == "file_size_bytes") {

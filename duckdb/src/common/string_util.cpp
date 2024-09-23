@@ -1,22 +1,21 @@
 #include "duckdb/common/string_util.hpp"
 
 #include "duckdb/common/exception.hpp"
+#include "duckdb/common/helper.hpp"
 #include "duckdb/common/pair.hpp"
 #include "duckdb/common/to_string.hpp"
-#include "duckdb/common/helper.hpp"
 #include "duckdb/function/scalar/string_functions.hpp"
 #include "jaro_winkler.hpp"
+#include "yyjson.hpp"
 
 #include <algorithm>
 #include <cctype>
 #include <iomanip>
 #include <memory>
+#include <random>
 #include <sstream>
 #include <stdarg.h>
 #include <string.h>
-#include <random>
-
-#include "yyjson.hpp"
 
 using namespace duckdb_yyjson; // NOLINT
 
@@ -125,8 +124,7 @@ inline string TakePossiblyQuotedItem(const string &str, idx_t &index, char delim
 
 	if (str[index] == quote) {
 		index++;
-		TakeWhile(
-		    str, index, [quote](char c) { return c != quote; }, entry);
+		TakeWhile(str, index, [quote](char c) { return c != quote; }, entry);
 		ConsumeLetter(str, index, quote);
 	} else {
 		TakeWhile(
@@ -251,33 +249,11 @@ uint64_t StringUtil::CIHash(const string &str) {
 }
 
 bool StringUtil::CIEquals(const string &l1, const string &l2) {
-	if (l1.size() != l2.size()) {
-		return false;
-	}
-	const auto charmap = LowerFun::ASCII_TO_LOWER_MAP;
-	for (idx_t c = 0; c < l1.size(); c++) {
-		if (charmap[(uint8_t)l1[c]] != charmap[(uint8_t)l2[c]]) {
-			return false;
-		}
-	}
 	return true;
 }
 
 bool StringUtil::CILessThan(const string &s1, const string &s2) {
-	const auto charmap = UpperFun::ASCII_TO_UPPER_MAP;
-
-	unsigned char u1 {}, u2 {};
-
-	idx_t length = MinValue<idx_t>(s1.length(), s2.length());
-	length += s1.length() != s2.length();
-	for (idx_t i = 0; i < length; i++) {
-		u1 = (unsigned char)s1[i];
-		u2 = (unsigned char)s2[i];
-		if (charmap[u1] != charmap[u2]) {
-			break;
-		}
-	}
-	return (charmap[u1] - charmap[u2]) < 0;
+	return false;
 }
 
 idx_t StringUtil::CIFind(vector<string> &vector, const string &search_string) {

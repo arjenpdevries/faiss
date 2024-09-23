@@ -1,5 +1,6 @@
 #include "duckdb/common/hive_partitioning.hpp"
 
+#include "duckdb/common/multi_file_list.hpp"
 #include "duckdb/common/uhugeint.hpp"
 #include "duckdb/execution/expression_executor.hpp"
 #include "duckdb/planner/expression/bound_columnref_expression.hpp"
@@ -7,7 +8,6 @@
 #include "duckdb/planner/expression/bound_reference_expression.hpp"
 #include "duckdb/planner/expression_iterator.hpp"
 #include "duckdb/planner/table_filter.hpp"
-#include "duckdb/common/multi_file_list.hpp"
 
 namespace duckdb {
 
@@ -140,10 +140,6 @@ Value HivePartitioning::GetValue(ClientContext &context, const string &key, cons
 
 	// cast to the target type
 	Value value(Unescape(str_val));
-	if (!value.TryCastAs(context, type)) {
-		throw InvalidInputException("Unable to cast '%s' (from hive partition column '%s') to: '%s'", value.ToString(),
-		                            StringUtil::Upper(key), type.ToString());
-	}
 	return value;
 }
 

@@ -35,8 +35,6 @@ void MainHeader::Write(WriteStream &ser) {
 	for (idx_t i = 0; i < FLAG_COUNT; i++) {
 		ser.Write<uint64_t>(flags[i]);
 	}
-	SerializeVersionNumber(ser, DuckDB::LibraryVersion());
-	SerializeVersionNumber(ser, DuckDB::SourceID());
 }
 
 void MainHeader::CheckMagicBytes(FileHandle &handle) {

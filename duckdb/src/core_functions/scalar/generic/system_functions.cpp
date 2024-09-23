@@ -1,13 +1,13 @@
+#include "duckdb/catalog/catalog_entry/aggregate_function_catalog_entry.hpp"
 #include "duckdb/catalog/catalog_search_path.hpp"
 #include "duckdb/core_functions/scalar/generic_functions.hpp"
-#include "duckdb/main/database.hpp"
+#include "duckdb/execution/expression_executor.hpp"
 #include "duckdb/main/client_context.hpp"
 #include "duckdb/main/client_data.hpp"
-#include "duckdb/planner/expression/bound_function_expression.hpp"
-#include "duckdb/catalog/catalog_entry/aggregate_function_catalog_entry.hpp"
-#include "duckdb/transaction/duck_transaction.hpp"
+#include "duckdb/main/database.hpp"
 #include "duckdb/main/database_manager.hpp"
-#include "duckdb/execution/expression_executor.hpp"
+#include "duckdb/planner/expression/bound_function_expression.hpp"
+#include "duckdb/transaction/duck_transaction.hpp"
 
 namespace duckdb {
 
@@ -98,8 +98,6 @@ static void TransactionIdCurrent(DataChunk &input, ExpressionState &state, Vecto
 
 // version
 static void VersionFunction(DataChunk &input, ExpressionState &state, Vector &result) {
-	auto val = Value(DuckDB::LibraryVersion());
-	result.Reference(val);
 }
 
 ScalarFunction CurrentQueryFun::GetFunction() {

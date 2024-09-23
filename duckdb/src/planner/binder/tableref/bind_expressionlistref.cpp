@@ -1,9 +1,9 @@
-#include "duckdb/planner/binder.hpp"
-#include "duckdb/planner/tableref/bound_expressionlistref.hpp"
-#include "duckdb/parser/tableref/expressionlistref.hpp"
-#include "duckdb/planner/expression_binder/insert_binder.hpp"
 #include "duckdb/common/to_string.hpp"
+#include "duckdb/parser/tableref/expressionlistref.hpp"
+#include "duckdb/planner/binder.hpp"
 #include "duckdb/planner/expression/bound_cast_expression.hpp"
+#include "duckdb/planner/expression_binder/insert_binder.hpp"
+#include "duckdb/planner/tableref/bound_expressionlistref.hpp"
 
 namespace duckdb {
 
@@ -59,8 +59,6 @@ unique_ptr<BoundTableRef> Binder::Bind(ExpressionListRef &expr) {
 		for (idx_t list_idx = 0; list_idx < result->values.size(); list_idx++) {
 			auto &list = result->values[list_idx];
 			for (idx_t val_idx = 0; val_idx < list.size(); val_idx++) {
-				list[val_idx] =
-				    BoundCastExpression::AddCastToType(context, std::move(list[val_idx]), result->types[val_idx]);
 			}
 		}
 	}

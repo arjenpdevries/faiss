@@ -25,7 +25,7 @@ unique_ptr<PhysicalOperator> PhysicalPlanGenerator::CreatePlan(LogicalPositional
 		break;
 	}
 
-	return make_uniq<PhysicalPositionalJoin>(op.types, std::move(left), std::move(right), op.estimated_cardinality);
+	return nullptr;
 }
 
 } // namespace duckdb

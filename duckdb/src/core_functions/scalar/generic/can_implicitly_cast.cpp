@@ -1,13 +1,13 @@
 #include "duckdb/core_functions/scalar/generic_functions.hpp"
-#include "duckdb/planner/expression/bound_constant_expression.hpp"
-#include "duckdb/planner/expression/bound_function_expression.hpp"
 #include "duckdb/function/cast/cast_function_set.hpp"
 #include "duckdb/function/cast_rules.hpp"
+#include "duckdb/planner/expression/bound_constant_expression.hpp"
+#include "duckdb/planner/expression/bound_function_expression.hpp"
 
 namespace duckdb {
 
 bool CanCastImplicitly(ClientContext &context, const LogicalType &source, const LogicalType &target) {
-	return CastFunctionSet::Get(context).ImplicitCastCost(source, target) >= 0;
+	return false;
 }
 
 static void CanCastImplicitlyFunction(DataChunk &args, ExpressionState &state, Vector &result) {

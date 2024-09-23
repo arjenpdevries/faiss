@@ -1,31 +1,31 @@
 #include "duckdb/common/operator/cast_operators.hpp"
-#include "duckdb/common/hugeint.hpp"
-#include "duckdb/common/operator/string_cast.hpp"
-#include "duckdb/common/operator/numeric_cast.hpp"
-#include "duckdb/common/operator/decimal_cast_operators.hpp"
-#include "duckdb/common/operator/multiply.hpp"
-#include "duckdb/common/operator/add.hpp"
-#include "duckdb/common/operator/subtract.hpp"
 
 #include "duckdb/common/exception.hpp"
+#include "duckdb/common/hugeint.hpp"
 #include "duckdb/common/limits.hpp"
+#include "duckdb/common/operator/add.hpp"
+#include "duckdb/common/operator/decimal_cast_operators.hpp"
+#include "duckdb/common/operator/double_cast_operator.hpp"
+#include "duckdb/common/operator/integer_cast_operator.hpp"
+#include "duckdb/common/operator/multiply.hpp"
+#include "duckdb/common/operator/numeric_cast.hpp"
+#include "duckdb/common/operator/string_cast.hpp"
+#include "duckdb/common/operator/subtract.hpp"
 #include "duckdb/common/string_util.hpp"
+#include "duckdb/common/types.hpp"
+#include "duckdb/common/types/bit.hpp"
 #include "duckdb/common/types/blob.hpp"
 #include "duckdb/common/types/cast_helpers.hpp"
 #include "duckdb/common/types/date.hpp"
 #include "duckdb/common/types/decimal.hpp"
 #include "duckdb/common/types/hugeint.hpp"
-#include "duckdb/common/types/uuid.hpp"
 #include "duckdb/common/types/interval.hpp"
 #include "duckdb/common/types/time.hpp"
 #include "duckdb/common/types/timestamp.hpp"
+#include "duckdb/common/types/uuid.hpp"
 #include "duckdb/common/types/vector.hpp"
-#include "duckdb/common/types.hpp"
 #include "fast_float/fast_float.h"
 #include "fmt/format.h"
-#include "duckdb/common/types/bit.hpp"
-#include "duckdb/common/operator/integer_cast_operator.hpp"
-#include "duckdb/common/operator/double_cast_operator.hpp"
 
 #include <cctype>
 #include <cmath>
@@ -1030,8 +1030,6 @@ bool TryCast::Operation(string_t input, double &result, bool strict) {
 template <>
 bool TryCastErrorMessageCommaSeparated::Operation(string_t input, float &result, CastParameters &parameters) {
 	if (!TryDoubleCast<float>(input.GetData(), input.GetSize(), result, parameters.strict, ',')) {
-		HandleCastError::AssignError(StringUtil::Format("Could not cast string to float: \"%s\"", input.GetString()),
-		                             parameters);
 		return false;
 	}
 	return true;
@@ -1040,8 +1038,6 @@ bool TryCastErrorMessageCommaSeparated::Operation(string_t input, float &result,
 template <>
 bool TryCastErrorMessageCommaSeparated::Operation(string_t input, double &result, CastParameters &parameters) {
 	if (!TryDoubleCast<double>(input.GetData(), input.GetSize(), result, parameters.strict, ',')) {
-		HandleCastError::AssignError(StringUtil::Format("Could not cast string to double: \"%s\"", input.GetString()),
-		                             parameters);
 		return false;
 	}
 	return true;
@@ -1474,7 +1470,6 @@ bool TryCastToUUID::Operation(string_t input, hugeint_t &result, Vector &result_
 template <>
 bool TryCastErrorMessage::Operation(string_t input, date_t &result, CastParameters &parameters) {
 	if (!TryCast::Operation<string_t, date_t>(input, result, parameters.strict)) {
-		HandleCastError::AssignError(Date::ConversionError(input), parameters);
 		return false;
 	}
 	return true;
@@ -1498,7 +1493,6 @@ date_t Cast::Operation(string_t input) {
 template <>
 bool TryCastErrorMessage::Operation(string_t input, dtime_t &result, CastParameters &parameters) {
 	if (!TryCast::Operation<string_t, dtime_t>(input, result, parameters.strict)) {
-		HandleCastError::AssignError(Time::ConversionError(input), parameters);
 		return false;
 	}
 	return true;
@@ -1521,7 +1515,6 @@ dtime_t Cast::Operation(string_t input) {
 template <>
 bool TryCastErrorMessage::Operation(string_t input, dtime_tz_t &result, CastParameters &parameters) {
 	if (!TryCast::Operation<string_t, dtime_tz_t>(input, result, parameters.strict)) {
-		HandleCastError::AssignError(Time::ConversionError(input), parameters);
 		return false;
 	}
 	return true;
@@ -1551,11 +1544,6 @@ bool TryCastErrorMessage::Operation(string_t input, timestamp_t &result, CastPar
 	auto cast_result = Timestamp::TryConvertTimestamp(input.GetData(), input.GetSize(), result);
 	if (cast_result == TimestampCastResult::SUCCESS) {
 		return true;
-	}
-	if (cast_result == TimestampCastResult::ERROR_INCORRECT_FORMAT) {
-		HandleCastError::AssignError(Timestamp::ConversionError(input), parameters);
-	} else {
-		HandleCastError::AssignError(Timestamp::UnsupportedTimezoneError(input), parameters);
 	}
 	return false;
 }
@@ -1751,13 +1739,6 @@ struct HugeIntegerCastOperation {
 			}
 		}
 
-		if (NEGATIVE) {
-			if (!TrySubtractOperator::Operation(state.result, state.decimal, state.result)) {
-				return false;
-			}
-		} else if (!TryAddOperator::Operation(state.result, state.decimal, state.result)) {
-			return false;
-		}
 		state.decimal = remainder;
 		return Finalize<T, NEGATIVE>(state);
 	}
@@ -1987,7 +1968,6 @@ bool StandardNumericToDecimalCast(SRC input, DST &result, CastParameters &parame
 	DST max_width = UnsafeNumericCast<DST>(NumericHelper::POWERS_OF_TEN[width - scale]);
 	if (OP::template Operation<SRC, DST>(input, max_width)) {
 		string error = StringUtil::Format("Could not cast value %d to DECIMAL(%d,%d)", input, width, scale);
-		HandleCastError::AssignError(error, parameters);
 		return false;
 	}
 	result = UnsafeNumericCast<DST>(DST(input) * NumericHelper::POWERS_OF_TEN[scale]);
@@ -2001,7 +1981,6 @@ bool NumericToHugeDecimalCast(SRC input, hugeint_t &result, CastParameters &para
 	hugeint_t hinput = Hugeint::Convert(input);
 	if (hinput >= max_width || hinput <= -max_width) {
 		string error = StringUtil::Format("Could not cast value %s to DECIMAL(%d,%d)", hinput.ToString(), width, scale);
-		HandleCastError::AssignError(error, parameters);
 		return false;
 	}
 	result = hinput * Hugeint::POWERS_OF_TEN[scale];
@@ -2221,7 +2200,6 @@ bool HugeintToDecimalCast(hugeint_t input, DST &result, CastParameters &paramete
 	hugeint_t max_width = Hugeint::POWERS_OF_TEN[width - scale];
 	if (input >= max_width || input <= -max_width) {
 		string error = StringUtil::Format("Could not cast value %s to DECIMAL(%d,%d)", input.ToString(), width, scale);
-		HandleCastError::AssignError(error, parameters);
 		return false;
 	}
 	result = Hugeint::Cast<DST>(input * Hugeint::POWERS_OF_TEN[scale]);
@@ -2261,7 +2239,6 @@ bool UhugeintToDecimalCast(uhugeint_t input, DST &result, CastParameters &parame
 	uhugeint_t max_width = Uhugeint::POWERS_OF_TEN[width - scale];
 	if (input >= max_width) {
 		string error = StringUtil::Format("Could not cast value %s to DECIMAL(%d,%d)", input.ToString(), width, scale);
-		HandleCastError::AssignError(error, parameters);
 		return false;
 	}
 	result = Uhugeint::Cast<DST>(input * Uhugeint::POWERS_OF_TEN[scale]);
@@ -2300,7 +2277,6 @@ bool DoubleToDecimalCast(SRC input, DST &result, CastParameters &parameters, uin
 	double value = input * NumericHelper::DOUBLE_POWERS_OF_TEN[scale];
 	if (value <= -NumericHelper::DOUBLE_POWERS_OF_TEN[width] || value >= NumericHelper::DOUBLE_POWERS_OF_TEN[width]) {
 		string error = StringUtil::Format("Could not cast value %f to DECIMAL(%d,%d)", value, width, scale);
-		HandleCastError::AssignError(error, parameters);
 		return false;
 	}
 	result = Cast::Operation<SRC, DST>(static_cast<SRC>(value));
@@ -2368,7 +2344,6 @@ bool TryCastDecimalToNumeric(SRC input, DST &result, CastParameters &parameters,
 	const auto scaled_value = (input + rounding) / power;
 	if (!TryCast::Operation<SRC, DST>(UnsafeNumericCast<SRC>(scaled_value), result)) {
 		string error = StringUtil::Format("Failed to cast decimal value %d to type %s", scaled_value, GetTypeId<DST>());
-		HandleCastError::AssignError(error, parameters);
 		return false;
 	}
 	return true;
@@ -2382,7 +2357,6 @@ bool TryCastHugeDecimalToNumeric(hugeint_t input, DST &result, CastParameters &p
 	if (!TryCast::Operation<hugeint_t, DST>(scaled_value, result)) {
 		string error = StringUtil::Format("Failed to cast decimal value %s to type %s",
 		                                  ConvertToString::Operation(scaled_value), GetTypeId<DST>());
-		HandleCastError::AssignError(error, parameters);
 		return false;
 	}
 	return true;

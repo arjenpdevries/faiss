@@ -1,40 +1,39 @@
 #include "duckdb/common/types/value.hpp"
 
 #include "duckdb/common/exception.hpp"
-#include "duckdb/common/to_string.hpp"
 #include "duckdb/common/limits.hpp"
 #include "duckdb/common/operator/aggregate_operators.hpp"
 #include "duckdb/common/operator/cast_operators.hpp"
 #include "duckdb/common/operator/comparison_operators.hpp"
-
-#include "duckdb/common/uhugeint.hpp"
-#include "utf8proc_wrapper.hpp"
 #include "duckdb/common/operator/numeric_binary_operators.hpp"
 #include "duckdb/common/printer.hpp"
+#include "duckdb/common/serializer/deserializer.hpp"
+#include "duckdb/common/serializer/serializer.hpp"
+#include "duckdb/common/string_util.hpp"
+#include "duckdb/common/to_string.hpp"
+#include "duckdb/common/types/bit.hpp"
 #include "duckdb/common/types/blob.hpp"
+#include "duckdb/common/types/cast_helpers.hpp"
 #include "duckdb/common/types/date.hpp"
 #include "duckdb/common/types/decimal.hpp"
+#include "duckdb/common/types/hash.hpp"
 #include "duckdb/common/types/hugeint.hpp"
-#include "duckdb/common/types/uuid.hpp"
 #include "duckdb/common/types/interval.hpp"
 #include "duckdb/common/types/null_value.hpp"
 #include "duckdb/common/types/time.hpp"
 #include "duckdb/common/types/timestamp.hpp"
-#include "duckdb/common/types/bit.hpp"
+#include "duckdb/common/types/uuid.hpp"
+#include "duckdb/common/types/varint.hpp"
 #include "duckdb/common/types/vector.hpp"
+#include "duckdb/common/uhugeint.hpp"
 #include "duckdb/common/value_operations/value_operations.hpp"
 #include "duckdb/common/vector_operations/vector_operations.hpp"
-#include "duckdb/common/string_util.hpp"
-#include "duckdb/common/types/cast_helpers.hpp"
-#include "duckdb/common/types/hash.hpp"
 #include "duckdb/function/cast/cast_function_set.hpp"
 #include "duckdb/main/error_manager.hpp"
-#include "duckdb/common/types/varint.hpp"
-#include "duckdb/common/serializer/serializer.hpp"
-#include "duckdb/common/serializer/deserializer.hpp"
+#include "utf8proc_wrapper.hpp"
 
-#include <utility>
 #include <cmath>
+#include <utility>
 
 namespace duckdb {
 
@@ -694,9 +693,6 @@ Value Value::TIMESTAMP(int32_t year, int32_t month, int32_t day, int32_t hour, i
 Value Value::STRUCT(const LogicalType &type, vector<Value> struct_values) {
 	Value result;
 	auto child_types = StructType::GetChildTypes(type);
-	for (size_t i = 0; i < struct_values.size(); i++) {
-		struct_values[i] = struct_values[i].DefaultCastAs(child_types[i].second);
-	}
 	result.value_info_ = make_shared_ptr<NestedValueInfo>(std::move(struct_values));
 	result.type_ = type;
 	result.is_null = false;
@@ -802,9 +798,6 @@ Value Value::LIST(const LogicalType &child_type, vector<Value> values) {
 	if (values.empty()) {
 		return Value::EMPTYLIST(child_type);
 	}
-	for (auto &val : values) {
-		val = val.DefaultCastAs(child_type);
-	}
 	return Value::LIST(std::move(values));
 }
 
@@ -836,9 +829,6 @@ Value Value::ARRAY(vector<Value> values) {
 Value Value::ARRAY(const LogicalType &child_type, vector<Value> values) {
 	if (values.empty()) {
 		return Value::EMPTYARRAY(child_type, 0);
-	}
-	for (auto &val : values) {
-		val = val.DefaultCastAs(child_type);
 	}
 	return Value::ARRAY(std::move(values));
 }
@@ -1116,7 +1106,6 @@ T Value::GetValueInternal() const {
 	case LogicalTypeId::INTERVAL:
 		return Cast::Operation<interval_t, T>(value_.interval);
 	case LogicalTypeId::DECIMAL:
-		return DefaultCastAs(LogicalType::DOUBLE).GetValueInternal<T>();
 	case LogicalTypeId::ENUM: {
 		switch (type_.InternalType()) {
 		case PhysicalType::UINT8:
@@ -1314,8 +1303,6 @@ Value Value::Numeric(const LogicalType &type, int64_t value) {
 
 Value Value::Numeric(const LogicalType &type, hugeint_t value) {
 #ifdef DEBUG
-	// perform a throwing cast to verify that the type fits
-	Value::HUGEINT(value).DefaultCastAs(type);
 #endif
 	switch (type.id()) {
 	case LogicalTypeId::HUGEINT:
@@ -1329,8 +1316,6 @@ Value Value::Numeric(const LogicalType &type, hugeint_t value) {
 
 Value Value::Numeric(const LogicalType &type, uhugeint_t value) {
 #ifdef DEBUG
-	// perform a throwing cast to verify that the type fits
-	Value::UHUGEINT(value).DefaultCastAs(type);
 #endif
 	switch (type.id()) {
 	case LogicalTypeId::UHUGEINT:
@@ -1479,10 +1464,7 @@ hash_t Value::Hash() const {
 }
 
 string Value::ToString() const {
-	if (IsNull()) {
-		return "NULL";
-	}
-	return StringValue::Get(DefaultCastAs(LogicalType::VARCHAR));
+	return "NULL";
 }
 
 string Value::ToSQLString() const {
@@ -1787,80 +1769,6 @@ bool Value::operator>=(const int64_t &rhs) const {
 	return *this >= Value::Numeric(type_, rhs);
 }
 
-bool Value::TryCastAs(CastFunctionSet &set, GetCastFunctionInput &get_input, const LogicalType &target_type,
-                      Value &new_value, string *error_message, bool strict) const {
-	if (type_ == target_type) {
-		new_value = Copy();
-		return true;
-	}
-	Vector input(*this);
-	Vector result(target_type);
-	if (!VectorOperations::TryCast(set, get_input, input, result, 1, error_message, strict)) {
-		return false;
-	}
-	new_value = result.GetValue(0);
-	return true;
-}
-
-bool Value::TryCastAs(ClientContext &context, const LogicalType &target_type, Value &new_value, string *error_message,
-                      bool strict) const {
-	GetCastFunctionInput get_input(context);
-	return TryCastAs(CastFunctionSet::Get(context), get_input, target_type, new_value, error_message, strict);
-}
-
-bool Value::DefaultTryCastAs(const LogicalType &target_type, Value &new_value, string *error_message,
-                             bool strict) const {
-	CastFunctionSet set;
-	GetCastFunctionInput get_input;
-	return TryCastAs(set, get_input, target_type, new_value, error_message, strict);
-}
-
-Value Value::CastAs(CastFunctionSet &set, GetCastFunctionInput &get_input, const LogicalType &target_type,
-                    bool strict) const {
-	Value new_value;
-	string error_message;
-	if (!TryCastAs(set, get_input, target_type, new_value, &error_message, strict)) {
-		throw InvalidInputException("Failed to cast value: %s", error_message);
-	}
-	return new_value;
-}
-
-Value Value::CastAs(ClientContext &context, const LogicalType &target_type, bool strict) const {
-	GetCastFunctionInput get_input(context);
-	return CastAs(CastFunctionSet::Get(context), get_input, target_type, strict);
-}
-
-Value Value::DefaultCastAs(const LogicalType &target_type, bool strict) const {
-	CastFunctionSet set;
-	GetCastFunctionInput get_input;
-	return CastAs(set, get_input, target_type, strict);
-}
-
-bool Value::TryCastAs(CastFunctionSet &set, GetCastFunctionInput &get_input, const LogicalType &target_type,
-                      bool strict) {
-	Value new_value;
-	string error_message;
-	if (!TryCastAs(set, get_input, target_type, new_value, &error_message, strict)) {
-		return false;
-	}
-	type_ = target_type;
-	is_null = new_value.is_null;
-	value_ = new_value.value_;
-	value_info_ = std::move(new_value.value_info_);
-	return true;
-}
-
-bool Value::TryCastAs(ClientContext &context, const LogicalType &target_type, bool strict) {
-	GetCastFunctionInput get_input(context);
-	return TryCastAs(CastFunctionSet::Get(context), get_input, target_type, strict);
-}
-
-bool Value::DefaultTryCastAs(const LogicalType &target_type, bool strict) {
-	CastFunctionSet set;
-	GetCastFunctionInput get_input;
-	return TryCastAs(set, get_input, target_type, strict);
-}
-
 void Value::Reinterpret(LogicalType new_type) {
 	this->type_ = std::move(new_type);
 }
@@ -2060,24 +1968,6 @@ bool Value::ValuesAreEqual(CastFunctionSet &set, GetCastFunctionInput &get_input
 		return true;
 	}
 	switch (value.type_.id()) {
-	case LogicalTypeId::FLOAT: {
-		auto other = result_value.CastAs(set, get_input, LogicalType::FLOAT);
-		float ldecimal = value.value_.float_;
-		float rdecimal = other.value_.float_;
-		return ApproxEqual(ldecimal, rdecimal);
-	}
-	case LogicalTypeId::DOUBLE: {
-		auto other = result_value.CastAs(set, get_input, LogicalType::DOUBLE);
-		double ldecimal = value.value_.double_;
-		double rdecimal = other.value_.double_;
-		return ApproxEqual(ldecimal, rdecimal);
-	}
-	case LogicalTypeId::VARCHAR: {
-		auto other = result_value.CastAs(set, get_input, LogicalType::VARCHAR);
-		string left = SanitizeValue(StringValue::Get(other));
-		string right = SanitizeValue(StringValue::Get(value));
-		return left == right;
-	}
 	default:
 		if (result_value.type_.id() == LogicalTypeId::FLOAT || result_value.type_.id() == LogicalTypeId::DOUBLE) {
 			return Value::ValuesAreEqual(set, get_input, value, result_value);
@@ -2087,13 +1977,10 @@ bool Value::ValuesAreEqual(CastFunctionSet &set, GetCastFunctionInput &get_input
 }
 
 bool Value::ValuesAreEqual(ClientContext &context, const Value &result_value, const Value &value) {
-	GetCastFunctionInput get_input(context);
-	return Value::ValuesAreEqual(CastFunctionSet::Get(context), get_input, result_value, value);
+	return false;
 }
 bool Value::DefaultValuesAreEqual(const Value &result_value, const Value &value) {
-	CastFunctionSet set;
-	GetCastFunctionInput get_input;
-	return Value::ValuesAreEqual(set, get_input, result_value, value);
+	return false;
 }
 
 } // namespace duckdb

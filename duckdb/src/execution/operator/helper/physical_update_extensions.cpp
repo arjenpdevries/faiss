@@ -1,4 +1,5 @@
 #include "duckdb/execution/operator/helper/physical_update_extensions.hpp"
+
 #include "duckdb/main/extension_helper.hpp"
 
 namespace duckdb {
@@ -40,16 +41,6 @@ SourceResultType PhysicalUpdateExtensions::GetData(ExecutionContext &context, Da
 
 unique_ptr<GlobalSourceState> PhysicalUpdateExtensions::GetGlobalSourceState(ClientContext &context) const {
 	auto res = make_uniq<UpdateExtensionsGlobalState>();
-
-	if (info->extensions_to_update.empty()) {
-		// Update all
-		res->update_result_entries = ExtensionHelper::UpdateExtensions(context);
-	} else {
-		// Update extensions in extensions_to_update
-		for (const auto &ext : info->extensions_to_update) {
-			res->update_result_entries.emplace_back(ExtensionHelper::UpdateExtension(context, ext));
-		}
-	}
 
 	return std::move(res);
 }

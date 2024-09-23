@@ -1,10 +1,10 @@
 #include "duckdb/optimizer/rule/like_optimizations.hpp"
 
 #include "duckdb/execution/expression_executor.hpp"
-#include "duckdb/planner/expression/bound_function_expression.hpp"
-#include "duckdb/planner/expression/bound_constant_expression.hpp"
-#include "duckdb/planner/expression/bound_operator_expression.hpp"
 #include "duckdb/planner/expression/bound_comparison_expression.hpp"
+#include "duckdb/planner/expression/bound_constant_expression.hpp"
+#include "duckdb/planner/expression/bound_function_expression.hpp"
+#include "duckdb/planner/expression/bound_operator_expression.hpp"
 
 namespace duckdb {
 
@@ -118,22 +118,6 @@ unique_ptr<Expression> LikeOptimizationRule::Apply(LogicalOperator &op, vector<r
 	D_ASSERT(constant_value.type() == constant_expr.return_type);
 	auto &patt_str = StringValue::Get(constant_value);
 
-	bool is_not_like = root.function.name == "!~~";
-	if (PatternIsConstant(patt_str)) {
-		// Pattern is constant
-		return make_uniq<BoundComparisonExpression>(is_not_like ? ExpressionType::COMPARE_NOTEQUAL
-		                                                        : ExpressionType::COMPARE_EQUAL,
-		                                            std::move(root.children[0]), std::move(root.children[1]));
-	} else if (PatternIsPrefix(patt_str)) {
-		// Prefix LIKE pattern : [^%_]*[%]+, ignoring underscore
-		return ApplyRule(root, PrefixFun::GetFunction(), patt_str, is_not_like);
-	} else if (PatternIsSuffix(patt_str)) {
-		// Suffix LIKE pattern: [%]+[^%_]*, ignoring underscore
-		return ApplyRule(root, SuffixFun::GetFunction(), patt_str, is_not_like);
-	} else if (PatternIsContains(patt_str)) {
-		// Contains LIKE pattern: [%]+[^%_]*[%]+, ignoring underscore
-		return ApplyRule(root, ContainsFun::GetStringContains(), patt_str, is_not_like);
-	}
 	return nullptr;
 }
 

@@ -200,11 +200,6 @@ BindResult BaseSelectBinder::BindAggregate(FunctionExpression &aggr, AggregateFu
 		return BindResult("Aggregate with only constant parameters has to be bound in the root subquery");
 	}
 
-	if (aggr.filter) {
-		auto &child = BoundExpression::GetExpression(*aggr.filter);
-		bound_filter = BoundCastExpression::AddCastToType(context, std::move(child), LogicalType::BOOLEAN);
-	}
-
 	// all children bound successfully
 	// extract the children and types
 	vector<LogicalType> types;
@@ -294,9 +289,6 @@ BindResult BaseSelectBinder::BindAggregate(FunctionExpression &aggr, AggregateFu
 	auto aggregate =
 	    function_binder.BindAggregateFunction(bound_function, std::move(children), std::move(bound_filter),
 	                                          aggr.distinct ? AggregateType::DISTINCT : AggregateType::NON_DISTINCT);
-	if (aggr.export_state) {
-		aggregate = ExportAggregateFunction::Bind(std::move(aggregate));
-	}
 	aggregate->order_bys = std::move(order_bys);
 
 	// check for all the aggregates if this aggregate already exists

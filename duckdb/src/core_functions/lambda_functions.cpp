@@ -1,10 +1,9 @@
 #include "duckdb/core_functions/lambda_functions.hpp"
 
-#include "duckdb/common/serializer/serializer.hpp"
 #include "duckdb/common/serializer/deserializer.hpp"
-
-#include "duckdb/planner/expression/bound_function_expression.hpp"
+#include "duckdb/common/serializer/serializer.hpp"
 #include "duckdb/planner/expression/bound_cast_expression.hpp"
+#include "duckdb/planner/expression/bound_function_expression.hpp"
 
 namespace duckdb {
 
@@ -383,8 +382,6 @@ unique_ptr<FunctionData> LambdaFunctions::ListLambdaPrepareBind(vector<unique_pt
 		throw ParameterNotResolvedException();
 	}
 
-	arguments[0] = BoundCastExpression::AddArrayCastToList(context, std::move(arguments[0]));
-	D_ASSERT(arguments[0]->return_type.id() == LogicalTypeId::LIST);
 	return nullptr;
 }
 

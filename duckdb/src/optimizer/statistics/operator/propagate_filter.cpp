@@ -31,11 +31,7 @@ bool StatisticsPropagator::ExpressionIsConstant(Expression &expr, const Value &v
 }
 
 bool StatisticsPropagator::ExpressionIsConstantOrNull(Expression &expr, const Value &val) {
-	if (expr.GetExpressionClass() != ExpressionClass::BOUND_FUNCTION) {
-		return false;
-	}
-	auto &bound_function = expr.Cast<BoundFunctionExpression>();
-	return ConstantOrNull::IsConstantOrNull(bound_function, val);
+	return false;
 }
 
 void StatisticsPropagator::SetStatisticsNotNull(ColumnBinding binding) {

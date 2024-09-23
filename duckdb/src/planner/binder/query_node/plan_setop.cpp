@@ -1,11 +1,11 @@
+#include "duckdb/function/table/read_csv.hpp"
 #include "duckdb/planner/binder.hpp"
 #include "duckdb/planner/expression/bound_cast_expression.hpp"
 #include "duckdb/planner/expression/bound_columnref_expression.hpp"
+#include "duckdb/planner/operator/logical_get.hpp"
 #include "duckdb/planner/operator/logical_projection.hpp"
 #include "duckdb/planner/operator/logical_set_operation.hpp"
 #include "duckdb/planner/query_node/bound_set_operation_node.hpp"
-#include "duckdb/function/table/read_csv.hpp"
-#include "duckdb/planner/operator/logical_get.hpp"
 
 namespace duckdb {
 
@@ -61,8 +61,6 @@ unique_ptr<LogicalOperator> Binder::CastLogicalOperatorToTypes(vector<LogicalTyp
 			if (source_types[i] != target_types[i]) {
 				// differing types, have to add a cast
 				string cur_alias = node->expressions[i]->alias;
-				node->expressions[i] =
-				    BoundCastExpression::AddCastToType(context, std::move(node->expressions[i]), target_types[i]);
 				node->expressions[i]->alias = cur_alias;
 			}
 		}
@@ -81,7 +79,6 @@ unique_ptr<LogicalOperator> Binder::CastLogicalOperatorToTypes(vector<LogicalTyp
 			unique_ptr<Expression> result = make_uniq<BoundColumnRefExpression>(source_types[i], setop_columns[i]);
 			if (source_types[i] != target_types[i]) {
 				// add a cast only if the source and target types are not equivalent
-				result = BoundCastExpression::AddCastToType(context, std::move(result), target_types[i]);
 			}
 			select_list.push_back(std::move(result));
 		}

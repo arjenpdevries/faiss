@@ -1,13 +1,13 @@
 #include "duckdb/planner/expression_binder.hpp"
 
 #include "duckdb/catalog/catalog_entry/scalar_function_catalog_entry.hpp"
+#include "duckdb/common/operator/cast_operators.hpp"
+#include "duckdb/main/client_config.hpp"
 #include "duckdb/parser/expression/list.hpp"
 #include "duckdb/parser/parsed_expression_iterator.hpp"
 #include "duckdb/planner/binder.hpp"
 #include "duckdb/planner/expression/list.hpp"
 #include "duckdb/planner/expression_iterator.hpp"
-#include "duckdb/common/operator/cast_operators.hpp"
-#include "duckdb/main/client_config.hpp"
 
 namespace duckdb {
 
@@ -330,22 +330,6 @@ unique_ptr<Expression> ExpressionBinder::Bind(unique_ptr<ParsedExpression> &expr
 	}
 	auto &bound_expr = expr->Cast<BoundExpression>();
 	unique_ptr<Expression> result = std::move(bound_expr.expr);
-	if (target_type.id() != LogicalTypeId::INVALID) {
-		// the binder has a specific target type: add a cast to that type
-		result = BoundCastExpression::AddCastToType(context, std::move(result), target_type);
-	} else {
-		if (!binder.can_contain_nulls) {
-			// SQL NULL type is only used internally in the binder
-			// cast to INTEGER if we encounter it outside of the binder
-			if (ContainsNullType(result->return_type)) {
-				auto exchanged_type = ExchangeNullType(result->return_type);
-				result = BoundCastExpression::AddCastToType(context, std::move(result), exchanged_type);
-			}
-		}
-		if (result->return_type.id() == LogicalTypeId::UNKNOWN) {
-			throw ParameterNotResolvedException();
-		}
-	}
 	if (result_type) {
 		*result_type = result->return_type;
 	}

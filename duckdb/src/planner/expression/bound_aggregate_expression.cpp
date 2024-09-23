@@ -1,10 +1,10 @@
 #include "duckdb/planner/expression/bound_aggregate_expression.hpp"
-#include "duckdb/parser/expression/function_expression.hpp"
 
 #include "duckdb/catalog/catalog_entry/aggregate_function_catalog_entry.hpp"
 #include "duckdb/common/types/hash.hpp"
-#include "duckdb/planner/expression/bound_cast_expression.hpp"
 #include "duckdb/function/function_serialization.hpp"
+#include "duckdb/parser/expression/function_expression.hpp"
+#include "duckdb/planner/expression/bound_cast_expression.hpp"
 
 namespace duckdb {
 
@@ -103,7 +103,6 @@ unique_ptr<Expression> BoundAggregateExpression::Deserialize(Deserializer &deser
 	if (result->return_type != return_type) {
 		// return type mismatch - push a cast
 		auto &context = deserializer.Get<ClientContext &>();
-		return BoundCastExpression::AddCastToType(context, std::move(result), return_type);
 	}
 	deserializer.ReadPropertyWithExplicitDefault(205, "order_bys", result->order_bys, unique_ptr<BoundOrderModifier>());
 	return std::move(result);
