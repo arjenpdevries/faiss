@@ -8,15 +8,15 @@
 
 #pragma once
 
+#include "duckdb/catalog/catalog_entry/column_dependency_manager.hpp"
+#include "duckdb/catalog/catalog_entry/table_column_type.hpp"
 #include "duckdb/catalog/standard_entry.hpp"
+#include "duckdb/common/case_insensitive_map.hpp"
 #include "duckdb/common/unordered_map.hpp"
 #include "duckdb/parser/column_list.hpp"
 #include "duckdb/parser/constraint.hpp"
 #include "duckdb/planner/bound_constraint.hpp"
 #include "duckdb/planner/expression.hpp"
-#include "duckdb/common/case_insensitive_map.hpp"
-#include "duckdb/catalog/catalog_entry/table_column_type.hpp"
-#include "duckdb/catalog/catalog_entry/column_dependency_manager.hpp"
 
 namespace duckdb {
 
@@ -79,9 +79,6 @@ public:
 	//! Returns a list of the constraints of the table
 	DUCKDB_API const vector<unique_ptr<Constraint>> &GetConstraints() const;
 	DUCKDB_API string ToSQL() const override;
-
-	//! Get statistics of a column (physical or virtual) within the table
-	virtual unique_ptr<BaseStatistics> GetStatistics(ClientContext &context, column_t column_id) = 0;
 
 	//! Returns the column index of the specified column name.
 	//! If the column does not exist:

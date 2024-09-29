@@ -124,8 +124,6 @@ struct RLECompressState : public CompressionState {
 	struct RLEWriter {
 		template <class VALUE_TYPE>
 		static void Operation(VALUE_TYPE value, rle_count_t count, void *dataptr, bool is_null) {
-			auto state = reinterpret_cast<RLECompressState<T, WRITE_STATISTICS> *>(dataptr);
-			state->WriteValue(value, count, is_null);
 		}
 	};
 
@@ -174,9 +172,6 @@ struct RLECompressState : public CompressionState {
 		entry_count++;
 
 		// update meta data
-		if (WRITE_STATISTICS && !is_null) {
-			current_segment->stats.statistics.UpdateNumericStats<T>(value);
-		}
 		current_segment->count += count;
 
 		if (entry_count == max_rle_count) {

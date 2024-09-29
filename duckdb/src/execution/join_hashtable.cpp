@@ -756,16 +756,12 @@ void JoinHashTable::Probe(ScanStructure &scan_structure, DataChunk &keys, TupleD
 	}
 
 	if (precomputed_hashes) {
-		GetRowPointers(keys, key_state, probe_state, *precomputed_hashes, *current_sel, scan_structure.count,
-		               scan_structure.pointers, scan_structure.sel_vector);
 	} else {
 		Vector hashes(LogicalType::HASH);
 		// hash all the keys
 		Hash(keys, *current_sel, scan_structure.count, hashes);
 
 		// now initialize the pointers of the scan structure based on the hashes
-		GetRowPointers(keys, key_state, probe_state, hashes, *current_sel, scan_structure.count,
-		               scan_structure.pointers, scan_structure.sel_vector);
 	}
 }
 
@@ -1517,8 +1513,6 @@ void JoinHashTable::ProbeAndSpill(ScanStructure &scan_structure, DataChunk &keys
 	}
 
 	// now initialize the pointers of the scan structure based on the hashes
-	GetRowPointers(keys, key_state, probe_state, hashes, *current_sel, scan_structure.count, scan_structure.pointers,
-	               scan_structure.sel_vector);
 }
 
 ProbeSpill::ProbeSpill(JoinHashTable &ht, ClientContext &context, const vector<LogicalType> &probe_types)

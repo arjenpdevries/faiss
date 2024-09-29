@@ -18,24 +18,12 @@ unique_ptr<SegmentScanState> ConstantInitScan(ColumnSegment &segment) {
 // Scan Partial
 //===--------------------------------------------------------------------===//
 void ConstantFillFunctionValidity(ColumnSegment &segment, Vector &result, idx_t start_idx, idx_t count) {
-	auto &stats = segment.stats.statistics;
-	if (stats.CanHaveNull()) {
-		auto &mask = FlatVector::Validity(result);
-		for (idx_t i = 0; i < count; i++) {
-			mask.SetInvalid(start_idx + i);
-		}
-	}
 }
 
 template <class T>
 void ConstantFillFunction(ColumnSegment &segment, Vector &result, idx_t start_idx, idx_t count) {
-	auto &nstats = segment.stats.statistics;
 
 	auto data = FlatVector::GetData<T>(result);
-	auto constant_value = NumericStats::GetMin<T>(nstats);
-	for (idx_t i = 0; i < count; i++) {
-		data[start_idx + i] = constant_value;
-	}
 }
 
 void ConstantScanPartialValidity(ColumnSegment &segment, ColumnScanState &state, idx_t scan_count, Vector &result,
@@ -53,25 +41,10 @@ void ConstantScanPartial(ColumnSegment &segment, ColumnScanState &state, idx_t s
 // Scan base data
 //===--------------------------------------------------------------------===//
 void ConstantScanFunctionValidity(ColumnSegment &segment, ColumnScanState &state, idx_t scan_count, Vector &result) {
-	auto &stats = segment.stats.statistics;
-	if (stats.CanHaveNull()) {
-		if (result.GetVectorType() == VectorType::CONSTANT_VECTOR) {
-			result.SetVectorType(VectorType::CONSTANT_VECTOR);
-			ConstantVector::SetNull(result, true);
-		} else {
-			result.Flatten(scan_count);
-			ConstantFillFunctionValidity(segment, result, 0, scan_count);
-		}
-	}
 }
 
 template <class T>
 void ConstantScanFunction(ColumnSegment &segment, ColumnScanState &state, idx_t scan_count, Vector &result) {
-	auto &nstats = segment.stats.statistics;
-
-	auto data = FlatVector::GetData<T>(result);
-	data[0] = NumericStats::GetMin<T>(nstats);
-	result.SetVectorType(VectorType::CONSTANT_VECTOR);
 }
 
 //===--------------------------------------------------------------------===//

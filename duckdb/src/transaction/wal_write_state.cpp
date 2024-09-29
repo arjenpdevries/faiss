@@ -55,15 +55,6 @@ void WALWriteState::WriteCatalogEntry(CatalogEntry &entry, data_ptr_t dataptr) {
 			auto extra_data_size = Load<idx_t>(dataptr);
 			auto extra_data = data_ptr_cast(dataptr + sizeof(idx_t));
 
-			MemoryStream source(extra_data, extra_data_size);
-			BinaryDeserializer deserializer(source);
-			deserializer.Begin();
-			auto column_name = deserializer.ReadProperty<string>(100, "column_name");
-			auto parse_info = deserializer.ReadProperty<unique_ptr<ParseInfo>>(101, "alter_info");
-			deserializer.End();
-
-			auto &alter_info = parse_info->Cast<AlterInfo>();
-			log.WriteAlter(alter_info);
 		} else {
 			switch (parent.type) {
 			case CatalogType::TABLE_ENTRY:
@@ -194,55 +185,7 @@ void WALWriteState::WriteDelete(DeleteInfo &info) {
 
 void WALWriteState::WriteUpdate(UpdateInfo &info) {
 	// switch to the current table, if necessary
-	auto &column_data = info.segment->column_data;
-	auto &table_info = column_data.GetTableInfo();
-
-	SwitchTable(&table_info, UndoFlags::UPDATE_TUPLE);
-
-	// initialize the update chunk
-	vector<LogicalType> update_types;
-	if (column_data.type.id() == LogicalTypeId::VALIDITY) {
-		update_types.emplace_back(LogicalType::BOOLEAN);
-	} else {
-		update_types.push_back(column_data.type);
-	}
-	update_types.emplace_back(LogicalType::ROW_TYPE);
-
-	update_chunk = make_uniq<DataChunk>();
-	update_chunk->Initialize(Allocator::DefaultAllocator(), update_types);
-
-	// fetch the updated values from the base segment
-	info.segment->FetchCommitted(info.vector_index, update_chunk->data[0]);
-
-	// write the row ids into the chunk
-	auto row_ids = FlatVector::GetData<row_t>(update_chunk->data[1]);
-	idx_t start = column_data.start + info.vector_index * STANDARD_VECTOR_SIZE;
-	for (idx_t i = 0; i < info.N; i++) {
-		row_ids[info.tuples[i]] = UnsafeNumericCast<int64_t>(start + info.tuples[i]);
-	}
-	if (column_data.type.id() == LogicalTypeId::VALIDITY) {
-		// zero-initialize the booleans
-		// FIXME: this is only required because of NullValue<T> in Vector::Serialize...
-		auto booleans = FlatVector::GetData<bool>(update_chunk->data[0]);
-		for (idx_t i = 0; i < info.N; i++) {
-			auto idx = info.tuples[i];
-			booleans[idx] = false;
-		}
-	}
-	SelectionVector sel(info.tuples);
-	update_chunk->Slice(sel, info.N);
-
-	// construct the column index path
-	vector<column_t> column_indexes;
-	reference<ColumnData> current_column_data = column_data;
-	while (current_column_data.get().parent) {
-		column_indexes.push_back(current_column_data.get().column_index);
-		current_column_data = *current_column_data.get().parent;
-	}
-	column_indexes.push_back(info.column_index);
-	std::reverse(column_indexes.begin(), column_indexes.end());
-
-	log.WriteUpdate(*update_chunk, column_indexes);
+	return;
 }
 
 void WALWriteState::CommitEntry(UndoFlags type, data_ptr_t data) {
@@ -274,9 +217,6 @@ void WALWriteState::CommitEntry(UndoFlags type, data_ptr_t data) {
 	case UndoFlags::UPDATE_TUPLE: {
 		// update:
 		auto info = reinterpret_cast<UpdateInfo *>(data);
-		if (!info->segment->column_data.GetTableInfo().IsTemporary()) {
-			WriteUpdate(*info);
-		}
 		break;
 	}
 	case UndoFlags::SEQUENCE_VALUE: {

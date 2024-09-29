@@ -1,23 +1,24 @@
 #include "duckdb/storage/table/column_data.hpp"
+
 #include "duckdb/common/exception/transaction_exception.hpp"
+#include "duckdb/common/serializer/binary_deserializer.hpp"
+#include "duckdb/common/serializer/read_stream.hpp"
+#include "duckdb/common/serializer/serializer.hpp"
 #include "duckdb/common/vector_operations/vector_operations.hpp"
 #include "duckdb/function/compression_function.hpp"
 #include "duckdb/planner/table_filter.hpp"
 #include "duckdb/storage/data_pointer.hpp"
 #include "duckdb/storage/data_table.hpp"
 #include "duckdb/storage/statistics/distinct_statistics.hpp"
+#include "duckdb/storage/table/append_state.hpp"
+#include "duckdb/storage/table/array_column_data.hpp"
 #include "duckdb/storage/table/column_data_checkpointer.hpp"
 #include "duckdb/storage/table/list_column_data.hpp"
+#include "duckdb/storage/table/scan_state.hpp"
 #include "duckdb/storage/table/standard_column_data.hpp"
-#include "duckdb/storage/table/array_column_data.hpp"
 #include "duckdb/storage/table/struct_column_data.hpp"
 #include "duckdb/storage/table/update_segment.hpp"
 #include "duckdb/storage/table_storage_info.hpp"
-#include "duckdb/storage/table/append_state.hpp"
-#include "duckdb/storage/table/scan_state.hpp"
-#include "duckdb/common/serializer/read_stream.hpp"
-#include "duckdb/common/serializer/binary_deserializer.hpp"
-#include "duckdb/common/serializer/serializer.hpp"
 
 namespace duckdb {
 
@@ -25,9 +26,6 @@ ColumnData::ColumnData(BlockManager &block_manager, DataTableInfo &info, idx_t c
                        LogicalType type_p, optional_ptr<ColumnData> parent)
     : start(start_row), count(0), block_manager(block_manager), info(info), column_index(column_index),
       type(std::move(type_p)), parent(parent), allocation_size(0) {
-	if (!parent) {
-		stats = make_uniq<SegmentStatistics>(type);
-	}
 }
 
 ColumnData::~ColumnData() {
@@ -189,8 +187,7 @@ idx_t ColumnData::ScanVector(ColumnScanState &state, Vector &result, idx_t remai
 }
 
 unique_ptr<BaseStatistics> ColumnData::GetUpdateStatistics() {
-	lock_guard<mutex> update_guard(update_lock);
-	return updates ? updates->GetStatistics() : nullptr;
+	return nullptr;
 }
 
 void ColumnData::FetchUpdates(TransactionData transaction, idx_t vector_index, Vector &result, idx_t scan_count,
@@ -324,17 +321,9 @@ void ColumnData::Skip(ColumnScanState &state, idx_t s_count) {
 }
 
 void ColumnData::Append(BaseStatistics &append_stats, ColumnAppendState &state, Vector &vector, idx_t append_count) {
-	UnifiedVectorFormat vdata;
-	vector.ToUnifiedFormat(append_count, vdata);
-	AppendData(append_stats, state, vdata, append_count);
 }
 
 void ColumnData::Append(ColumnAppendState &state, Vector &vector, idx_t append_count) {
-	if (parent || !stats) {
-		throw InternalException("ColumnData::Append called on a column with a parent or without stats");
-	}
-	lock_guard<mutex> l(stats_lock);
-	Append(stats->statistics, state, vector, append_count);
 }
 
 FilterPropagateResult ColumnData::CheckZonemap(ColumnScanState &state, TableFilter &filter) {
@@ -346,57 +335,25 @@ FilterPropagateResult ColumnData::CheckZonemap(ColumnScanState &state, TableFilt
 	}
 	state.segment_checked = true;
 	FilterPropagateResult prune_result;
-	{
-		lock_guard<mutex> l(stats_lock);
-		prune_result = filter.CheckStatistics(state.current->stats.statistics);
-		if (prune_result == FilterPropagateResult::NO_PRUNING_POSSIBLE) {
-			return FilterPropagateResult::NO_PRUNING_POSSIBLE;
-		}
-	}
+	{ lock_guard<mutex> l(stats_lock); }
 	lock_guard<mutex> l(update_lock);
 	if (!updates) {
 		// no updates - return original result
-		return prune_result;
-	}
-	auto update_stats = updates->GetStatistics();
-	// combine the update and original prune result
-	FilterPropagateResult update_result = filter.CheckStatistics(*update_stats);
-	if (prune_result == update_result) {
 		return prune_result;
 	}
 	return FilterPropagateResult::NO_PRUNING_POSSIBLE;
 }
 
 FilterPropagateResult ColumnData::CheckZonemap(TableFilter &filter) {
-	if (!stats) {
-		throw InternalException("ColumnData::CheckZonemap called on a column without stats");
-	}
-	lock_guard<mutex> l(stats_lock);
-	return filter.CheckStatistics(stats->statistics);
-}
-
-unique_ptr<BaseStatistics> ColumnData::GetStatistics() {
-	if (!stats) {
-		throw InternalException("ColumnData::GetStatistics called on a column without stats");
-	}
-	lock_guard<mutex> l(stats_lock);
-	return stats->statistics.ToUnique();
+	throw InternalException("ColumnData::CheckZonemap called on a column without stats");
 }
 
 void ColumnData::MergeStatistics(const BaseStatistics &other) {
-	if (!stats) {
-		throw InternalException("ColumnData::MergeStatistics called on a column without stats");
-	}
-	lock_guard<mutex> l(stats_lock);
-	return stats->statistics.Merge(other);
+	throw InternalException("ColumnData::MergeStatistics called on a column without stats");
 }
 
 void ColumnData::MergeIntoStatistics(BaseStatistics &other) {
-	if (!stats) {
-		throw InternalException("ColumnData::MergeIntoStatistics called on a column without stats");
-	}
-	lock_guard<mutex> l(stats_lock);
-	return other.Merge(stats->statistics);
+	throw InternalException("ColumnData::MergeIntoStatistics called on a column without stats");
 }
 
 void ColumnData::InitializeAppend(ColumnAppendState &state) {
@@ -427,7 +384,6 @@ void ColumnData::AppendData(BaseStatistics &append_stats, ColumnAppendState &sta
 	while (true) {
 		// append the data from the vector
 		idx_t copied_elements = state.current->Append(state, vdata, offset, append_count);
-		append_stats.Merge(state.current->stats.statistics);
 		if (copied_elements == append_count) {
 			// finished copying everything
 			break;
@@ -561,7 +517,6 @@ unique_ptr<ColumnCheckpointState> ColumnData::Checkpoint(RowGroup &row_group, Co
 	// scan the segments of the column data
 	// set up the checkpoint state
 	auto checkpoint_state = CreateCheckpointState(row_group, checkpoint_info.info.manager);
-	checkpoint_state->global_stats = BaseStatistics::CreateEmpty(type).ToUnique();
 
 	auto l = data.Lock();
 	auto nodes = data.MoveSegments(l);
@@ -581,30 +536,12 @@ unique_ptr<ColumnCheckpointState> ColumnData::Checkpoint(RowGroup &row_group, Co
 }
 
 void ColumnData::InitializeColumn(PersistentColumnData &column_data) {
-	InitializeColumn(column_data, stats->statistics);
 }
 
 void ColumnData::InitializeColumn(PersistentColumnData &column_data, BaseStatistics &target_stats) {
 	D_ASSERT(type.InternalType() == column_data.physical_type);
 	// construct the segments based on the data pointers
 	this->count = 0;
-	for (auto &data_pointer : column_data.pointers) {
-		// Update the count and statistics
-		this->count += data_pointer.tuple_count;
-
-		// Merge the statistics. If this is a child column, the target_stats reference will point into the parents stats
-		// otherwise if this is a top level column, `stats->statistics` == `target_stats`
-
-		target_stats.Merge(data_pointer.statistics);
-
-		// create a persistent segment
-		auto segment = ColumnSegment::CreatePersistentSegment(
-		    GetDatabase(), block_manager, data_pointer.block_pointer.block_id, data_pointer.block_pointer.offset, type,
-		    data_pointer.row_start, data_pointer.tuple_count, data_pointer.compression_type,
-		    std::move(data_pointer.statistics), std::move(data_pointer.segment_state));
-
-		data.AppendSegment(std::move(segment));
-	}
 }
 
 bool ColumnData::IsPersistent() {
@@ -616,20 +553,7 @@ bool ColumnData::IsPersistent() {
 	return true;
 }
 
-vector<DataPointer> ColumnData::GetDataPointers() {
-	vector<DataPointer> pointers;
-	for (auto &segment : data.Segments()) {
-		pointers.push_back(segment.GetDataPointer());
-	}
-	return pointers;
-}
-
 PersistentColumnData::PersistentColumnData(PhysicalType physical_type_p) : physical_type(physical_type_p) {
-}
-
-PersistentColumnData::PersistentColumnData(PhysicalType physical_type, vector<DataPointer> pointers_p)
-    : physical_type(physical_type), pointers(std::move(pointers_p)) {
-	D_ASSERT(!pointers.empty());
 }
 
 PersistentColumnData::~PersistentColumnData() {
@@ -639,10 +563,8 @@ void PersistentColumnData::Serialize(Serializer &serializer) const {
 	if (has_updates) {
 		throw InternalException("Column data with updates cannot be serialized");
 	}
-	serializer.WritePropertyWithDefault(100, "data_pointers", pointers);
 	if (child_columns.empty()) {
 		// validity column
-		D_ASSERT(physical_type == PhysicalType::BIT);
 		return;
 	}
 	serializer.WriteProperty(101, "validity", child_columns[0]);
@@ -666,7 +588,6 @@ PersistentColumnData PersistentColumnData::Deserialize(Deserializer &deserialize
 	auto &type = deserializer.Get<const LogicalType &>();
 	auto physical_type = type.InternalType();
 	PersistentColumnData result(physical_type);
-	deserializer.ReadPropertyWithDefault(100, "data_pointers", static_cast<vector<DataPointer> &>(result.pointers));
 	if (result.physical_type == PhysicalType::BIT) {
 		// validity: return
 		return result;
@@ -757,31 +678,13 @@ bool PersistentCollectionData::HasUpdates() const {
 	return false;
 }
 
-PersistentColumnData ColumnData::Serialize() {
-	PersistentColumnData result(type.InternalType(), GetDataPointers());
-	result.has_updates = HasUpdates();
-	return result;
-}
-
 shared_ptr<ColumnData> ColumnData::Deserialize(BlockManager &block_manager, DataTableInfo &info, idx_t column_index,
                                                idx_t start_row, ReadStream &source, const LogicalType &type) {
 	auto entry = ColumnData::CreateColumn(block_manager, info, column_index, start_row, type, nullptr);
 
 	// deserialize the persistent column data
-	BinaryDeserializer deserializer(source);
-	deserializer.Begin();
-	deserializer.Set<DatabaseInstance &>(info.GetDB().GetDatabase());
-	CompressionInfo compression_info(block_manager.GetBlockSize());
-	deserializer.Set<const CompressionInfo &>(compression_info);
-	deserializer.Set<const LogicalType &>(type);
-	auto persistent_column_data = PersistentColumnData::Deserialize(deserializer);
-	deserializer.Unset<LogicalType>();
-	deserializer.Unset<const CompressionInfo>();
-	deserializer.Unset<DatabaseInstance>();
-	deserializer.End();
 
 	// initialize the column
-	entry->InitializeColumn(persistent_column_data, entry->stats->statistics);
 	return entry;
 }
 
@@ -811,11 +714,6 @@ void ColumnData::GetColumnSegmentInfo(idx_t row_group_index, vector<idx_t> col_p
 		column_info.segment_type = type.ToString();
 		column_info.segment_start = segment->start;
 		column_info.segment_count = segment->count;
-		column_info.compression_type = CompressionTypeToString(segment->function.get().type);
-		{
-			lock_guard<mutex> l(stats_lock);
-			column_info.segment_stats = segment->stats.statistics.ToString();
-		}
 		column_info.has_updates = ColumnData::HasUpdates();
 		// persistent
 		// block_id

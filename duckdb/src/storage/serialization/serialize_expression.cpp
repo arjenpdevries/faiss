@@ -10,10 +10,6 @@
 namespace duckdb {
 
 void Expression::Serialize(Serializer &serializer) const {
-	serializer.WriteProperty<ExpressionClass>(100, "expression_class", expression_class);
-	serializer.WriteProperty<ExpressionType>(101, "type", type);
-	serializer.WritePropertyWithDefault<string>(102, "alias", alias);
-	serializer.WritePropertyWithDefault<optional_idx>(103, "query_location", query_location, optional_idx());
 }
 
 unique_ptr<Expression> Expression::Deserialize(Deserializer &deserializer) {
@@ -83,12 +79,6 @@ unique_ptr<Expression> Expression::Deserialize(Deserializer &deserializer) {
 }
 
 void BoundBetweenExpression::Serialize(Serializer &serializer) const {
-	Expression::Serialize(serializer);
-	serializer.WritePropertyWithDefault<unique_ptr<Expression>>(200, "input", input);
-	serializer.WritePropertyWithDefault<unique_ptr<Expression>>(201, "lower", lower);
-	serializer.WritePropertyWithDefault<unique_ptr<Expression>>(202, "upper", upper);
-	serializer.WritePropertyWithDefault<bool>(203, "lower_inclusive", lower_inclusive);
-	serializer.WritePropertyWithDefault<bool>(204, "upper_inclusive", upper_inclusive);
 }
 
 unique_ptr<Expression> BoundBetweenExpression::Deserialize(Deserializer &deserializer) {
@@ -102,10 +92,6 @@ unique_ptr<Expression> BoundBetweenExpression::Deserialize(Deserializer &deseria
 }
 
 void BoundCaseExpression::Serialize(Serializer &serializer) const {
-	Expression::Serialize(serializer);
-	serializer.WriteProperty<LogicalType>(200, "return_type", return_type);
-	serializer.WritePropertyWithDefault<vector<BoundCaseCheck>>(201, "case_checks", case_checks);
-	serializer.WritePropertyWithDefault<unique_ptr<Expression>>(202, "else_expr", else_expr);
 }
 
 unique_ptr<Expression> BoundCaseExpression::Deserialize(Deserializer &deserializer) {
@@ -117,10 +103,6 @@ unique_ptr<Expression> BoundCaseExpression::Deserialize(Deserializer &deserializ
 }
 
 void BoundCastExpression::Serialize(Serializer &serializer) const {
-	Expression::Serialize(serializer);
-	serializer.WritePropertyWithDefault<unique_ptr<Expression>>(200, "child", child);
-	serializer.WriteProperty<LogicalType>(201, "return_type", return_type);
-	serializer.WritePropertyWithDefault<bool>(202, "try_cast", try_cast);
 }
 
 unique_ptr<Expression> BoundCastExpression::Deserialize(Deserializer &deserializer) {
@@ -130,10 +112,6 @@ unique_ptr<Expression> BoundCastExpression::Deserialize(Deserializer &deserializ
 }
 
 void BoundColumnRefExpression::Serialize(Serializer &serializer) const {
-	Expression::Serialize(serializer);
-	serializer.WriteProperty<LogicalType>(200, "return_type", return_type);
-	serializer.WriteProperty<ColumnBinding>(201, "binding", binding);
-	serializer.WritePropertyWithDefault<idx_t>(202, "depth", depth);
 }
 
 unique_ptr<Expression> BoundColumnRefExpression::Deserialize(Deserializer &deserializer) {
@@ -146,9 +124,6 @@ unique_ptr<Expression> BoundColumnRefExpression::Deserialize(Deserializer &deser
 }
 
 void BoundComparisonExpression::Serialize(Serializer &serializer) const {
-	Expression::Serialize(serializer);
-	serializer.WritePropertyWithDefault<unique_ptr<Expression>>(200, "left", left);
-	serializer.WritePropertyWithDefault<unique_ptr<Expression>>(201, "right", right);
 }
 
 unique_ptr<Expression> BoundComparisonExpression::Deserialize(Deserializer &deserializer) {

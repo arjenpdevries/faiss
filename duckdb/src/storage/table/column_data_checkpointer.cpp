@@ -1,9 +1,10 @@
 #include "duckdb/storage/table/column_data_checkpointer.hpp"
+
 #include "duckdb/main/config.hpp"
-#include "duckdb/storage/table/update_segment.hpp"
-#include "duckdb/storage/data_table.hpp"
 #include "duckdb/parser/column_definition.hpp"
+#include "duckdb/storage/data_table.hpp"
 #include "duckdb/storage/table/scan_state.hpp"
+#include "duckdb/storage/table/update_segment.hpp"
 
 namespace duckdb {
 
@@ -228,15 +229,6 @@ void ColumnDataCheckpointer::WritePersistentSegments() {
 	// we only need to write the metadata
 	for (idx_t segment_idx = 0; segment_idx < nodes.size(); segment_idx++) {
 		auto segment = nodes[segment_idx].node.get();
-		auto pointer = segment->GetDataPointer();
-
-		// merge the persistent stats into the global column stats
-		state.global_stats->Merge(segment->stats.statistics);
-
-		// directly append the current segment to the new tree
-		state.new_tree.AppendSegment(std::move(nodes[segment_idx].node));
-
-		state.data_pointers.push_back(std::move(pointer));
 	}
 }
 

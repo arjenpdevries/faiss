@@ -166,9 +166,6 @@ unique_ptr<LocalSinkState> PhysicalUpdate::GetLocalSinkState(ExecutionContext &c
 }
 
 SinkCombineResultType PhysicalUpdate::Combine(ExecutionContext &context, OperatorSinkCombineInput &input) const {
-	auto &client_profiler = QueryProfiler::Get(context.client);
-	context.thread.profiler.Flush(*this);
-	client_profiler.Flush(context.thread.profiler);
 	return SinkCombineResultType::FINISHED;
 }
 

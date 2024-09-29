@@ -1,6 +1,6 @@
-#include "duckdb/parallel/task.hpp"
 #include "duckdb/execution/executor.hpp"
 #include "duckdb/main/client_context.hpp"
+#include "duckdb/parallel/task.hpp"
 #include "duckdb/parallel/thread_context.hpp"
 
 namespace duckdb {
@@ -36,9 +36,7 @@ void ExecutorTask::Reschedule() {
 TaskExecutionResult ExecutorTask::Execute(TaskExecutionMode mode) {
 	try {
 		if (thread_context) {
-			thread_context->profiler.StartOperator(op);
 			auto result = ExecuteTask(mode);
-			thread_context->profiler.EndOperator(nullptr);
 			return result;
 		} else {
 			return ExecuteTask(mode);

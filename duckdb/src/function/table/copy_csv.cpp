@@ -359,8 +359,6 @@ public:
 public:
 	//! Used to execute the expressions that transform input -> string
 	ExpressionExecutor executor;
-	//! The thread-local buffer to write data into
-	MemoryStream stream;
 	//! A chunk with VARCHAR columns to cast intermediates into
 	DataChunk cast_chunk;
 	//! If we've written any rows yet, allows us to prevent a trailing comma when writing JSON ARRAY
@@ -433,18 +431,6 @@ static unique_ptr<GlobalFunctionData> WriteCSVInitializeGlobal(ClientContext &co
 	}
 
 	if (!(options.dialect_options.header.IsSetByUser() && !options.dialect_options.header.GetValue())) {
-		MemoryStream stream;
-		// write the header line to the file
-		for (idx_t i = 0; i < csv_data.options.name_list.size(); i++) {
-			if (i != 0) {
-				WriteQuoteOrEscape(stream, options.dialect_options.state_machine_options.delimiter.GetValue());
-			}
-			WriteQuotedString(stream, csv_data, csv_data.options.name_list[i].c_str(),
-			                  csv_data.options.name_list[i].size(), false);
-		}
-		stream.WriteData(const_data_ptr_cast(csv_data.newline.c_str()), csv_data.newline.size());
-
-		global_data->WriteData(stream.GetData(), stream.GetPosition());
 	}
 
 	return std::move(global_data);
@@ -536,14 +522,6 @@ void WriteCSVFinalize(ClientContext &context, FunctionData &bind_data, GlobalFun
 	auto &csv_data = bind_data.Cast<WriteCSVData>();
 	auto &options = csv_data.options;
 
-	MemoryStream stream;
-	if (!options.suffix.empty()) {
-		stream.WriteData(const_data_ptr_cast(options.suffix.c_str()), options.suffix.size());
-	} else if (global_state.written_anything) {
-		stream.WriteData(const_data_ptr_cast(csv_data.newline.c_str()), csv_data.newline.size());
-	}
-	global_state.WriteData(stream.GetData(), stream.GetPosition());
-
 	global_state.handle->Close();
 	global_state.handle.reset();
 }
@@ -563,10 +541,7 @@ CopyFunctionExecutionMode WriteCSVExecutionMode(bool preserve_insertion_order, b
 //===--------------------------------------------------------------------===//
 // Prepare Batch
 //===--------------------------------------------------------------------===//
-struct WriteCSVBatchData : public PreparedBatchData {
-	//! The thread-local buffer to write data into
-	MemoryStream stream;
-};
+struct WriteCSVBatchData : public PreparedBatchData {};
 
 unique_ptr<PreparedBatchData> WriteCSVPrepareBatch(ClientContext &context, FunctionData &bind_data,
                                                    GlobalFunctionData &gstate,

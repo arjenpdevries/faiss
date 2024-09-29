@@ -23,7 +23,6 @@ struct SecretEntry;
 
 //! Base class for SecretStorage API
 class SecretStorage {
-	friend class SecretManager;
 
 public:
 	explicit SecretStorage(const string &name) : storage_name(name), persistent(false) {};

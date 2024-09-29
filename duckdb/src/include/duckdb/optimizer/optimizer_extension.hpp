@@ -24,7 +24,6 @@ struct OptimizerExtensionInfo {
 
 struct OptimizerExtensionInput {
 	ClientContext &context;
-	Optimizer &optimizer;
 	optional_ptr<OptimizerExtensionInfo> info;
 };
 

@@ -9,19 +9,19 @@
 #pragma once
 
 #include "duckdb/common/enum_util.hpp"
-#include "duckdb/common/serializer/serialization_traits.hpp"
+#include "duckdb/common/insertion_order_preserving_map.hpp"
+#include "duckdb/common/optional_idx.hpp"
+#include "duckdb/common/optionally_owned_ptr.hpp"
 #include "duckdb/common/serializer/serialization_data.hpp"
+#include "duckdb/common/serializer/serialization_traits.hpp"
 #include "duckdb/common/types/interval.hpp"
 #include "duckdb/common/types/string_type.hpp"
 #include "duckdb/common/types/uhugeint.hpp"
 #include "duckdb/common/unordered_map.hpp"
 #include "duckdb/common/unordered_set.hpp"
-#include "duckdb/common/optional_idx.hpp"
-#include "duckdb/common/optionally_owned_ptr.hpp"
 #include "duckdb/common/value_operations/value_operations.hpp"
 #include "duckdb/execution/operator/csv_scanner/csv_option.hpp"
 #include "duckdb/main/config.hpp"
-#include "duckdb/common/insertion_order_preserving_map.hpp"
 
 namespace duckdb {
 
@@ -88,19 +88,6 @@ public:
 	void WritePropertyWithDefault(const field_id_t field_id, const char *tag, const T &value) {
 		// If current value is default, don't write it
 		if (!options.serialize_default_values && SerializationDefaultValue::IsDefault<T>(value)) {
-			OnOptionalPropertyBegin(field_id, tag, false);
-			OnOptionalPropertyEnd(false);
-			return;
-		}
-		OnOptionalPropertyBegin(field_id, tag, true);
-		WriteValue(value);
-		OnOptionalPropertyEnd(true);
-	}
-
-	template <class T>
-	void WritePropertyWithDefault(const field_id_t field_id, const char *tag, const T &value, const T &&default_value) {
-		// If current value is default, don't write it
-		if (!options.serialize_default_values && (value == default_value)) {
 			OnOptionalPropertyBegin(field_id, tag, false);
 			OnOptionalPropertyEnd(false);
 			return;
@@ -218,9 +205,6 @@ protected:
 	void WriteValue(const vector<T> &vec) {
 		auto count = vec.size();
 		OnListBegin(count);
-		for (auto &item : vec) {
-			WriteValue(item);
-		}
 		OnListEnd();
 	}
 
@@ -368,15 +352,6 @@ protected:
 		WriteValue(value.IsValid() ? value.GetIndex() : DConstants::INVALID_INDEX);
 	}
 };
-
-// We need to special case vector<bool> because elements of vector<bool> cannot be referenced
-template <>
-void Serializer::WriteValue(const vector<bool> &vec);
-
-// Specialization for Value (default Value comparison throws when comparing nulls)
-template <>
-void Serializer::WritePropertyWithDefault<Value>(const field_id_t field_id, const char *tag, const Value &value,
-                                                 const Value &&default_value);
 
 // List Impl
 template <class FUNC>

@@ -520,11 +520,9 @@ void PipelineExecutor::StartOperator(PhysicalOperator &op) {
 	if (context.client.interrupted) {
 		throw InterruptException();
 	}
-	context.thread.profiler.StartOperator(&op);
 }
 
 void PipelineExecutor::EndOperator(PhysicalOperator &op, optional_ptr<DataChunk> chunk) {
-	context.thread.profiler.EndOperator(chunk);
 
 	if (chunk) {
 		chunk->Verify();

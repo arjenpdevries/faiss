@@ -162,23 +162,6 @@ void ColumnDataAllocator::Initialize(ColumnDataAllocator &other) {
 	blocks.push_back(other.blocks.back());
 }
 
-data_ptr_t ColumnDataAllocator::GetDataPointer(ChunkManagementState &state, uint32_t block_id, uint32_t offset) {
-	if (type == ColumnDataAllocatorType::IN_MEMORY_ALLOCATOR) {
-		// in-memory allocator: construct pointer from block_id and offset
-		if (sizeof(uintptr_t) == sizeof(uint32_t)) {
-			uintptr_t pointer_value = uintptr_t(block_id);
-			return (data_ptr_t)pointer_value; // NOLINT - convert from pointer value back to pointer
-		} else if (sizeof(uintptr_t) == sizeof(uint64_t)) {
-			uintptr_t pointer_value = (uintptr_t(offset) << 32) | uintptr_t(block_id);
-			return (data_ptr_t)pointer_value; // NOLINT - convert from pointer value back to pointer
-		} else {
-			throw InternalException("ColumnDataCollection: Architecture not supported!?");
-		}
-	}
-	D_ASSERT(state.handles.find(block_id) != state.handles.end());
-	return state.handles[block_id].Ptr() + offset;
-}
-
 void ColumnDataAllocator::UnswizzlePointers(ChunkManagementState &state, Vector &result, idx_t v_offset, uint16_t count,
                                             uint32_t block_id, uint32_t offset) {
 	D_ASSERT(result.GetType().InternalType() == PhysicalType::VARCHAR);
@@ -201,12 +184,6 @@ void ColumnDataAllocator::UnswizzlePointers(ChunkManagementState &state, Vector 
 	// at least one string must be non-inlined, otherwise this function should not be called
 	D_ASSERT(i < end);
 
-	auto base_ptr = char_ptr_cast(GetDataPointer(state, block_id, offset));
-	if (strings[i].GetData() == base_ptr) {
-		// pointers are still valid
-		return;
-	}
-
 	// pointer mismatch! pointers are invalid, set them correctly
 	for (; i < end; i++) {
 		if (!validity.RowIsValid(i)) {
@@ -215,8 +192,6 @@ void ColumnDataAllocator::UnswizzlePointers(ChunkManagementState &state, Vector 
 		if (strings[i].IsInlined()) {
 			continue;
 		}
-		strings[i].SetPointer(base_ptr);
-		base_ptr += strings[i].GetSize();
 	}
 }
 

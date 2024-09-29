@@ -474,11 +474,6 @@ public:
 
 		static void UpdateStats(BitpackingCompressState<T, WRITE_STATISTICS> *state, idx_t count) {
 			state->current_segment->count += count;
-
-			if (WRITE_STATISTICS && !state->state.all_invalid) {
-				state->current_segment->stats.statistics.template UpdateNumericStats<T>(state->state.maximum);
-				state->current_segment->stats.statistics.template UpdateNumericStats<T>(state->state.minimum);
-			}
 		}
 	};
 

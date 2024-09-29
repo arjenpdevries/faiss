@@ -203,8 +203,6 @@ void ClientContext::BeginQueryInternal(ClientContextLock &lock, const string &qu
 
 ErrorData ClientContext::EndQueryInternal(ClientContextLock &lock, bool success, bool invalidate_transaction,
                                           optional_ptr<ErrorData> previous_error) {
-	client_data->profiler->EndQuery();
-
 	if (active_query->executor) {
 		active_query->executor->CancelTasks();
 	}
@@ -324,9 +322,6 @@ ClientContext::CreatePreparedStatementInternal(ClientContextLock &lock, const st
 	StatementType statement_type = statement->type;
 	auto result = make_shared_ptr<PreparedStatementData>(statement_type);
 
-	auto &profiler = QueryProfiler::Get(*this);
-	profiler.StartQuery(query, IsExplainAnalyze(statement.get()), true);
-	profiler.StartPhase(MetricsType::PLANNER);
 	Planner planner(*this);
 	if (values) {
 		auto &parameter_values = *values;
@@ -337,7 +332,6 @@ ClientContext::CreatePreparedStatementInternal(ClientContextLock &lock, const st
 
 	planner.CreatePlan(std::move(statement));
 	D_ASSERT(planner.plan || !planner.properties.bound_all_parameters);
-	profiler.EndPhase();
 
 	auto plan = std::move(planner.plan);
 	// extract the result column names from the plan
@@ -352,22 +346,15 @@ ClientContext::CreatePreparedStatementInternal(ClientContextLock &lock, const st
 	plan->Verify(*this);
 #endif
 	if (config.enable_optimizer && plan->RequireOptimizer()) {
-		profiler.StartPhase(MetricsType::ALL_OPTIMIZERS);
-		Optimizer optimizer(*planner.binder, *this);
-		plan = optimizer.Optimize(std::move(plan));
-		D_ASSERT(plan);
-		profiler.EndPhase();
 
 #ifdef DEBUG
 		plan->Verify(*this);
 #endif
 	}
 
-	profiler.StartPhase(MetricsType::PHYSICAL_PLANNER);
 	// now convert logical query plan into a physical query plan
 	PhysicalPlanGenerator physical_planner(*this);
 	auto physical_plan = physical_planner.CreatePlan(std::move(plan));
-	profiler.EndPhase();
 
 #ifdef DEBUG
 	D_ASSERT(!physical_plan->ToString().empty());
@@ -635,11 +622,6 @@ unique_ptr<LogicalOperator> ClientContext::ExtractPlan(const string &query) {
 
 		plan = std::move(planner.plan);
 
-		if (config.enable_optimizer) {
-			Optimizer optimizer(*planner.binder, *this);
-			plan = optimizer.Optimize(std::move(plan));
-		}
-
 		ColumnBindingResolver resolver;
 		resolver.Verify(*plan);
 		resolver.VisitOperator(*plan);
@@ -843,9 +825,6 @@ unique_ptr<PendingQueryResult> ClientContext::PendingStatementOrPreparedStatemen
 		}
 		return ErrorResult<PendingQueryResult>(std::move(error), query);
 	}
-	// start the profiler
-	auto &profiler = QueryProfiler::Get(*this);
-	profiler.StartQuery(query, IsExplainAnalyze(statement ? statement.get() : prepared->unbound_statement.get()));
 
 	bool invalidate_query = true;
 	try {
@@ -879,25 +858,6 @@ unique_ptr<PendingQueryResult> ClientContext::PendingStatementOrPreparedStatemen
 }
 
 void ClientContext::LogQueryInternal(ClientContextLock &, const string &query) {
-	if (!client_data->log_query_writer) {
-#ifdef DUCKDB_FORCE_QUERY_LOG
-		try {
-			string log_path(DUCKDB_FORCE_QUERY_LOG);
-			client_data->log_query_writer =
-			    make_uniq<BufferedFileWriter>(FileSystem::GetFileSystem(*this), log_path,
-			                                  BufferedFileWriter::DEFAULT_OPEN_FLAGS, client_data->file_opener.get());
-		} catch (...) {
-			return;
-		}
-#else
-		return;
-#endif
-	}
-	// log query path is set: log the query
-	client_data->log_query_writer->WriteData(const_data_ptr_cast(query.c_str()), query.size());
-	client_data->log_query_writer->WriteData(const_data_ptr_cast("\n"), 1);
-	client_data->log_query_writer->Flush();
-	client_data->log_query_writer->Sync();
 }
 
 unique_ptr<QueryResult> ClientContext::Query(unique_ptr<SQLStatement> statement, bool allow_stream_result) {
@@ -1147,24 +1107,6 @@ void ClientContext::Append(TableDescription &description, ColumnDataCollection &
 	});
 }
 
-void ClientContext::TryBindRelation(Relation &relation, vector<ColumnDefinition> &result_columns) {
-#ifdef DEBUG
-	D_ASSERT(!relation.GetAlias().empty());
-	D_ASSERT(!relation.ToString().empty());
-#endif
-	RunFunctionInTransaction([&]() {
-		// bind the expressions
-		auto binder = Binder::CreateBinder(*this);
-		auto result = relation.Bind(*binder);
-		D_ASSERT(result.names.size() == result.types.size());
-
-		result_columns.reserve(result_columns.size() + result.names.size());
-		for (idx_t i = 0; i < result.names.size(); i++) {
-			result_columns.emplace_back(result.names[i], result.types[i]);
-		}
-	});
-}
-
 unordered_set<string> ClientContext::GetTableNames(const string &query) {
 	auto lock = LockContext();
 
@@ -1182,80 +1124,6 @@ unordered_set<string> ClientContext::GetTableNames(const string &query) {
 		result = binder->GetTableNames();
 	});
 	return result;
-}
-
-unique_ptr<PendingQueryResult> ClientContext::PendingQueryInternal(ClientContextLock &lock,
-                                                                   const shared_ptr<Relation> &relation,
-                                                                   bool allow_stream_result) {
-	InitialCleanup(lock);
-
-	string query;
-	if (config.query_verification_enabled) {
-		// run the ToString method of any relation we run, mostly to ensure it doesn't crash
-		relation->ToString();
-		relation->GetAlias();
-		if (relation->IsReadOnly()) {
-			// verify read only statements by running a select statement
-			auto select = make_uniq<SelectStatement>();
-			select->node = relation->GetQueryNode();
-			RunStatementInternal(lock, query, std::move(select), false);
-		}
-	}
-
-	auto relation_stmt = make_uniq<RelationStatement>(relation);
-	PendingQueryParameters parameters;
-	parameters.allow_stream_result = allow_stream_result;
-	return PendingQueryInternal(lock, std::move(relation_stmt), parameters);
-}
-
-unique_ptr<PendingQueryResult> ClientContext::PendingQuery(const shared_ptr<Relation> &relation,
-                                                           bool allow_stream_result) {
-	auto lock = LockContext();
-	return PendingQueryInternal(*lock, relation, allow_stream_result);
-}
-
-unique_ptr<QueryResult> ClientContext::Execute(const shared_ptr<Relation> &relation) {
-	auto lock = LockContext();
-	auto &expected_columns = relation->Columns();
-	auto pending = PendingQueryInternal(*lock, relation, false);
-	if (!pending->success) {
-		return ErrorResult<MaterializedQueryResult>(pending->GetErrorObject());
-	}
-
-	unique_ptr<QueryResult> result;
-	result = ExecutePendingQueryInternal(*lock, *pending);
-	if (result->HasError()) {
-		return result;
-	}
-	// verify that the result types and result names of the query match the expected result types/names
-	if (result->types.size() == expected_columns.size()) {
-		bool mismatch = false;
-		for (idx_t i = 0; i < result->types.size(); i++) {
-			if (result->types[i] != expected_columns[i].Type() || result->names[i] != expected_columns[i].Name()) {
-				mismatch = true;
-				break;
-			}
-		}
-		if (!mismatch) {
-			// all is as expected: return the result
-			return result;
-		}
-	}
-	// result mismatch
-	string err_str = "Result mismatch in query!\nExpected the following columns: [";
-	for (idx_t i = 0; i < expected_columns.size(); i++) {
-		if (i > 0) {
-			err_str += ", ";
-		}
-		err_str += expected_columns[i].Name() + " " + expected_columns[i].Type().ToString();
-	}
-	err_str += "]\nBut result contained the following: ";
-	for (idx_t i = 0; i < result->types.size(); i++) {
-		err_str += i == 0 ? "[" : ", ";
-		err_str += result->names[i] + " " + result->types[i].ToString();
-	}
-	err_str += "]";
-	return ErrorResult<MaterializedQueryResult>(ErrorData(err_str));
 }
 
 SettingLookupResult ClientContext::TryGetCurrentSetting(const std::string &key, Value &result) const {

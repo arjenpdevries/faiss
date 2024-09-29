@@ -1,12 +1,13 @@
 #include "duckdb/storage/table/standard_column_data.hpp"
+
+#include "duckdb/common/serializer/deserializer.hpp"
+#include "duckdb/common/serializer/serializer.hpp"
+#include "duckdb/planner/table_filter.hpp"
+#include "duckdb/storage/data_table.hpp"
+#include "duckdb/storage/table/append_state.hpp"
+#include "duckdb/storage/table/column_checkpoint_state.hpp"
 #include "duckdb/storage/table/scan_state.hpp"
 #include "duckdb/storage/table/update_segment.hpp"
-#include "duckdb/storage/table/append_state.hpp"
-#include "duckdb/storage/data_table.hpp"
-#include "duckdb/planner/table_filter.hpp"
-#include "duckdb/storage/table/column_checkpoint_state.hpp"
-#include "duckdb/common/serializer/serializer.hpp"
-#include "duckdb/common/serializer/deserializer.hpp"
 
 namespace duckdb {
 
@@ -85,8 +86,6 @@ void StandardColumnData::InitializeAppend(ColumnAppendState &state) {
 
 void StandardColumnData::AppendData(BaseStatistics &stats, ColumnAppendState &state, UnifiedVectorFormat &vdata,
                                     idx_t count) {
-	ColumnData::AppendData(stats, state, vdata, count);
-	validity.AppendData(stats, state.child_appends[0], vdata, count);
 }
 
 void StandardColumnData::RevertAppend(row_t start_row) {
@@ -125,18 +124,7 @@ void StandardColumnData::UpdateColumn(TransactionData transaction, const vector<
 }
 
 unique_ptr<BaseStatistics> StandardColumnData::GetUpdateStatistics() {
-	auto stats = updates ? updates->GetStatistics() : nullptr;
-	auto validity_stats = validity.GetUpdateStatistics();
-	if (!stats && !validity_stats) {
-		return nullptr;
-	}
-	if (!stats) {
-		stats = BaseStatistics::CreateEmpty(type).ToUnique();
-	}
-	if (validity_stats) {
-		stats->Merge(*validity_stats);
-	}
-	return stats;
+	return nullptr;
 }
 
 void StandardColumnData::FetchRow(TransactionData transaction, ColumnFetchState &state, row_t row_id, Vector &result,
@@ -164,11 +152,6 @@ struct StandardColumnCheckpointState : public ColumnCheckpointState {
 	unique_ptr<ColumnCheckpointState> validity_state;
 
 public:
-	unique_ptr<BaseStatistics> GetStatistics() override {
-		D_ASSERT(global_stats);
-		return std::move(global_stats);
-	}
-
 	PersistentColumnData ToPersistentData() override {
 		auto data = ColumnCheckpointState::ToPersistentData();
 		data.child_columns.push_back(validity_state->ToPersistentData());
@@ -208,14 +191,10 @@ bool StandardColumnData::IsPersistent() {
 }
 
 PersistentColumnData StandardColumnData::Serialize() {
-	auto persistent_data = ColumnData::Serialize();
-	persistent_data.child_columns.push_back(validity.Serialize());
-	return persistent_data;
+	throw InternalException("Cannot AlterEntry without client context");
 }
 
 void StandardColumnData::InitializeColumn(PersistentColumnData &column_data, BaseStatistics &target_stats) {
-	ColumnData::InitializeColumn(column_data, target_stats);
-	validity.InitializeColumn(column_data.child_columns[0], target_stats);
 }
 
 void StandardColumnData::GetColumnSegmentInfo(duckdb::idx_t row_group_index, vector<duckdb::idx_t> col_path,

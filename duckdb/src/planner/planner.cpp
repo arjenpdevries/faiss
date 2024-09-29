@@ -3,7 +3,9 @@
 #include "duckdb/common/serializer/binary_deserializer.hpp"
 #include "duckdb/common/serializer/binary_serializer.hpp"
 #include "duckdb/common/serializer/memory_stream.hpp"
+#include "duckdb/execution/column_binding_resolver.hpp"
 #include "duckdb/execution/expression_executor.hpp"
+#include "duckdb/main/attached_database.hpp"
 #include "duckdb/main/client_context.hpp"
 #include "duckdb/main/client_data.hpp"
 #include "duckdb/main/database.hpp"
@@ -12,8 +14,6 @@
 #include "duckdb/planner/binder.hpp"
 #include "duckdb/planner/expression/bound_parameter_expression.hpp"
 #include "duckdb/transaction/meta_transaction.hpp"
-#include "duckdb/execution/column_binding_resolver.hpp"
-#include "duckdb/main/attached_database.hpp"
 
 namespace duckdb {
 
@@ -30,7 +30,6 @@ static void CheckTreeDepth(const LogicalOperator &op, idx_t max_depth, idx_t dep
 }
 
 void Planner::CreatePlan(SQLStatement &statement) {
-	auto &profiler = QueryProfiler::Get(context);
 	auto parameter_count = statement.named_param_map.size();
 
 	BoundParameterMap bound_parameters(parameter_data);
@@ -38,10 +37,8 @@ void Planner::CreatePlan(SQLStatement &statement) {
 	// first bind the tables and columns to the catalog
 	bool parameters_resolved = true;
 	try {
-		profiler.StartPhase(MetricsType::PLANNER_BINDING);
 		binder->parameters = &bound_parameters;
 		auto bound_statement = binder->Bind(statement);
-		profiler.EndPhase();
 
 		this->names = bound_statement.names;
 		this->types = bound_statement.types;
@@ -183,35 +180,6 @@ void Planner::VerifyPlan(ClientContext &context, unique_ptr<LogicalOperator> &op
 	ColumnBindingResolver::Verify(*op);
 
 	// format (de)serialization of this operator
-	try {
-		MemoryStream stream;
-
-		SerializationOptions options;
-		if (config.options.serialization_compatibility.manually_set) {
-			// Override the default of 'latest' if this was manually set (for testing, mostly)
-			options.serialization_compatibility = config.options.serialization_compatibility;
-		} else {
-			options.serialization_compatibility = SerializationCompatibility::Latest();
-		}
-
-		BinarySerializer::Serialize(*op, stream, options);
-		stream.Rewind();
-		bound_parameter_map_t parameters;
-		auto new_plan = BinaryDeserializer::Deserialize<LogicalOperator>(stream, context, parameters);
-
-		if (map) {
-			*map = std::move(parameters);
-		}
-		op = std::move(new_plan);
-	} catch (std::exception &ex) {
-		ErrorData error(ex);
-		switch (error.Type()) {
-		case ExceptionType::NOT_IMPLEMENTED: // NOLINT: explicitly allowing these errors (for now)
-			break;                           // pass
-		default:
-			throw;
-		}
-	}
 }
 
 } // namespace duckdb

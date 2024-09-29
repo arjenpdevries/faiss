@@ -60,7 +60,7 @@ public:
 	                          vector<duckdb::ColumnSegmentInfo> &result) override;
 
 	bool IsPersistent() override;
-	PersistentColumnData Serialize() override;
+	PersistentColumnData Serialize();
 	void InitializeColumn(PersistentColumnData &column_data, BaseStatistics &target_stats) override;
 
 	void Verify(RowGroup &parent) override;

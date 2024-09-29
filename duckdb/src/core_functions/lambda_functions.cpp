@@ -236,9 +236,6 @@ bool ListLambdaBindData::Equals(const FunctionData &other_p) const {
 void ListLambdaBindData::Serialize(Serializer &serializer, const optional_ptr<FunctionData> bind_data_p,
                                    const ScalarFunction &) {
 	auto &bind_data = bind_data_p->Cast<ListLambdaBindData>();
-	serializer.WriteProperty(100, "return_type", bind_data.return_type);
-	serializer.WritePropertyWithDefault(101, "lambda_expr", bind_data.lambda_expr, unique_ptr<Expression>());
-	serializer.WriteProperty(102, "has_index", bind_data.has_index);
 }
 
 unique_ptr<FunctionData> ListLambdaBindData::Deserialize(Deserializer &deserializer, ScalarFunction &) {

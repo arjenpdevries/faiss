@@ -36,7 +36,6 @@ DBConfig::DBConfig() {
 	compression_functions = make_uniq<CompressionFunctionSet>();
 	index_types = make_uniq<IndexTypeSet>();
 	error_manager = make_uniq<ErrorManager>();
-	secret_manager = make_uniq<SecretManager>();
 }
 
 DBConfig::DBConfig(bool read_only) : DBConfig::DBConfig() {
@@ -245,9 +244,6 @@ void DatabaseInstance::Initialize(const char *database_path, DBConfig *user_conf
 	object_cache = make_uniq<ObjectCache>();
 	connection_manager = make_uniq<ConnectionManager>();
 
-	// initialize the secret manager
-	config.secret_manager->Initialize(*this);
-
 	// resolve the type of teh database we are opening
 	auto &fs = FileSystem::GetFileSystem(*this);
 	DBPathAndType::ResolveDatabaseType(fs, config.options.database_path, config.options.database_type);
@@ -283,10 +279,6 @@ DuckDB::DuckDB(DatabaseInstance &instance_p) : instance(instance_p.shared_from_t
 }
 
 DuckDB::~DuckDB() {
-}
-
-SecretManager &DatabaseInstance::GetSecretManager() {
-	return *config.secret_manager;
 }
 
 BufferManager &DatabaseInstance::GetBufferManager() {
@@ -366,9 +358,6 @@ void DatabaseInstance::Configure(DBConfig &new_config, const char *database_path
 		config.file_system = std::move(new_config.file_system);
 	} else {
 		config.file_system = make_uniq<VirtualFileSystem>();
-	}
-	if (new_config.secret_manager) {
-		config.secret_manager = std::move(new_config.secret_manager);
 	}
 	if (config.options.maximum_memory == DConstants::INVALID_INDEX) {
 		config.SetDefaultMaxMemory();

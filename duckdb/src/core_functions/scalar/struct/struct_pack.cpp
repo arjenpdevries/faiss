@@ -1,11 +1,11 @@
-#include "duckdb/core_functions/scalar/struct_functions.hpp"
-#include "duckdb/planner/expression/bound_function_expression.hpp"
-#include "duckdb/common/string_util.hpp"
-#include "duckdb/parser/expression/bound_expression.hpp"
-#include "duckdb/function/scalar/nested_functions.hpp"
 #include "duckdb/common/case_insensitive_map.hpp"
-#include "duckdb/storage/statistics/struct_stats.hpp"
+#include "duckdb/common/string_util.hpp"
+#include "duckdb/core_functions/scalar/struct_functions.hpp"
+#include "duckdb/function/scalar/nested_functions.hpp"
+#include "duckdb/parser/expression/bound_expression.hpp"
+#include "duckdb/planner/expression/bound_function_expression.hpp"
 #include "duckdb/planner/expression_binder.hpp"
+#include "duckdb/storage/statistics/struct_stats.hpp"
 
 namespace duckdb {
 
@@ -61,13 +61,7 @@ static unique_ptr<FunctionData> StructPackBind(ClientContext &context, ScalarFun
 }
 
 unique_ptr<BaseStatistics> StructPackStats(ClientContext &context, FunctionStatisticsInput &input) {
-	auto &child_stats = input.child_stats;
-	auto &expr = input.expr;
-	auto struct_stats = StructStats::CreateUnknown(expr.return_type);
-	for (idx_t i = 0; i < child_stats.size(); i++) {
-		StructStats::SetChildStats(struct_stats, i, child_stats[i]);
-	}
-	return struct_stats.ToUnique();
+	return nullptr;
 }
 
 template <bool IS_STRUCT_PACK>

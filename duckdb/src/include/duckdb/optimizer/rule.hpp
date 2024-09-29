@@ -23,8 +23,6 @@ public:
 
 	//! The expression rewriter this rule belongs to
 	ExpressionRewriter &rewriter;
-	//! The expression matcher of the rule
-	unique_ptr<ExpressionMatcher> root;
 
 	ClientContext &GetContext() const;
 	virtual unique_ptr<Expression> Apply(LogicalOperator &op, vector<reference<Expression>> &bindings,

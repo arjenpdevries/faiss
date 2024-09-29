@@ -28,20 +28,7 @@ unique_ptr<ColumnSegment> ColumnSegment::CreatePersistentSegment(DatabaseInstanc
                                                                  BaseStatistics statistics,
                                                                  unique_ptr<ColumnSegmentState> segment_state) {
 
-	auto &config = DBConfig::GetConfig(db);
-	optional_ptr<CompressionFunction> function;
-	shared_ptr<BlockHandle> block;
-
-	if (block_id == INVALID_BLOCK) {
-		function = config.GetCompressionFunction(CompressionType::COMPRESSION_CONSTANT, type.InternalType());
-	} else {
-		function = config.GetCompressionFunction(compression_type, type.InternalType());
-		block = block_manager.RegisterBlock(block_id);
-	}
-
-	auto segment_size = block_manager.GetBlockSize();
-	return make_uniq<ColumnSegment>(db, std::move(block), type, ColumnSegmentType::PERSISTENT, start, count, *function,
-	                                std::move(statistics), block_id, offset, segment_size, std::move(segment_state));
+	return nullptr;
 }
 
 unique_ptr<ColumnSegment> ColumnSegment::CreateTransientSegment(DatabaseInstance &db, const LogicalType &type,
@@ -56,8 +43,7 @@ unique_ptr<ColumnSegment> ColumnSegment::CreateTransientSegment(DatabaseInstance
 	auto &config = DBConfig::GetConfig(db);
 	auto function = config.GetCompressionFunction(CompressionType::COMPRESSION_UNCOMPRESSED, type.InternalType());
 
-	return make_uniq<ColumnSegment>(db, std::move(block), type, ColumnSegmentType::TRANSIENT, start, 0U, *function,
-	                                BaseStatistics::CreateEmpty(type), INVALID_BLOCK, 0U, segment_size);
+	return nullptr;
 }
 
 //===--------------------------------------------------------------------===//
@@ -70,8 +56,8 @@ ColumnSegment::ColumnSegment(DatabaseInstance &db, shared_ptr<BlockHandle> block
                              const unique_ptr<ColumnSegmentState> segment_state_p)
 
     : SegmentBase<ColumnSegment>(start, count), db(db), type(type), type_size(GetTypeIdSize(type.InternalType())),
-      segment_type(segment_type), function(function_p), stats(std::move(statistics)), block(std::move(block_p)),
-      block_id(block_id_p), offset(offset), segment_size(segment_size_p) {
+      segment_type(segment_type), function(function_p), block(std::move(block_p)), block_id(block_id_p), offset(offset),
+      segment_size(segment_size_p) {
 
 	if (function.get().init_segment) {
 		segment_state = function.get().init_segment(*this, block_id, segment_state_p.get());
@@ -85,8 +71,8 @@ ColumnSegment::ColumnSegment(ColumnSegment &other, const idx_t start)
 
     : SegmentBase<ColumnSegment>(start, other.count.load()), db(other.db), type(std::move(other.type)),
       type_size(other.type_size), segment_type(other.segment_type), function(other.function),
-      stats(std::move(other.stats)), block(std::move(other.block)), block_id(other.block_id), offset(other.offset),
-      segment_size(other.segment_size), segment_state(std::move(other.segment_state)) {
+      block(std::move(other.block)), block_id(other.block_id), offset(other.offset), segment_size(other.segment_size),
+      segment_state(std::move(other.segment_state)) {
 
 	// For constant segments (CompressionType::COMPRESSION_CONSTANT) the block is a nullptr.
 	D_ASSERT(!block || segment_size <= GetBlockManager().GetBlockSize());
@@ -111,17 +97,14 @@ void ColumnSegment::InitializePrefetch(PrefetchState &prefetch_state, ColumnScan
 }
 
 void ColumnSegment::InitializeScan(ColumnScanState &state) {
-	state.scan_state = function.get().init_scan(*this);
 }
 
 void ColumnSegment::Scan(ColumnScanState &state, idx_t scan_count, Vector &result, idx_t result_offset,
                          ScanVectorType scan_type) {
 	if (scan_type == ScanVectorType::SCAN_ENTIRE_VECTOR) {
 		D_ASSERT(result_offset == 0);
-		Scan(state, scan_count, result);
 	} else {
 		D_ASSERT(result.GetVectorType() == VectorType::FLAT_VECTOR);
-		ScanPartial(state, scan_count, result, result_offset);
 		D_ASSERT(result.GetVectorType() == VectorType::FLAT_VECTOR);
 	}
 }
@@ -183,7 +166,7 @@ idx_t ColumnSegment::Append(ColumnAppendState &state, UnifiedVectorFormat &appen
 	if (!function.get().append) {
 		throw InternalException("Attempting to append to a segment without append method");
 	}
-	return function.get().append(*state.append_state, *this, stats, append_data, offset, count);
+	return 0;
 }
 
 idx_t ColumnSegment::FinalizeAppend(ColumnAppendState &state) {
@@ -191,9 +174,7 @@ idx_t ColumnSegment::FinalizeAppend(ColumnAppendState &state) {
 	if (!function.get().finalize_append) {
 		throw InternalException("Attempting to call FinalizeAppend on a segment without a finalize_append method");
 	}
-	auto result_count = function.get().finalize_append(*this, stats);
-	state.append_state.reset();
-	return result_count;
+	return 0;
 }
 
 void ColumnSegment::RevertAppend(idx_t start_row) {
@@ -216,10 +197,8 @@ void ColumnSegment::ConvertToPersistent(optional_ptr<BlockManager> block_manager
 
 	if (block_id == INVALID_BLOCK) {
 		// constant block: reset the block buffer
-		D_ASSERT(stats.statistics.IsConstant());
 		block.reset();
 	} else {
-		D_ASSERT(!stats.statistics.IsConstant());
 		// non-constant block: write the block to disk
 		// the data for the block already exists in-memory of our block
 		// instead of copying the data we alter some metadata so the buffer points to an on-disk block
@@ -234,23 +213,6 @@ void ColumnSegment::MarkAsPersistent(shared_ptr<BlockHandle> block_p, uint32_t o
 	block_id = block_p->BlockId();
 	offset = offset_p;
 	block = std::move(block_p);
-}
-
-DataPointer ColumnSegment::GetDataPointer() {
-	if (segment_type != ColumnSegmentType::PERSISTENT) {
-		throw InternalException("Attempting to call ColumnSegment::GetDataPointer on a transient segment");
-	}
-	// set up the data pointer directly using the data from the persistent segment
-	DataPointer pointer(stats.statistics.Copy());
-	pointer.block_pointer.block_id = GetBlockId();
-	pointer.block_pointer.offset = NumericCast<uint32_t>(GetBlockOffset());
-	pointer.row_start = start;
-	pointer.tuple_count = count;
-	pointer.compression_type = function.get().type;
-	if (function.get().serialize_state) {
-		pointer.segment_state = function.get().serialize_state(*this);
-	}
-	return pointer;
 }
 
 //===--------------------------------------------------------------------===//

@@ -31,10 +31,6 @@ public:
 
 	unique_ptr<NodeStatistics> PropagateStatistics(unique_ptr<LogicalOperator> &node_ptr);
 
-	column_binding_map_t<unique_ptr<BaseStatistics>> GetStatisticsMap() {
-		return std::move(statistics_map);
-	}
-
 private:
 	//! Propagate statistics through an operator
 	unique_ptr<NodeStatistics> PropagateStatistics(LogicalOperator &node, unique_ptr<LogicalOperator> &node_ptr);
@@ -71,8 +67,6 @@ private:
 	//! Set the statistics of a specific column binding to not contain null values
 	void SetStatisticsNotNull(ColumnBinding binding);
 
-	//! Run a comparison between the statistics and the table filter; returns the prune result
-	FilterPropagateResult PropagateTableFilter(BaseStatistics &stats, TableFilter &filter);
 	//! Update filter statistics from a TableFilter
 	void UpdateFilterStatistics(BaseStatistics &input, TableFilter &filter);
 
@@ -105,12 +99,10 @@ private:
 	bool ExpressionIsConstantOrNull(Expression &expr, const Value &val);
 
 private:
-	Optimizer &optimizer;
 	ClientContext &context;
 	//! The root of the query plan
 	optional_ptr<LogicalOperator> root;
 	//! The map of ColumnBinding -> statistics for the various nodes
-	column_binding_map_t<unique_ptr<BaseStatistics>> statistics_map;
 	//! Node stats for the current node
 	unique_ptr<NodeStatistics> node_stats;
 };

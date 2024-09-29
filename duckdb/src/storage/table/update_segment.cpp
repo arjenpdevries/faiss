@@ -21,20 +21,7 @@ static UpdateSegment::rollback_update_function_t GetRollbackUpdateFunction(Physi
 static UpdateSegment::statistics_update_function_t GetStatisticsUpdateFunction(PhysicalType type);
 static UpdateSegment::fetch_row_function_t GetFetchRowFunction(PhysicalType type);
 
-UpdateSegment::UpdateSegment(ColumnData &column_data)
-    : column_data(column_data), stats(column_data.type), heap(BufferAllocator::Get(column_data.GetDatabase())) {
-	auto physical_type = column_data.type.InternalType();
-
-	this->type_size = GetTypeIdSize(physical_type);
-
-	this->initialize_update_function = GetInitializeUpdateFunction(physical_type);
-	this->fetch_update_function = GetFetchUpdateFunction(physical_type);
-	this->fetch_committed_function = GetFetchCommittedFunction(physical_type);
-	this->fetch_committed_range = GetFetchCommittedRangeFunction(physical_type);
-	this->fetch_row_function = GetFetchRowFunction(physical_type);
-	this->merge_update_function = GetMergeUpdateFunction(physical_type);
-	this->rollback_update_function = GetRollbackUpdateFunction(physical_type);
-	this->statistics_update_function = GetStatisticsUpdateFunction(physical_type);
+UpdateSegment::UpdateSegment(ColumnData &column_data) : heap(BufferAllocator::Get(column_data.GetDatabase())) {
 }
 
 UpdateSegment::~UpdateSegment() {
@@ -44,16 +31,7 @@ UpdateSegment::~UpdateSegment() {
 // Update Info Helpers
 //===--------------------------------------------------------------------===//
 Value UpdateInfo::GetValue(idx_t index) {
-	auto &type = segment->column_data.type;
-
-	switch (type.id()) {
-	case LogicalTypeId::VALIDITY:
-		return Value::BOOLEAN(reinterpret_cast<bool *>(tuple_data)[index]);
-	case LogicalTypeId::INTEGER:
-		return Value::INTEGER(reinterpret_cast<int32_t *>(tuple_data)[index]);
-	default:
-		throw NotImplementedException("Unimplemented type for UpdateInfo::GetValue");
-	}
+	throw NotImplementedException("Unimplemented type for UpdateInfo::GetValue");
 }
 
 void UpdateInfo::Print() {
@@ -61,16 +39,7 @@ void UpdateInfo::Print() {
 }
 
 string UpdateInfo::ToString() {
-	auto &type = segment->column_data.type;
-	string result = "Update Info [" + type.ToString() + ", Count: " + to_string(N) +
-	                ", Transaction Id: " + to_string(version_number) + "]\n";
-	for (idx_t i = 0; i < N; i++) {
-		result += to_string(tuples[i]) + ": " + GetValue(i).ToString() + "\n";
-	}
-	if (next) {
-		result += "\nChild Segment: " + next->ToString();
-	}
-	return result;
+	return "result";
 }
 
 void UpdateInfo::Verify() {
@@ -428,16 +397,7 @@ static UpdateSegment::fetch_row_function_t GetFetchRowFunction(PhysicalType type
 }
 
 void UpdateSegment::FetchRow(TransactionData transaction, idx_t row_id, Vector &result, idx_t result_idx) {
-	if (!root) {
-		return;
-	}
-	idx_t vector_index = (row_id - column_data.start) / STANDARD_VECTOR_SIZE;
-	if (!root->info[vector_index]) {
-		return;
-	}
-	idx_t row_in_vector = (row_id - column_data.start) - vector_index * STANDARD_VECTOR_SIZE;
-	fetch_row_function(transaction.start_time, transaction.transaction_id, root->info[vector_index]->info.get(),
-	                   row_in_vector, result, result_idx);
+	return;
 }
 
 //===--------------------------------------------------------------------===//
@@ -743,7 +703,7 @@ struct ExtractValidityEntry {
 template <class T, class V, class OP = ExtractStandardEntry>
 static void MergeUpdateLoopInternal(UpdateInfo *base_info, V *base_table_data, UpdateInfo *update_info,
                                     V *update_vector_data, row_t *ids, idx_t count, const SelectionVector &sel) {
-	auto base_id = base_info->segment->column_data.start + base_info->vector_index * STANDARD_VECTOR_SIZE;
+	auto base_id = base_info->vector_index * STANDARD_VECTOR_SIZE;
 #ifdef DEBUG
 	// all of these should be sorted, otherwise the below algorithm does not work
 	for (idx_t i = 1; i < count; i++) {
@@ -899,23 +859,10 @@ static UpdateSegment::merge_update_function_t GetMergeUpdateFunction(PhysicalTyp
 //===--------------------------------------------------------------------===//
 // Update statistics
 //===--------------------------------------------------------------------===//
-unique_ptr<BaseStatistics> UpdateSegment::GetStatistics() {
-	lock_guard<mutex> stats_guard(stats_lock);
-	return stats.statistics.ToUnique();
-}
 
 idx_t UpdateValidityStatistics(UpdateSegment *segment, SegmentStatistics &stats, Vector &update, idx_t count,
                                SelectionVector &sel) {
 	auto &mask = FlatVector::Validity(update);
-	auto &validity = stats.statistics;
-	if (!mask.AllValid() && !validity.CanHaveNull()) {
-		for (idx_t i = 0; i < count; i++) {
-			if (!mask.RowIsValid(i)) {
-				validity.SetHasNullFast();
-				break;
-			}
-		}
-	}
 	sel.Initialize(nullptr);
 	return count;
 }
@@ -928,7 +875,6 @@ idx_t TemplatedUpdateNumericStatistics(UpdateSegment *segment, SegmentStatistics
 
 	if (mask.AllValid()) {
 		for (idx_t i = 0; i < count; i++) {
-			stats.statistics.UpdateNumericStats<T>(update_data[i]);
 		}
 		sel.Initialize(nullptr);
 		return count;
@@ -938,7 +884,6 @@ idx_t TemplatedUpdateNumericStatistics(UpdateSegment *segment, SegmentStatistics
 		for (idx_t i = 0; i < count; i++) {
 			if (mask.RowIsValid(i)) {
 				sel.set_index(not_null_count++, i);
-				stats.statistics.UpdateNumericStats<T>(update_data[i]);
 			}
 		}
 		return not_null_count;
@@ -951,7 +896,6 @@ idx_t UpdateStringStatistics(UpdateSegment *segment, SegmentStatistics &stats, V
 	auto &mask = FlatVector::Validity(update);
 	if (mask.AllValid()) {
 		for (idx_t i = 0; i < count; i++) {
-			StringStats::Update(stats.statistics, update_data[i]);
 			if (!update_data[i].IsInlined()) {
 				update_data[i] = segment->GetStringHeap().AddBlob(update_data[i]);
 			}
@@ -964,7 +908,6 @@ idx_t UpdateStringStatistics(UpdateSegment *segment, SegmentStatistics &stats, V
 		for (idx_t i = 0; i < count; i++) {
 			if (mask.RowIsValid(i)) {
 				sel.set_index(not_null_count++, i);
-				StringStats::Update(stats.statistics, update_data[i]);
 				if (!update_data[i].IsInlined()) {
 					update_data[i] = segment->GetStringHeap().AddBlob(update_data[i]);
 				}
@@ -1104,10 +1047,9 @@ void UpdateSegment::Update(TransactionData transaction, idx_t column_index, Vect
 	// get the vector index based on the first id
 	// we assert that all updates must be part of the same vector
 	auto first_id = ids[sel.get_index(0)];
-	idx_t vector_index = (UnsafeNumericCast<idx_t>(first_id) - column_data.start) / STANDARD_VECTOR_SIZE;
-	idx_t vector_offset = column_data.start + vector_index * STANDARD_VECTOR_SIZE;
+	idx_t vector_index = (UnsafeNumericCast<idx_t>(first_id)) / STANDARD_VECTOR_SIZE;
+	idx_t vector_offset = vector_index * STANDARD_VECTOR_SIZE;
 
-	D_ASSERT(idx_t(first_id) >= column_data.start);
 	D_ASSERT(vector_index < Storage::ROW_GROUP_VECTOR_COUNT);
 
 	// first check the version chain

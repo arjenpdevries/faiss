@@ -8,9 +8,9 @@
 
 #pragma once
 
+#include "duckdb/common/radix_partitioning.hpp"
 #include "duckdb/common/sort/sort.hpp"
 #include "duckdb/common/types/column/partitioned_column_data.hpp"
-#include "duckdb/common/radix_partitioning.hpp"
 #include "duckdb/parallel/base_pipeline_event.hpp"
 
 namespace duckdb {
@@ -60,7 +60,7 @@ public:
 
 	PartitionGlobalSinkState(ClientContext &context, const vector<unique_ptr<Expression>> &partition_bys,
 	                         const vector<BoundOrderByNode> &order_bys, const Types &payload_types,
-	                         const vector<unique_ptr<BaseStatistics>> &partitions_stats, idx_t estimated_cardinality);
+	                         idx_t estimated_cardinality);
 	virtual ~PartitionGlobalSinkState() = default;
 
 	bool HasMergeTasks() const;

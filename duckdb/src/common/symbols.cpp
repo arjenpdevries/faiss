@@ -7,6 +7,7 @@
 #include "duckdb/catalog/catalog_entry/list.hpp"
 #include "duckdb/common/types/column/column_data_allocator.hpp"
 #include "duckdb/common/types/column/column_data_collection.hpp"
+#include "duckdb/common/types/row/row_data_collection.hpp"
 #include "duckdb/common/vector.hpp"
 #include "duckdb/execution/aggregate_hashtable.hpp"
 #include "duckdb/execution/column_binding_resolver.hpp"
@@ -15,7 +16,6 @@
 #include "duckdb/main/materialized_query_result.hpp"
 #include "duckdb/main/query_profiler.hpp"
 #include "duckdb/main/query_result.hpp"
-#include "duckdb/main/relation.hpp"
 #include "duckdb/main/stream_query_result.hpp"
 #include "duckdb/optimizer/join_order/join_order_optimizer.hpp"
 #include "duckdb/optimizer/rule.hpp"
@@ -39,7 +39,6 @@
 #include "duckdb/storage/statistics/base_statistics.hpp"
 #include "duckdb/storage/write_ahead_log.hpp"
 #include "duckdb/transaction/transaction.hpp"
-#include "duckdb/common/types/row/row_data_collection.hpp"
 
 using namespace duckdb;
 
@@ -144,9 +143,7 @@ template class unique_ptr<SingleJoinRelation>;
 template class unique_ptr<CatalogSet>;
 template class unique_ptr<Binder>;
 template class unique_ptr<PrivateAllocatorData>;
-template class unique_ptr<BaseStatistics>;
 
-template class shared_ptr<Relation>;
 template class shared_ptr<Event>;
 template class shared_ptr<Pipeline>;
 template class shared_ptr<MetaPipeline>;

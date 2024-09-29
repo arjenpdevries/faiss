@@ -1,8 +1,9 @@
 #include "duckdb/main/extension_install_info.hpp"
-#include "duckdb/common/string.hpp"
+
 #include "duckdb/common/file_system.hpp"
-#include "duckdb/common/serializer/buffered_file_reader.hpp"
 #include "duckdb/common/serializer/binary_deserializer.hpp"
+#include "duckdb/common/serializer/buffered_file_reader.hpp"
+#include "duckdb/common/string.hpp"
 
 namespace duckdb {
 
@@ -91,18 +92,6 @@ unique_ptr<ExtensionInstallInfo> ExtensionInstallInfo::TryReadInfoFile(FileSyste
 	// Return empty info if the file is missing (TODO: throw error here in the future?)
 	if (!fs.FileExists(info_file_path)) {
 		return make_uniq<ExtensionInstallInfo>();
-	}
-
-	BufferedFileReader file_reader(fs, info_file_path.c_str());
-	if (!file_reader.Finished()) {
-		try {
-			result = BinaryDeserializer::Deserialize<ExtensionInstallInfo>(file_reader);
-		} catch (std::exception &ex) {
-			ErrorData error(ex);
-			throw IOException(
-			    "Failed to read info file for '%s' extension: '%s'.\nA serialization error occured: '%s'\n%s",
-			    extension_name, info_file_path, error.RawMessage(), hint);
-		}
 	}
 
 	if (!result) {

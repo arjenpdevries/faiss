@@ -9,13 +9,13 @@
 #pragma once
 
 #include "duckdb/common/types/data_chunk.hpp"
-#include "duckdb/storage/statistics/base_statistics.hpp"
-#include "duckdb/storage/data_pointer.hpp"
-#include "duckdb/storage/statistics/segment_statistics.hpp"
-#include "duckdb/storage/table/column_segment.hpp"
-#include "duckdb/storage/table/column_data.hpp"
 #include "duckdb/common/unordered_set.hpp"
+#include "duckdb/storage/data_pointer.hpp"
 #include "duckdb/storage/partial_block_manager.hpp"
+#include "duckdb/storage/statistics/base_statistics.hpp"
+#include "duckdb/storage/statistics/segment_statistics.hpp"
+#include "duckdb/storage/table/column_data.hpp"
+#include "duckdb/storage/table/column_segment.hpp"
 
 namespace duckdb {
 class ColumnData;
@@ -31,15 +31,11 @@ struct ColumnCheckpointState {
 	RowGroup &row_group;
 	ColumnData &column_data;
 	ColumnSegmentTree new_tree;
-	vector<DataPointer> data_pointers;
-	unique_ptr<BaseStatistics> global_stats;
 
 protected:
 	PartialBlockManager &partial_block_manager;
 
 public:
-	virtual unique_ptr<BaseStatistics> GetStatistics();
-
 	virtual void FlushSegment(unique_ptr<ColumnSegment> segment, idx_t segment_size);
 	virtual PersistentColumnData ToPersistentData();
 

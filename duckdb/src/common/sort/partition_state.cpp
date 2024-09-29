@@ -1,7 +1,7 @@
 #include "duckdb/common/sort/partition_state.hpp"
 
-#include "duckdb/common/types/column/column_data_consumer.hpp"
 #include "duckdb/common/row_operations/row_operations.hpp"
+#include "duckdb/common/types/column/column_data_consumer.hpp"
 #include "duckdb/main/config.hpp"
 #include "duckdb/parallel/executor_task.hpp"
 
@@ -66,12 +66,6 @@ void PartitionGlobalSinkState::GenerateOrderings(Orders &partitions, Orders &ord
 	for (idx_t prt_idx = 0; prt_idx < partition_cols; prt_idx++) {
 		auto &pexpr = partition_bys[prt_idx];
 
-		if (partition_stats.empty() || !partition_stats[prt_idx]) {
-			orders.emplace_back(OrderType::ASCENDING, OrderByNullType::NULLS_FIRST, pexpr->Copy(), nullptr);
-		} else {
-			orders.emplace_back(OrderType::ASCENDING, OrderByNullType::NULLS_FIRST, pexpr->Copy(),
-			                    partition_stats[prt_idx]->ToUnique());
-		}
 		partitions.emplace_back(orders.back().Copy());
 	}
 
@@ -83,36 +77,9 @@ void PartitionGlobalSinkState::GenerateOrderings(Orders &partitions, Orders &ord
 PartitionGlobalSinkState::PartitionGlobalSinkState(ClientContext &context,
                                                    const vector<unique_ptr<Expression>> &partition_bys,
                                                    const vector<BoundOrderByNode> &order_bys,
-                                                   const Types &payload_types,
-                                                   const vector<unique_ptr<BaseStatistics>> &partition_stats,
-                                                   idx_t estimated_cardinality)
+                                                   const Types &payload_types, idx_t estimated_cardinality)
     : context(context), buffer_manager(BufferManager::GetBufferManager(context)), allocator(Allocator::Get(context)),
       fixed_bits(0), payload_types(payload_types), memory_per_thread(0), max_bits(1), count(0) {
-
-	GenerateOrderings(partitions, orders, partition_bys, order_bys, partition_stats);
-
-	memory_per_thread = PhysicalOperator::GetMaxThreadMemory(context);
-	external = ClientConfig::GetConfig(context).force_external;
-
-	const auto thread_pages = PreviousPowerOfTwo(memory_per_thread / (4 * buffer_manager.GetBlockAllocSize()));
-	while (max_bits < 10 && (thread_pages >> max_bits) > 1) {
-		++max_bits;
-	}
-
-	if (!orders.empty()) {
-		if (partitions.empty()) {
-			//	Sort early into a dedicated hash group if we only sort.
-			grouping_types.Initialize(payload_types);
-			auto new_group =
-			    make_uniq<PartitionGlobalHashGroup>(buffer_manager, partitions, orders, payload_types, external);
-			hash_groups.emplace_back(std::move(new_group));
-		} else {
-			auto types = payload_types;
-			types.push_back(LogicalType::HASH);
-			grouping_types.Initialize(types);
-			ResizeGroupingData(estimated_cardinality);
-		}
-	}
 }
 
 bool PartitionGlobalSinkState::HasMergeTasks() const {

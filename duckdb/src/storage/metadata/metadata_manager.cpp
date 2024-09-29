@@ -1,8 +1,9 @@
 #include "duckdb/storage/metadata/metadata_manager.hpp"
-#include "duckdb/storage/buffer_manager.hpp"
-#include "duckdb/storage/buffer/block_handle.hpp"
-#include "duckdb/common/serializer/write_stream.hpp"
+
 #include "duckdb/common/serializer/read_stream.hpp"
+#include "duckdb/common/serializer/write_stream.hpp"
+#include "duckdb/storage/buffer/block_handle.hpp"
+#include "duckdb/storage/buffer_manager.hpp"
 #include "duckdb/storage/database_size.hpp"
 
 namespace duckdb {
@@ -128,10 +129,6 @@ MetadataPointer MetadataManager::FromDiskPointer(MetaBlockPointer pointer) {
 	auto block_id = pointer.GetBlockId();
 	auto index = pointer.GetBlockIndex();
 	auto entry = blocks.find(block_id);
-	if (entry == blocks.end()) { // LCOV_EXCL_START
-		throw InternalException("Failed to load metadata pointer (id %llu, idx %llu, ptr %llu)\n", block_id, index,
-		                        pointer.block_pointer);
-	} // LCOV_EXCL_STOP
 	MetadataPointer result;
 	result.block_index = UnsafeNumericCast<idx_t>(block_id);
 	result.index = UnsafeNumericCast<uint8_t>(index);
@@ -163,7 +160,6 @@ MetaBlockPointer MetadataManager::FromBlockPointer(BlockPointer block_pointer, c
 	D_ASSERT(index < MetadataManager::METADATA_BLOCK_COUNT);
 	D_ASSERT(offset < metadata_block_size);
 	MetaBlockPointer result;
-	result.block_pointer = idx_t(block_pointer.block_id) | index << 56ULL;
 	result.offset = UnsafeNumericCast<uint32_t>(offset);
 	return result;
 }

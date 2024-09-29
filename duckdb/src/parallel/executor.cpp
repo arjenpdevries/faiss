@@ -391,8 +391,6 @@ void Executor::InitializeInternal(PhysicalOperator &plan) {
 		lock_guard<mutex> elock(executor_lock);
 		physical_plan = &plan;
 
-		this->profiler = ClientData::Get(context).profiler;
-		profiler->Initialize(plan);
 		this->producer = scheduler.CreateProducer();
 
 		// build and ready the pipelines
@@ -665,13 +663,6 @@ void Executor::ThrowException() {
 
 void Executor::Flush(ThreadContext &thread_context) {
 	static constexpr std::chrono::milliseconds WAIT_TIME_MS = std::chrono::milliseconds(WAIT_TIME);
-	auto global_profiler = profiler;
-	if (global_profiler) {
-		global_profiler->Flush(thread_context.profiler);
-
-		auto blocked_time = blocked_thread_time.load();
-		global_profiler->SetInfo(double(blocked_time * WAIT_TIME_MS.count()) / 1000);
-	}
 }
 
 bool Executor::GetPipelinesProgress(double &current_progress, uint64_t &current_cardinality,

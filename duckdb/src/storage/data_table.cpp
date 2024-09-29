@@ -3,9 +3,13 @@
 #include "duckdb/catalog/catalog_entry/table_catalog_entry.hpp"
 #include "duckdb/common/chrono.hpp"
 #include "duckdb/common/exception.hpp"
+#include "duckdb/common/exception/transaction_exception.hpp"
 #include "duckdb/common/helper.hpp"
+#include "duckdb/common/types/conflict_manager.hpp"
+#include "duckdb/common/types/constraint_conflict_info.hpp"
 #include "duckdb/common/vector_operations/vector_operations.hpp"
 #include "duckdb/execution/expression_executor.hpp"
+#include "duckdb/main/attached_database.hpp"
 #include "duckdb/main/client_context.hpp"
 #include "duckdb/parser/constraints/list.hpp"
 #include "duckdb/planner/constraints/list.hpp"
@@ -13,20 +17,16 @@
 #include "duckdb/planner/table_filter.hpp"
 #include "duckdb/storage/checkpoint/table_data_writer.hpp"
 #include "duckdb/storage/storage_manager.hpp"
-#include "duckdb/storage/table_storage_info.hpp"
-#include "duckdb/storage/table/persistent_table_data.hpp"
-#include "duckdb/storage/table/row_group.hpp"
-#include "duckdb/storage/table/standard_column_data.hpp"
-#include "duckdb/transaction/duck_transaction.hpp"
-#include "duckdb/transaction/transaction_manager.hpp"
-#include "duckdb/main/attached_database.hpp"
-#include "duckdb/common/types/conflict_manager.hpp"
-#include "duckdb/common/types/constraint_conflict_info.hpp"
 #include "duckdb/storage/table/append_state.hpp"
 #include "duckdb/storage/table/delete_state.hpp"
+#include "duckdb/storage/table/persistent_table_data.hpp"
+#include "duckdb/storage/table/row_group.hpp"
 #include "duckdb/storage/table/scan_state.hpp"
+#include "duckdb/storage/table/standard_column_data.hpp"
 #include "duckdb/storage/table/update_state.hpp"
-#include "duckdb/common/exception/transaction_exception.hpp"
+#include "duckdb/storage/table_storage_info.hpp"
+#include "duckdb/transaction/duck_transaction.hpp"
+#include "duckdb/transaction/transaction_manager.hpp"
 
 namespace duckdb {
 
@@ -1397,12 +1397,6 @@ void DataTable::UpdateColumn(TableCatalogEntry &table, ClientContext &context, V
 //===--------------------------------------------------------------------===//
 // Statistics
 //===--------------------------------------------------------------------===//
-unique_ptr<BaseStatistics> DataTable::GetStatistics(ClientContext &context, column_t column_id) {
-	if (column_id == COLUMN_IDENTIFIER_ROW_ID) {
-		return nullptr;
-	}
-	return row_groups->CopyStats(column_id);
-}
 
 void DataTable::SetDistinct(column_t column_id, unique_ptr<DistinctStatistics> distinct_stats) {
 	D_ASSERT(column_id != COLUMN_IDENTIFIER_ROW_ID);
@@ -1422,16 +1416,12 @@ unique_ptr<StorageLockKey> DataTable::GetCheckpointLock() {
 
 void DataTable::Checkpoint(TableDataWriter &writer, Serializer &serializer) {
 	// checkpoint each individual row group
-	TableStatistics global_stats;
-	row_groups->CopyStats(global_stats);
-	row_groups->Checkpoint(writer, global_stats);
 
 	// The row group payload data has been written. Now write:
 	//   column stats
 	//   row-group pointers
 	//   table pointer
 	//   index data
-	writer.FinalizeTable(global_stats, info.get(), serializer);
 }
 
 void DataTable::CommitDropColumn(idx_t index) {

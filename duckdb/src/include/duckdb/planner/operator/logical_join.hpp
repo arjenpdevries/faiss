@@ -36,7 +36,6 @@ public:
 	//! The columns of the RHS that are output by the join
 	vector<idx_t> right_projection_map;
 	//! Join Keys statistics (optional)
-	vector<unique_ptr<BaseStatistics>> join_stats;
 
 public:
 	vector<ColumnBinding> GetColumnBindings() override;

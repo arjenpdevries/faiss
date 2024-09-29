@@ -1,4 +1,5 @@
 #include "duckdb/common/arrow/arrow_merge_event.hpp"
+
 #include "duckdb/storage/storage_info.hpp"
 
 namespace duckdb {
@@ -99,7 +100,6 @@ void ArrowMergeEvent::Schedule() {
 			break;
 		}
 		BatchesForTask batches_for_task;
-		batches_for_task.tuple_count = tuples_for_task;
 		batches_for_task.batches = batches.BatchRange(start_index, end_index);
 		task_data.push_back(batches_for_task);
 	}
@@ -109,21 +109,6 @@ void ArrowMergeEvent::Schedule() {
 	// and a vector of indices indicating the arrays (record batches) they should populate
 	idx_t record_batch_index = 0;
 	for (auto &data : task_data) {
-		const auto tuples = data.tuple_count;
-
-		auto full_batches = tuples / record_batch_size;
-		auto remainder = tuples % record_batch_size;
-		auto total_batches = full_batches + !!remainder;
-
-		vector<idx_t> record_batch_indices(total_batches);
-		for (idx_t i = 0; i < total_batches; i++) {
-			record_batch_indices[i] = record_batch_index++;
-		}
-
-		BatchCollectionChunkScanState scan_state(batches, data.batches, pipeline->executor.context);
-		tasks.push_back(make_uniq<ArrowBatchTask>(result, std::move(record_batch_indices), pipeline->executor,
-		                                          shared_from_this(), std::move(scan_state), result.names,
-		                                          record_batch_size));
 	}
 
 	// Allocate the list of record batches inside the query result

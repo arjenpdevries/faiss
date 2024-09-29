@@ -8,16 +8,16 @@
 
 #pragma once
 
-#include "duckdb/common/vector_size.hpp"
-#include "duckdb/storage/table/chunk_info.hpp"
-#include "duckdb/storage/statistics/segment_statistics.hpp"
-#include "duckdb/common/types/data_chunk.hpp"
+#include "duckdb/common/enums/checkpoint_type.hpp"
 #include "duckdb/common/enums/scan_options.hpp"
 #include "duckdb/common/mutex.hpp"
+#include "duckdb/common/types/data_chunk.hpp"
+#include "duckdb/common/vector_size.hpp"
 #include "duckdb/parser/column_list.hpp"
-#include "duckdb/storage/table/segment_base.hpp"
 #include "duckdb/storage/block.hpp"
-#include "duckdb/common/enums/checkpoint_type.hpp"
+#include "duckdb/storage/statistics/segment_statistics.hpp"
+#include "duckdb/storage/table/chunk_info.hpp"
+#include "duckdb/storage/table/segment_base.hpp"
 
 namespace duckdb {
 class AttachedDatabase;
@@ -61,7 +61,6 @@ struct RowGroupWriteInfo {
 
 struct RowGroupWriteData {
 	vector<unique_ptr<ColumnCheckpointState>> states;
-	vector<BaseStatistics> statistics;
 };
 
 class RowGroup : public SegmentBase<RowGroup> {
@@ -70,7 +69,6 @@ public:
 
 public:
 	RowGroup(RowGroupCollection &collection, idx_t start, idx_t count);
-	RowGroup(RowGroupCollection &collection, RowGroupPointer pointer);
 	RowGroup(RowGroupCollection &collection, PersistentRowGroupData &data);
 	~RowGroup();
 
@@ -81,8 +79,6 @@ private:
 	atomic<optional_ptr<RowVersionManager>> version_info;
 	//! The owned version info of the row_group (inserted and deleted tuple info)
 	shared_ptr<RowVersionManager> owned_version_info;
-	//! The column data of the row_group
-	vector<shared_ptr<ColumnData>> columns;
 
 public:
 	void MoveToCollection(RowGroupCollection &collection, idx_t new_start);
@@ -159,7 +155,6 @@ public:
 	void MergeStatistics(idx_t column_idx, const BaseStatistics &other);
 	void MergeIntoStatistics(idx_t column_idx, BaseStatistics &other);
 	void MergeIntoStatistics(TableStatistics &other);
-	unique_ptr<BaseStatistics> GetStatistics(idx_t column_idx);
 
 	void GetColumnSegmentInfo(idx_t row_group_index, vector<ColumnSegmentInfo> &result);
 

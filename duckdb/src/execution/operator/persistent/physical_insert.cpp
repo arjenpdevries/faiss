@@ -1,23 +1,24 @@
 #include "duckdb/execution/operator/persistent/physical_insert.hpp"
-#include "duckdb/parallel/thread_context.hpp"
+
 #include "duckdb/catalog/catalog_entry/duck_table_entry.hpp"
 #include "duckdb/common/types/column/column_data_collection.hpp"
+#include "duckdb/common/types/conflict_manager.hpp"
 #include "duckdb/common/vector_operations/vector_operations.hpp"
 #include "duckdb/execution/expression_executor.hpp"
-#include "duckdb/storage/data_table.hpp"
+#include "duckdb/execution/index/art/art.hpp"
 #include "duckdb/main/client_context.hpp"
+#include "duckdb/parallel/thread_context.hpp"
 #include "duckdb/parser/parsed_data/create_table_info.hpp"
-#include "duckdb/planner/expression/bound_constant_expression.hpp"
-#include "duckdb/storage/table_io_manager.hpp"
-#include "duckdb/transaction/local_storage.hpp"
 #include "duckdb/parser/statement/insert_statement.hpp"
 #include "duckdb/parser/statement/update_statement.hpp"
-#include "duckdb/storage/table/scan_state.hpp"
-#include "duckdb/common/types/conflict_manager.hpp"
-#include "duckdb/execution/index/art/art.hpp"
-#include "duckdb/transaction/duck_transaction.hpp"
+#include "duckdb/planner/expression/bound_constant_expression.hpp"
+#include "duckdb/storage/data_table.hpp"
 #include "duckdb/storage/table/append_state.hpp"
+#include "duckdb/storage/table/scan_state.hpp"
 #include "duckdb/storage/table/update_state.hpp"
+#include "duckdb/storage/table_io_manager.hpp"
+#include "duckdb/transaction/duck_transaction.hpp"
+#include "duckdb/transaction/local_storage.hpp"
 
 namespace duckdb {
 
@@ -495,9 +496,6 @@ SinkResultType PhysicalInsert::Sink(ExecutionContext &context, DataChunk &chunk,
 SinkCombineResultType PhysicalInsert::Combine(ExecutionContext &context, OperatorSinkCombineInput &input) const {
 	auto &gstate = input.global_state.Cast<InsertGlobalState>();
 	auto &lstate = input.local_state.Cast<InsertLocalState>();
-	auto &client_profiler = QueryProfiler::Get(context.client);
-	context.thread.profiler.Flush(*this);
-	client_profiler.Flush(context.thread.profiler);
 
 	if (!parallel || !lstate.local_collection) {
 		return SinkCombineResultType::FINISHED;

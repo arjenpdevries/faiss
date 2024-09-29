@@ -1,5 +1,4 @@
 add_subdirectory(catalog_entry)
-add_subdirectory(default)
 
 if(${BUILD_CORE_FUNCTIONS_EXTENSION})
 

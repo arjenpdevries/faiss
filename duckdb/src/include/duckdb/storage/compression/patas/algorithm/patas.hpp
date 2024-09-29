@@ -8,13 +8,13 @@
 
 #pragma once
 
-#include "duckdb/storage/compression/chimp/algorithm/byte_writer.hpp"
-#include "duckdb/storage/compression/chimp/algorithm/ring_buffer.hpp"
+#include "duckdb/common/bit_utils.hpp"
 #include "duckdb/storage/compression/chimp/algorithm/byte_reader.hpp"
+#include "duckdb/storage/compression/chimp/algorithm/byte_writer.hpp"
 #include "duckdb/storage/compression/chimp/algorithm/chimp_utils.hpp"
 #include "duckdb/storage/compression/chimp/algorithm/packed_data.hpp"
+#include "duckdb/storage/compression/chimp/algorithm/ring_buffer.hpp"
 #include "duckdb/storage/compression/patas/shared.hpp"
-#include "duckdb/common/bit_utils.hpp"
 
 namespace duckdb {
 
@@ -73,7 +73,6 @@ struct PatasCompression {
 	static void StoreFirst(EXACT_TYPE value, State &state) {
 		// write first value, uncompressed
 		state.ring_buffer.template Insert<true>(value);
-		state.byte_writer.template WriteValue<EXACT_TYPE, EXACT_TYPE_BITSIZE>(value);
 		state.first = false;
 		state.UpdateMetadata(0, sizeof(EXACT_TYPE), 0);
 	}
@@ -106,7 +105,6 @@ struct PatasCompression {
 		const uint8_t significant_bytes = (significant_bits >> 3) + ((significant_bits & 7) != 0);
 
 		// Avoid an invalid shift error when xor_result is 0
-		state.byte_writer.template WriteValue<EXACT_TYPE>(xor_result >> (trailing_zero - is_equal), significant_bits);
 
 		state.ring_buffer.Insert(value);
 		const uint8_t index_difference = state.ring_buffer.Size() - reference_index;

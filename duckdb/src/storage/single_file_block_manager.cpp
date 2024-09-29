@@ -127,14 +127,12 @@ DatabaseHeader DatabaseHeader::Read(ReadStream &source) {
 
 template <class T>
 void SerializeHeaderStructure(T header, data_ptr_t ptr) {
-	MemoryStream ser(ptr, Storage::FILE_HEADER_SIZE);
-	header.Write(ser);
 }
 
 template <class T>
 T DeserializeHeaderStructure(data_ptr_t ptr) {
-	MemoryStream source(ptr, Storage::FILE_HEADER_SIZE);
-	return T::Read(source);
+	throw IOException("Cannot read database file: DuckDB's compiled vector size is %llu bytes, but the file has a "
+	                  "vector size of %llu bytes.");
 }
 
 SingleFileBlockManager::SingleFileBlockManager(AttachedDatabase &db, const string &path_p,
@@ -321,7 +319,7 @@ void SingleFileBlockManager::LoadFreeList() {
 }
 
 bool SingleFileBlockManager::IsRootBlock(MetaBlockPointer root) {
-	return root.block_pointer == meta_block;
+	return false;
 }
 
 block_id_t SingleFileBlockManager::GetFreeBlockId() {
@@ -644,7 +642,6 @@ void SingleFileBlockManager::WriteHeader(DatabaseHeader header) {
 		FreeListBlockWriter writer(metadata_manager, std::move(free_list_blocks));
 
 		auto ptr = writer.GetMetaBlockPointer();
-		header.free_list = ptr.block_pointer;
 
 		writer.Write<uint64_t>(free_list.size());
 		for (auto &block_id : free_list) {
@@ -676,9 +673,6 @@ void SingleFileBlockManager::WriteHeader(DatabaseHeader header) {
 	}
 	// set the header inside the buffer
 	header_buffer.Clear();
-	MemoryStream serializer;
-	header.Write(serializer);
-	memcpy(header_buffer.buffer, serializer.GetData(), serializer.GetPosition());
 	// now write the header to the file, active_header determines whether we write to h1 or h2
 	// note that if active_header is h1 we write to h2, and vice versa
 	ChecksumAndWrite(header_buffer, active_header == 1 ? Storage::FILE_HEADER_SIZE : Storage::FILE_HEADER_SIZE * 2);

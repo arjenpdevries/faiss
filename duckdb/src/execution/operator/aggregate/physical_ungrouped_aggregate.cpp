@@ -7,15 +7,15 @@
 #include "duckdb/execution/expression_executor.hpp"
 #include "duckdb/execution/operator/aggregate/aggregate_object.hpp"
 #include "duckdb/execution/operator/aggregate/distinct_aggregate_data.hpp"
+#include "duckdb/execution/operator/aggregate/ungrouped_aggregate_state.hpp"
 #include "duckdb/execution/radix_partitioned_hashtable.hpp"
 #include "duckdb/main/client_context.hpp"
 #include "duckdb/parallel/base_pipeline_event.hpp"
+#include "duckdb/parallel/executor_task.hpp"
 #include "duckdb/parallel/interrupt.hpp"
 #include "duckdb/parallel/thread_context.hpp"
-#include "duckdb/parallel/executor_task.hpp"
 #include "duckdb/planner/expression/bound_aggregate_expression.hpp"
 #include "duckdb/planner/expression/bound_reference_expression.hpp"
-#include "duckdb/execution/operator/aggregate/ungrouped_aggregate_state.hpp"
 
 #include <functional>
 
@@ -383,10 +383,6 @@ SinkCombineResultType PhysicalUngroupedAggregate::Combine(ExecutionContext &cont
 	CombineDistinct(context, distinct_input);
 
 	gstate.state.Combine(lstate.state);
-
-	auto &client_profiler = QueryProfiler::Get(context.client);
-	context.thread.profiler.Flush(*this);
-	client_profiler.Flush(context.thread.profiler);
 
 	return SinkCombineResultType::FINISHED;
 }

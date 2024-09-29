@@ -514,13 +514,7 @@ string LogicalType::ToString() const {
 // LCOV_EXCL_STOP
 
 LogicalTypeId TransformStringToLogicalTypeId(const string &str) {
-	auto type = DefaultTypeGenerator::GetDefaultType(str);
-	if (type == LogicalTypeId::INVALID) {
-		// This is a User Type, at this point we don't know if its one of the User Defined Types or an error
-		// It is checked in the binder
-		type = LogicalTypeId::USER;
-	}
-	return type;
+	return LogicalTypeId::USER;
 }
 
 LogicalType TransformStringToLogicalType(const string &str) {

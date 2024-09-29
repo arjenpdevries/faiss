@@ -43,22 +43,8 @@ void CommitState::CommitEntryDrop(CatalogEntry &entry, data_ptr_t dataptr) {
 			auto extra_data_size = Load<idx_t>(dataptr);
 			auto extra_data = data_ptr_cast(dataptr + sizeof(idx_t));
 
-			MemoryStream source(extra_data, extra_data_size);
-			BinaryDeserializer deserializer(source);
-			deserializer.Begin();
-			auto column_name = deserializer.ReadProperty<string>(100, "column_name");
-			auto parse_info = deserializer.ReadProperty<unique_ptr<ParseInfo>>(101, "alter_info");
-			deserializer.End();
-
 			switch (parent.type) {
 			case CatalogType::TABLE_ENTRY:
-				if (!column_name.empty()) {
-					D_ASSERT(entry.type != CatalogType::RENAMED_ENTRY);
-					auto &table_entry = entry.Cast<DuckTableEntry>();
-					D_ASSERT(table_entry.IsDuckTable());
-					// write the alter table in the log
-					table_entry.CommitAlter(column_name);
-				}
 				break;
 			case CatalogType::VIEW_ENTRY:
 			case CatalogType::INDEX_ENTRY:
@@ -66,7 +52,6 @@ void CommitState::CommitEntryDrop(CatalogEntry &entry, data_ptr_t dataptr) {
 			case CatalogType::TYPE_ENTRY:
 			case CatalogType::MACRO_ENTRY:
 			case CatalogType::TABLE_MACRO_ENTRY:
-				(void)column_name;
 				break;
 			default:
 				throw InternalException("Don't know how to alter this type!");

@@ -56,10 +56,6 @@ private:
 public:
 	template <class T>
 	static void Serialize(const T &value, WriteStream &stream, SerializationOptions options = SerializationOptions()) {
-		BinarySerializer serializer(stream, std::move(options));
-		serializer.OnObjectBegin();
-		value.Serialize(serializer);
-		serializer.OnObjectEnd();
 	}
 
 	void Begin() {

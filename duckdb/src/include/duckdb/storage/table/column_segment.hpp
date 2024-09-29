@@ -50,8 +50,6 @@ public:
 	ColumnSegmentType segment_type;
 	//! The compression function
 	reference<CompressionFunction> function;
-	//! The statistics for the segment
-	SegmentStatistics stats;
 	//! The block that this segment relates to
 	shared_ptr<BlockHandle> block;
 
@@ -101,7 +99,6 @@ public:
 	//! when sharing a block among segments. This is invoked only AFTER the block is written.
 	void MarkAsPersistent(shared_ptr<BlockHandle> block, uint32_t offset_in_block);
 	//! Gets a data pointer from a persistent column segment
-	DataPointer GetDataPointer();
 
 	block_id_t GetBlockId() {
 		D_ASSERT(segment_type == ColumnSegmentType::PERSISTENT);

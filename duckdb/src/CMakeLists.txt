@@ -80,7 +80,6 @@ else()
 
   add_definitions(-DDUCKDB_MAIN_LIBRARY)
 
-  add_subdirectory(optimizer)
   add_subdirectory(planner)
   add_subdirectory(parser)
   if(${BUILD_CORE_FUNCTIONS_EXTENSION})

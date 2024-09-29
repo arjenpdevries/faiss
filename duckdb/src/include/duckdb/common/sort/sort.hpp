@@ -41,7 +41,6 @@ public:
 	vector<bool> constant_size;
 	vector<idx_t> column_sizes;
 	vector<idx_t> prefix_lengths;
-	vector<BaseStatistics *> stats;
 	vector<bool> has_null;
 
 	idx_t comparison_size;

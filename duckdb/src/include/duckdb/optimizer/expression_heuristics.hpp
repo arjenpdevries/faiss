@@ -8,17 +8,16 @@
 
 #pragma once
 
-#include "duckdb/optimizer/optimizer.hpp"
 #include "duckdb/common/unordered_map.hpp"
+#include "duckdb/optimizer/optimizer.hpp"
 
 namespace duckdb {
 
 class ExpressionHeuristics : public LogicalOperatorVisitor {
 public:
-	explicit ExpressionHeuristics(Optimizer &optimizer) : optimizer(optimizer) {
+	explicit ExpressionHeuristics(Optimizer &optimizer) {
 	}
 
-	Optimizer &optimizer;
 	unique_ptr<LogicalOperator> root;
 
 public:

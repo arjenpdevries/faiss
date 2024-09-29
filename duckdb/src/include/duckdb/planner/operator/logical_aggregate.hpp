@@ -8,10 +8,10 @@
 
 #pragma once
 
-#include "duckdb/planner/logical_operator.hpp"
-#include "duckdb/planner/column_binding.hpp"
-#include "duckdb/storage/statistics/base_statistics.hpp"
 #include "duckdb/parser/group_by_node.hpp"
+#include "duckdb/planner/column_binding.hpp"
+#include "duckdb/planner/logical_operator.hpp"
+#include "duckdb/storage/statistics/base_statistics.hpp"
 
 namespace duckdb {
 
@@ -36,8 +36,6 @@ public:
 	vector<GroupingSet> grouping_sets;
 	//! The list of grouping function calls (optional)
 	vector<unsafe_vector<idx_t>> grouping_functions;
-	//! Group statistics (optional)
-	vector<unique_ptr<BaseStatistics>> group_stats;
 
 public:
 	InsertionOrderPreservingMap<string> ParamsToString() const override;

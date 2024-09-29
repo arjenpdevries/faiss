@@ -140,45 +140,7 @@ idx_t ColumnDataCollectionSegment::ReadVectorInternal(ChunkManagementState &stat
 	auto type_size = GetTypeIdSize(internal_type);
 	auto &vdata = GetVectorData(vector_index);
 
-	auto base_ptr = allocator->GetDataPointer(state, vdata.block_id, vdata.offset);
-	auto validity_data = GetValidityPointer(base_ptr, type_size);
-	if (!vdata.next_data.IsValid() && state.properties != ColumnDataScanProperties::DISALLOW_ZERO_COPY) {
-		// no next data, we can do a zero-copy read of this vector
-		FlatVector::SetData(result, base_ptr);
-		FlatVector::Validity(result).Initialize(validity_data);
-		return vdata.count;
-	}
-
-	// the data for this vector is spread over multiple vector data entries
-	// we need to copy over the data for each of the vectors
-	// first figure out how many rows we need to copy by looping over all of the child vector indexes
-	idx_t vector_count = 0;
-	auto next_index = vector_index;
-	while (next_index.IsValid()) {
-		auto &current_vdata = GetVectorData(next_index);
-		vector_count += current_vdata.count;
-		next_index = current_vdata.next_data;
-	}
-	// resize the result vector
-	result.Resize(0, vector_count);
-	next_index = vector_index;
-	// now perform the copy of each of the vectors
-	auto target_data = FlatVector::GetData(result);
-	auto &target_validity = FlatVector::Validity(result);
-	idx_t current_offset = 0;
-	while (next_index.IsValid()) {
-		auto &current_vdata = GetVectorData(next_index);
-		base_ptr = allocator->GetDataPointer(state, current_vdata.block_id, current_vdata.offset);
-		validity_data = GetValidityPointer(base_ptr, type_size);
-		if (type_size > 0) {
-			memcpy(target_data + current_offset * type_size, base_ptr, current_vdata.count * type_size);
-		}
-		ValidityMask current_validity(validity_data);
-		target_validity.SliceInPlace(current_validity, current_offset, 0, current_vdata.count);
-		current_offset += current_vdata.count;
-		next_index = current_vdata.next_data;
-	}
-	return vector_count;
+	return 0;
 }
 
 idx_t ColumnDataCollectionSegment::ReadVector(ChunkManagementState &state, VectorDataIndex vector_index,

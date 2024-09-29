@@ -1,9 +1,8 @@
 #include "duckdb/execution/window_executor.hpp"
 
+#include "duckdb/common/array.hpp"
 #include "duckdb/common/operator/add.hpp"
 #include "duckdb/common/operator/subtract.hpp"
-
-#include "duckdb/common/array.hpp"
 
 namespace duckdb {
 
@@ -1162,27 +1161,6 @@ static void ApplyWindowStats(const WindowBoundary &boundary, FrameDelta &delta, 
 		delta.begin = delta.end = 0;
 		return;
 	case WindowBoundary::EXPR_PRECEDING_ROWS:
-		if (base && base->GetStatsType() == StatisticsType::NUMERIC_STATS && NumericStats::HasMinMax(*base)) {
-			//	Preceding so negative offset from current row
-			base_stats.begin = NumericStats::GetMin<int64_t>(*base);
-			base_stats.end = NumericStats::GetMax<int64_t>(*base);
-			if (delta.begin < base_stats.end && base_stats.end < delta.end) {
-				delta.begin = -base_stats.end;
-			}
-			if (delta.begin < base_stats.begin && base_stats.begin < delta.end) {
-				delta.end = -base_stats.begin + 1;
-			}
-		}
-		return;
-	case WindowBoundary::EXPR_FOLLOWING_ROWS:
-		if (base && base->GetStatsType() == StatisticsType::NUMERIC_STATS && NumericStats::HasMinMax(*base)) {
-			base_stats.begin = NumericStats::GetMin<int64_t>(*base);
-			base_stats.end = NumericStats::GetMax<int64_t>(*base);
-			if (base_stats.end < delta.end) {
-				delta.end = base_stats.end + 1;
-			}
-		}
-		return;
 
 	case WindowBoundary::CURRENT_ROW_RANGE:
 	case WindowBoundary::EXPR_PRECEDING_RANGE:
@@ -1212,13 +1190,6 @@ void WindowAggregateExecutor::Finalize(WindowExecutorGlobalState &gstate, Window
 
 	//	First entry is the frame start
 	stats[0] = FrameDelta(-count, count);
-	auto base = wexpr.expr_stats.empty() ? nullptr : wexpr.expr_stats[0].get();
-	ApplyWindowStats(wexpr.start, stats[0], base, true);
-
-	//	Second entry is the frame end
-	stats[1] = FrameDelta(-count, count);
-	base = wexpr.expr_stats.empty() ? nullptr : wexpr.expr_stats[1].get();
-	ApplyWindowStats(wexpr.end, stats[1], base, false);
 
 	auto &lastate = lstate.Cast<WindowAggregateExecutorLocalState>();
 	aggregator->Finalize(*gsink, *lastate.aggregator_state, stats);

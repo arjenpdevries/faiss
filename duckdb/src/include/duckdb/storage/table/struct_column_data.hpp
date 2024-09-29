@@ -19,8 +19,6 @@ public:
 	StructColumnData(BlockManager &block_manager, DataTableInfo &info, idx_t column_index, idx_t start_row,
 	                 LogicalType type, optional_ptr<ColumnData> parent = nullptr);
 
-	//! The sub-columns of the struct
-	vector<unique_ptr<ColumnData>> sub_columns;
 	//! The validity column data of the struct
 	ValidityColumnData validity;
 
@@ -59,7 +57,7 @@ public:
 	unique_ptr<ColumnCheckpointState> Checkpoint(RowGroup &row_group, ColumnCheckpointInfo &info) override;
 
 	bool IsPersistent() override;
-	PersistentColumnData Serialize() override;
+	PersistentColumnData Serialize();
 	void InitializeColumn(PersistentColumnData &column_data, BaseStatistics &target_stats) override;
 
 	void GetColumnSegmentInfo(duckdb::idx_t row_group_index, vector<duckdb::idx_t> col_path,

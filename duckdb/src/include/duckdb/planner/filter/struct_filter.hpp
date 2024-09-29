@@ -8,9 +8,9 @@
 
 #pragma once
 
-#include "duckdb/planner/table_filter.hpp"
-#include "duckdb/common/types/value.hpp"
 #include "duckdb/common/enums/expression_type.hpp"
+#include "duckdb/common/types/value.hpp"
+#include "duckdb/planner/table_filter.hpp"
 
 namespace duckdb {
 
@@ -31,7 +31,6 @@ public:
 	unique_ptr<TableFilter> child_filter;
 
 public:
-	FilterPropagateResult CheckStatistics(BaseStatistics &stats) override;
 	string ToString(const string &column_name) override;
 	bool Equals(const TableFilter &other) const override;
 	unique_ptr<TableFilter> Copy() const override;

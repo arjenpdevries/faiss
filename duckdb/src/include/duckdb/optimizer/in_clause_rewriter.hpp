@@ -20,7 +20,6 @@ public:
 	}
 
 	ClientContext &context;
-	Optimizer &optimizer;
 	unique_ptr<LogicalOperator> root;
 
 public:

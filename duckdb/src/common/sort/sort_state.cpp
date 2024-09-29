@@ -56,30 +56,12 @@ SortLayout::SortLayout(const vector<BoundOrderByNode> &orders)
 		auto physical_type = expr.return_type.InternalType();
 		constant_size.push_back(TypeIsConstantSize(physical_type));
 
-		if (order.stats) {
-			stats.push_back(order.stats.get());
-			has_null.push_back(stats.back()->CanHaveNull());
-		} else {
-			stats.push_back(nullptr);
-			has_null.push_back(true);
-		}
-
 		idx_t col_size = has_null.back() ? 1 : 0;
 		prefix_lengths.push_back(0);
 		if (!TypeIsConstantSize(physical_type) && physical_type != PhysicalType::VARCHAR) {
 			prefix_lengths.back() = GetNestedSortingColSize(col_size, expr.return_type);
 		} else if (physical_type == PhysicalType::VARCHAR) {
 			idx_t size_before = col_size;
-			if (stats.back() && StringStats::HasMaxStringLength(*stats.back())) {
-				col_size += StringStats::MaxStringLength(*stats.back());
-				if (col_size > 12) {
-					col_size = 12;
-				} else {
-					constant_size.back() = true;
-				}
-			} else {
-				col_size = 12;
-			}
 			prefix_lengths.back() = col_size - size_before;
 		} else {
 			col_size += GetTypeIdSize(physical_type);
@@ -97,20 +79,6 @@ SortLayout::SortLayout(const vector<BoundOrderByNode> &orders)
 		for (idx_t col_idx = 0; col_idx < column_count; col_idx++) {
 			if (bytes_to_fill == 0) {
 				break;
-			}
-			if (logical_types[col_idx].InternalType() == PhysicalType::VARCHAR && stats[col_idx] &&
-			    StringStats::HasMaxStringLength(*stats[col_idx])) {
-				idx_t diff = StringStats::MaxStringLength(*stats[col_idx]) - prefix_lengths[col_idx];
-				if (diff > 0) {
-					// Increase all sizes accordingly
-					idx_t increase = MinValue(bytes_to_fill, diff);
-					column_sizes[col_idx] += increase;
-					prefix_lengths[col_idx] += increase;
-					constant_size[col_idx] = increase == diff;
-					comparison_size += increase;
-					entry_size += increase;
-					bytes_to_fill -= increase;
-				}
 			}
 		}
 		entry_size = AlignValue(entry_size);
@@ -144,7 +112,6 @@ SortLayout SortLayout::GetPrefixComparisonLayout(idx_t num_prefix_cols) const {
 		result.column_sizes.push_back(column_sizes[col_idx]);
 
 		result.prefix_lengths.push_back(prefix_lengths[col_idx]);
-		result.stats.push_back(stats[col_idx]);
 		result.has_null.push_back(has_null[col_idx]);
 	}
 	result.entry_size = entry_size;

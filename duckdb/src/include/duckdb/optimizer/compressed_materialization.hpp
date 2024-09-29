@@ -43,7 +43,6 @@ public:
 	//! Type before compressing
 	LogicalType type;
 	bool needs_decompression;
-	unique_ptr<BaseStatistics> stats;
 };
 
 struct CompressedMaterializationInfo {
@@ -66,7 +65,6 @@ public:
 
 public:
 	unique_ptr<Expression> expression;
-	unique_ptr<BaseStatistics> stats;
 };
 
 typedef column_binding_map_t<unique_ptr<BaseStatistics>> statistics_map_t;
@@ -126,12 +124,10 @@ private:
 	                                           const BaseStatistics &stats);
 
 private:
-	Optimizer &optimizer;
 	ClientContext &context;
 	//! The root of the query plan
 	optional_ptr<LogicalOperator> root;
 	//! The map of ColumnBinding -> statistics for the various nodes
-	statistics_map_t &statistics_map;
 };
 
 } // namespace duckdb

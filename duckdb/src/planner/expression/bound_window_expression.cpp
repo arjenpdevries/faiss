@@ -1,10 +1,10 @@
 #include "duckdb/planner/expression/bound_window_expression.hpp"
-#include "duckdb/parser/expression/window_expression.hpp"
 
+#include "duckdb/catalog/catalog_entry/aggregate_function_catalog_entry.hpp"
 #include "duckdb/common/string_util.hpp"
 #include "duckdb/function/aggregate_function.hpp"
 #include "duckdb/function/function_serialization.hpp"
-#include "duckdb/catalog/catalog_entry/aggregate_function_catalog_entry.hpp"
+#include "duckdb/parser/expression/window_expression.hpp"
 
 namespace duckdb {
 
@@ -136,13 +136,6 @@ unique_ptr<Expression> BoundWindowExpression::Copy() const {
 	for (auto &e : partitions) {
 		new_window->partitions.push_back(e->Copy());
 	}
-	for (auto &ps : partitions_stats) {
-		if (ps) {
-			new_window->partitions_stats.push_back(ps->ToUnique());
-		} else {
-			new_window->partitions_stats.push_back(nullptr);
-		}
-	}
 	for (auto &o : orders) {
 		new_window->orders.emplace_back(o.type, o.null_order, o.expression->Copy());
 	}
@@ -159,36 +152,10 @@ unique_ptr<Expression> BoundWindowExpression::Copy() const {
 	new_window->ignore_nulls = ignore_nulls;
 	new_window->distinct = distinct;
 
-	for (auto &es : expr_stats) {
-		if (es) {
-			new_window->expr_stats.push_back(es->ToUnique());
-		} else {
-			new_window->expr_stats.push_back(nullptr);
-		}
-	}
 	return std::move(new_window);
 }
 
 void BoundWindowExpression::Serialize(Serializer &serializer) const {
-	Expression::Serialize(serializer);
-	serializer.WriteProperty(200, "return_type", return_type);
-	serializer.WriteProperty(201, "children", children);
-	if (type == ExpressionType::WINDOW_AGGREGATE) {
-		D_ASSERT(aggregate);
-		FunctionSerializer::Serialize(serializer, *aggregate, bind_info.get());
-	}
-	serializer.WriteProperty(202, "partitions", partitions);
-	serializer.WriteProperty(203, "orders", orders);
-	serializer.WritePropertyWithDefault(204, "filters", filter_expr, unique_ptr<Expression>());
-	serializer.WriteProperty(205, "ignore_nulls", ignore_nulls);
-	serializer.WriteProperty(206, "start", start);
-	serializer.WriteProperty(207, "end", end);
-	serializer.WritePropertyWithDefault(208, "start_expr", start_expr, unique_ptr<Expression>());
-	serializer.WritePropertyWithDefault(209, "end_expr", end_expr, unique_ptr<Expression>());
-	serializer.WritePropertyWithDefault(210, "offset_expr", offset_expr, unique_ptr<Expression>());
-	serializer.WritePropertyWithDefault(211, "default_expr", default_expr, unique_ptr<Expression>());
-	serializer.WriteProperty(212, "exclude_clause", exclude_clause);
-	serializer.WriteProperty(213, "distinct", distinct);
 }
 
 unique_ptr<Expression> BoundWindowExpression::Deserialize(Deserializer &deserializer) {

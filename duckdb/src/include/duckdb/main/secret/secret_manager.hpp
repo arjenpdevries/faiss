@@ -101,7 +101,6 @@ public:
 	DUCKDB_API static SecretManager &Get(DatabaseInstance &db);
 
 	// Initialize the secret manager with the DB instance
-	DUCKDB_API void Initialize(DatabaseInstance &db);
 	//! Load a secret storage
 	DUCKDB_API void LoadSecretStorage(unique_ptr<SecretStorage> storage);
 

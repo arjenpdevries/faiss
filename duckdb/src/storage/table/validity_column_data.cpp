@@ -1,4 +1,5 @@
 #include "duckdb/storage/table/validity_column_data.hpp"
+
 #include "duckdb/storage/table/scan_state.hpp"
 #include "duckdb/storage/table/update_segment.hpp"
 
@@ -15,7 +16,5 @@ FilterPropagateResult ValidityColumnData::CheckZonemap(ColumnScanState &state, T
 
 void ValidityColumnData::AppendData(BaseStatistics &stats, ColumnAppendState &state, UnifiedVectorFormat &vdata,
                                     idx_t count) {
-	lock_guard<mutex> l(stats_lock);
-	ColumnData::AppendData(stats, state, vdata, count);
 }
 } // namespace duckdb

@@ -260,7 +260,6 @@ FixedSizeAllocatorInfo FixedSizeAllocator::GetInfo() const {
 
 	for (const auto &buffer : buffers) {
 		info.buffer_ids.push_back(buffer.first);
-		info.block_pointers.push_back(buffer.second.block_pointer);
 		info.segment_counts.push_back(buffer.second.segment_count);
 		info.allocation_sizes.push_back(buffer.second.allocation_size);
 	}

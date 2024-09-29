@@ -14,59 +14,6 @@ PhysicalPerfectHashAggregate::PhysicalPerfectHashAggregate(ClientContext &contex
                                                            vector<idx_t> required_bits_p, idx_t estimated_cardinality)
     : PhysicalOperator(PhysicalOperatorType::PERFECT_HASH_GROUP_BY, std::move(types_p), estimated_cardinality),
       groups(std::move(groups_p)), aggregates(std::move(aggregates_p)), required_bits(std::move(required_bits_p)) {
-	D_ASSERT(groups.size() == group_stats.size());
-	group_minima.reserve(group_stats.size());
-	for (auto &stats : group_stats) {
-		D_ASSERT(stats);
-		auto &nstats = *stats;
-		D_ASSERT(NumericStats::HasMin(nstats));
-		group_minima.push_back(NumericStats::Min(nstats));
-	}
-	for (auto &expr : groups) {
-		group_types.push_back(expr->return_type);
-	}
-
-	vector<BoundAggregateExpression *> bindings;
-	vector<LogicalType> payload_types_filters;
-	for (auto &expr : aggregates) {
-		D_ASSERT(expr->expression_class == ExpressionClass::BOUND_AGGREGATE);
-		D_ASSERT(expr->IsAggregate());
-		auto &aggr = expr->Cast<BoundAggregateExpression>();
-		bindings.push_back(&aggr);
-
-		D_ASSERT(!aggr.IsDistinct());
-		D_ASSERT(aggr.function.combine);
-		for (auto &child : aggr.children) {
-			payload_types.push_back(child->return_type);
-		}
-		if (aggr.filter) {
-			payload_types_filters.push_back(aggr.filter->return_type);
-		}
-	}
-	for (const auto &pay_filters : payload_types_filters) {
-		payload_types.push_back(pay_filters);
-	}
-	aggregate_objects = AggregateObject::CreateAggregateObjects(bindings);
-
-	// filter_indexes must be pre-built, not lazily instantiated in parallel...
-	idx_t aggregate_input_idx = 0;
-	for (auto &aggregate : aggregates) {
-		auto &aggr = aggregate->Cast<BoundAggregateExpression>();
-		aggregate_input_idx += aggr.children.size();
-	}
-	for (auto &aggregate : aggregates) {
-		auto &aggr = aggregate->Cast<BoundAggregateExpression>();
-		if (aggr.filter) {
-			auto &bound_ref_expr = aggr.filter->Cast<BoundReferenceExpression>();
-			auto it = filter_indexes.find(aggr.filter.get());
-			if (it == filter_indexes.end()) {
-				filter_indexes[aggr.filter.get()] = bound_ref_expr.index;
-				bound_ref_expr.index = aggregate_input_idx++;
-			} else {
-				++aggregate_input_idx;
-			}
-		}
-	}
 }
 
 unique_ptr<PerfectAggregateHashTable> PhysicalPerfectHashAggregate::CreateHT(Allocator &allocator,

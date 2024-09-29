@@ -6,6 +6,7 @@
 #include "duckdb/common/enum_util.hpp"
 #include "duckdb/common/helper.hpp"
 #include "duckdb/main/config.hpp"
+#include "duckdb/main/database.hpp"
 #include "duckdb/parser/expression/function_expression.hpp"
 #include "duckdb/parser/expression/subquery_expression.hpp"
 #include "duckdb/parser/parsed_expression_iterator.hpp"
@@ -21,7 +22,6 @@
 #include "duckdb/planner/operator/logical_sample.hpp"
 #include "duckdb/planner/query_node/list.hpp"
 #include "duckdb/planner/tableref/list.hpp"
-#include "duckdb/main/database.hpp"
 
 #include <algorithm>
 
@@ -157,8 +157,6 @@ BoundStatement Binder::Bind(SQLStatement &statement) {
 		return BindWithCTE(statement.Cast<DeleteStatement>());
 	case StatementType::UPDATE_STATEMENT:
 		return BindWithCTE(statement.Cast<UpdateStatement>());
-	case StatementType::RELATION_STATEMENT:
-		return Bind(statement.Cast<RelationStatement>());
 	case StatementType::CREATE_STATEMENT:
 		return Bind(statement.Cast<CreateStatement>());
 	case StatementType::DROP_STATEMENT:

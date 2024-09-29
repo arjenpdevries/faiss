@@ -82,7 +82,6 @@ struct SecretType {
 
 //! Base class from which BaseSecret classes can be made.
 class BaseSecret {
-	friend class SecretManager;
 
 public:
 	BaseSecret(vector<string> prefix_paths_p, string type_p, string provider_p, string name_p)

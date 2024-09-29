@@ -9,6 +9,7 @@
 #include "duckdb/function/function_set.hpp"
 #include "duckdb/main/attached_database.hpp"
 #include "duckdb/main/client_config.hpp"
+#include "duckdb/main/client_data.hpp"
 #include "duckdb/optimizer/matcher/expression_matcher.hpp"
 #include "duckdb/planner/expression/bound_between_expression.hpp"
 #include "duckdb/planner/expression_iterator.hpp"
@@ -17,7 +18,6 @@
 #include "duckdb/storage/table/scan_state.hpp"
 #include "duckdb/transaction/duck_transaction.hpp"
 #include "duckdb/transaction/local_storage.hpp"
-#include "duckdb/main/client_data.hpp"
 
 namespace duckdb {
 
@@ -106,13 +106,7 @@ unique_ptr<GlobalTableFunctionState> TableScanInitGlobal(ClientContext &context,
 
 static unique_ptr<BaseStatistics> TableScanStatistics(ClientContext &context, const FunctionData *bind_data_p,
                                                       column_t column_id) {
-	auto &bind_data = bind_data_p->Cast<TableScanBindData>();
-	auto &local_storage = LocalStorage::Get(context, bind_data.table.catalog);
-	if (local_storage.Find(bind_data.table.GetStorage())) {
-		// we don't emit any statistics for tables that have outstanding transaction-local data
-		return nullptr;
-	}
-	return bind_data.table.GetStatistics(context, column_id);
+	return nullptr;
 }
 
 static void TableScanFunc(ClientContext &context, TableFunctionInput &data_p, DataChunk &output) {
@@ -406,7 +400,6 @@ TableFunction TableScanFunction::GetIndexScanFunction() {
 	TableFunction scan_function("index_scan", {}, IndexScanFunction);
 	scan_function.init_local = nullptr;
 	scan_function.init_global = IndexScanInitGlobal;
-	scan_function.statistics = TableScanStatistics;
 	scan_function.dependency = TableScanDependency;
 	scan_function.cardinality = TableScanCardinality;
 	scan_function.pushdown_complex_filter = nullptr;
@@ -425,7 +418,6 @@ TableFunction TableScanFunction::GetFunction() {
 	TableFunction scan_function("seq_scan", {}, TableScanFunc);
 	scan_function.init_local = TableScanInitLocal;
 	scan_function.init_global = TableScanInitGlobal;
-	scan_function.statistics = TableScanStatistics;
 	scan_function.dependency = TableScanDependency;
 	scan_function.cardinality = TableScanCardinality;
 	scan_function.pushdown_complex_filter = TableScanPushdownComplexFilter;

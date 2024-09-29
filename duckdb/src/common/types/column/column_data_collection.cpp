@@ -1,14 +1,14 @@
 #include "duckdb/common/types/column/column_data_collection.hpp"
 
 #include "duckdb/common/printer.hpp"
+#include "duckdb/common/serializer/deserializer.hpp"
+#include "duckdb/common/serializer/serializer.hpp"
 #include "duckdb/common/string_util.hpp"
 #include "duckdb/common/types/column/column_data_collection_segment.hpp"
 #include "duckdb/common/types/value_map.hpp"
 #include "duckdb/common/uhugeint.hpp"
 #include "duckdb/common/vector_operations/vector_operations.hpp"
 #include "duckdb/storage/buffer_manager.hpp"
-#include "duckdb/common/serializer/serializer.hpp"
-#include "duckdb/common/serializer/deserializer.hpp"
 
 namespace duckdb {
 
@@ -398,37 +398,6 @@ static void TemplatedColumnDataCopy(ColumnDataMetaData &meta_data, const Unified
 	while (remaining > 0) {
 		auto &current_segment = segment.GetVectorData(current_index);
 		idx_t append_count = MinValue<idx_t>(STANDARD_VECTOR_SIZE - current_segment.count, remaining);
-
-		auto base_ptr = segment.allocator->GetDataPointer(append_state.current_chunk_state, current_segment.block_id,
-		                                                  current_segment.offset);
-		auto validity_data = ColumnDataCollectionSegment::GetValidityPointer(base_ptr, OP::TypeSize());
-
-		ValidityMask result_validity(validity_data);
-		if (current_segment.count == 0) {
-			// first time appending to this vector
-			// all data here is still uninitialized
-			// initialize the validity mask to set all to valid
-			result_validity.SetAllValid(STANDARD_VECTOR_SIZE);
-		}
-		for (idx_t i = 0; i < append_count; i++) {
-			auto source_idx = source_data.sel->get_index(offset + i);
-			if (source_data.validity.RowIsValid(source_idx)) {
-				OP::template Assign<OP>(meta_data, base_ptr, source_data.data, current_segment.count + i, source_idx);
-			} else {
-				result_validity.SetInvalid(current_segment.count + i);
-			}
-		}
-		current_segment.count += append_count;
-		offset += append_count;
-		remaining -= append_count;
-		if (remaining > 0) {
-			// need to append more, check if we need to allocate a new vector or not
-			if (!current_segment.next_data.IsValid()) {
-				segment.AllocateVector(source.GetType(), meta_data.chunk_data, append_state, current_index);
-			}
-			D_ASSERT(segment.GetVectorData(current_index).next_data.IsValid());
-			current_index = segment.GetVectorData(current_index).next_data;
-		}
 	}
 }
 
@@ -510,59 +479,9 @@ void ColumnDataCopy<string_t>(ColumnDataMetaData &meta_data, const UnifiedVector
 				meta_data.GetVectorMetaData().child_index = meta_data.segment.AddChildIndex(child_index);
 			}
 			auto &child_segment = segment.GetVectorData(child_index);
-			heap_ptr = segment.allocator->GetDataPointer(append_state.current_chunk_state, child_segment.block_id,
-			                                             child_segment.offset);
 		}
 
 		auto &current_segment = segment.GetVectorData(current_index);
-		auto base_ptr = segment.allocator->GetDataPointer(append_state.current_chunk_state, current_segment.block_id,
-		                                                  current_segment.offset);
-		auto validity_data = ColumnDataCollectionSegment::GetValidityPointer(base_ptr, sizeof(string_t));
-		ValidityMask target_validity(validity_data);
-		if (current_segment.count == 0) {
-			// first time appending to this vector
-			// all data here is still uninitialized
-			// initialize the validity mask to set all to valid
-			target_validity.SetAllValid(STANDARD_VECTOR_SIZE);
-		}
-
-		auto target_entries = reinterpret_cast<string_t *>(base_ptr);
-		for (idx_t i = 0; i < append_count; i++) {
-			auto source_idx = source_data.sel->get_index(offset + i);
-			auto target_idx = current_segment.count + i;
-			if (!source_data.validity.RowIsValid(source_idx)) {
-				target_validity.SetInvalid(target_idx);
-				continue;
-			}
-			const auto &source_entry = source_entries[source_idx];
-			auto &target_entry = target_entries[target_idx];
-			if (source_entry.IsInlined()) {
-				target_entry = source_entry;
-			} else {
-				D_ASSERT(heap_ptr != nullptr);
-				memcpy(heap_ptr, source_entry.GetData(), source_entry.GetSize());
-				target_entry =
-				    string_t(const_char_ptr_cast(heap_ptr), UnsafeNumericCast<uint32_t>(source_entry.GetSize()));
-				heap_ptr += source_entry.GetSize();
-			}
-		}
-
-		if (heap_size != 0) {
-			current_segment.swizzle_data.emplace_back(child_index, current_segment.count, append_count);
-		}
-
-		current_segment.count += append_count;
-		offset += append_count;
-		remaining -= append_count;
-
-		if (vector_remaining - append_count == 0) {
-			// need to append more, check if we need to allocate a new vector or not
-			if (!current_segment.next_data.IsValid()) {
-				segment.AllocateVector(source.GetType(), meta_data.chunk_data, append_state, current_index);
-			}
-			D_ASSERT(segment.GetVectorData(current_index).next_data.IsValid());
-			current_index = segment.GetVectorData(current_index).next_data;
-		}
 	}
 }
 

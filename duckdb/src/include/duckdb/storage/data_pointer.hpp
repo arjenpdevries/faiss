@@ -9,11 +9,11 @@
 #pragma once
 
 #include "duckdb/common/common.hpp"
+#include "duckdb/common/enums/compression_type.hpp"
+#include "duckdb/storage/block.hpp"
 #include "duckdb/storage/statistics/base_statistics.hpp"
 #include "duckdb/storage/storage_info.hpp"
-#include "duckdb/storage/block.hpp"
 #include "duckdb/storage/table/row_group.hpp"
-#include "duckdb/common/enums/compression_type.hpp"
 
 namespace duckdb {
 
@@ -43,7 +43,7 @@ public:
 };
 
 struct DataPointer {
-	explicit DataPointer(BaseStatistics stats);
+	explicit DataPointer();
 	// disable copy constructors
 	DataPointer(const DataPointer &other) = delete;
 	DataPointer &operator=(const DataPointer &) = delete;
@@ -55,8 +55,6 @@ struct DataPointer {
 	uint64_t tuple_count;
 	BlockPointer block_pointer;
 	CompressionType compression_type;
-	//! Type-specific statistics of the segment
-	BaseStatistics statistics;
 	//! Serialized segment state
 	unique_ptr<ColumnSegmentState> segment_state;
 

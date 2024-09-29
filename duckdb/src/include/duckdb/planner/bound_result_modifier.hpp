@@ -54,7 +54,6 @@ public:
 	OrderType type;
 	OrderByNullType null_order;
 	unique_ptr<Expression> expression;
-	unique_ptr<BaseStatistics> stats;
 
 public:
 	BoundOrderByNode Copy() const;

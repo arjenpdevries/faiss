@@ -174,14 +174,6 @@ void SingleFileCheckpointWriter::CreateCheckpoint() {
 
 	serialization_options.serialization_compatibility = config.options.serialization_compatibility;
 
-	BinarySerializer serializer(*metadata_writer, serialization_options);
-	serializer.Begin();
-	serializer.WriteList(100, "catalog_entries", catalog_entries.size(), [&](Serializer::List &list, idx_t i) {
-		auto &entry = catalog_entries[i];
-		list.WriteObject([&](Serializer &obj) { WriteEntry(entry.get(), obj); });
-	});
-	serializer.End();
-
 	metadata_writer->Flush();
 	table_metadata_writer->Flush();
 
@@ -203,7 +195,6 @@ void SingleFileCheckpointWriter::CreateCheckpoint() {
 
 	// finally write the updated header
 	DatabaseHeader header;
-	header.meta_block = meta_block.block_pointer;
 	header.block_alloc_size = block_manager.GetBlockAllocSize();
 	header.vector_size = STANDARD_VECTOR_SIZE;
 	block_manager.WriteHeader(header);
@@ -250,12 +241,6 @@ void SingleFileCheckpointWriter::CreateCheckpoint() {
 }
 
 void CheckpointReader::LoadCheckpoint(CatalogTransaction transaction, MetadataReader &reader) {
-	BinaryDeserializer deserializer(reader);
-	deserializer.Begin();
-	deserializer.ReadList(100, "catalog_entries", [&](Deserializer::List &list, idx_t i) {
-		return list.ReadObject([&](Deserializer &obj) { ReadEntry(transaction, obj); });
-	});
-	deserializer.End();
 }
 
 MetadataManager &SingleFileCheckpointReader::GetMetadataManager() {
@@ -572,13 +557,6 @@ void CheckpointReader::ReadTableData(CatalogTransaction transaction, Deserialize
 	}
 
 	// FIXME: icky downcast to get the underlying MetadataReader
-	auto &binary_deserializer = dynamic_cast<BinaryDeserializer &>(deserializer);
-	auto &reader = dynamic_cast<MetadataReader &>(binary_deserializer.GetStream());
-
-	MetadataReader table_data_reader(reader.GetMetadataManager(), table_pointer);
-	TableDataReader data_reader(table_data_reader, bound_info);
-	data_reader.ReadTableData();
-
 	bound_info.data->total_rows = total_rows;
 }
 

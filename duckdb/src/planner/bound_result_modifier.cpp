@@ -1,4 +1,5 @@
 #include "duckdb/planner/bound_result_modifier.hpp"
+
 #include "duckdb/parser/expression_map.hpp"
 
 namespace duckdb {
@@ -14,15 +15,11 @@ BoundOrderByNode::BoundOrderByNode(OrderType type, OrderByNullType null_order, u
 }
 BoundOrderByNode::BoundOrderByNode(OrderType type, OrderByNullType null_order, unique_ptr<Expression> expression,
                                    unique_ptr<BaseStatistics> stats)
-    : type(type), null_order(null_order), expression(std::move(expression)), stats(std::move(stats)) {
+    : type(type), null_order(null_order), expression(std::move(expression)) {
 }
 
 BoundOrderByNode BoundOrderByNode::Copy() const {
-	if (stats) {
-		return BoundOrderByNode(type, null_order, expression->Copy(), stats->ToUnique());
-	} else {
-		return BoundOrderByNode(type, null_order, expression->Copy());
-	}
+	return BoundOrderByNode(type, null_order, expression->Copy());
 }
 
 bool BoundOrderByNode::Equals(const BoundOrderByNode &other) const {

@@ -8,16 +8,16 @@
 
 #pragma once
 
-#include "duckdb/common/types/data_chunk.hpp"
-#include "duckdb/storage/statistics/base_statistics.hpp"
-#include "duckdb/storage/data_pointer.hpp"
-#include "duckdb/storage/table/persistent_table_data.hpp"
-#include "duckdb/storage/statistics/segment_statistics.hpp"
-#include "duckdb/storage/table/segment_tree.hpp"
-#include "duckdb/storage/table/column_segment_tree.hpp"
-#include "duckdb/common/mutex.hpp"
 #include "duckdb/common/enums/scan_vector_type.hpp"
+#include "duckdb/common/mutex.hpp"
 #include "duckdb/common/serializer/serialization_traits.hpp"
+#include "duckdb/common/types/data_chunk.hpp"
+#include "duckdb/storage/data_pointer.hpp"
+#include "duckdb/storage/statistics/base_statistics.hpp"
+#include "duckdb/storage/statistics/segment_statistics.hpp"
+#include "duckdb/storage/table/column_segment_tree.hpp"
+#include "duckdb/storage/table/persistent_table_data.hpp"
+#include "duckdb/storage/table/segment_tree.hpp"
 
 namespace duckdb {
 class ColumnData;
@@ -150,9 +150,7 @@ public:
 	                            Vector &scan_vector);
 
 	virtual bool IsPersistent();
-	vector<DataPointer> GetDataPointers();
 
-	virtual PersistentColumnData Serialize();
 	void InitializeColumn(PersistentColumnData &column_data);
 	virtual void InitializeColumn(PersistentColumnData &column_data, BaseStatistics &target_stats);
 	static shared_ptr<ColumnData> Deserialize(BlockManager &block_manager, DataTableInfo &info, idx_t column_index,
@@ -172,7 +170,6 @@ public:
 
 	void MergeStatistics(const BaseStatistics &other);
 	void MergeIntoStatistics(BaseStatistics &other);
-	unique_ptr<BaseStatistics> GetStatistics();
 
 protected:
 	//! Append a transient segment
@@ -212,7 +209,6 @@ protected:
 
 struct PersistentColumnData {
 	explicit PersistentColumnData(PhysicalType physical_type);
-	PersistentColumnData(PhysicalType physical_type, vector<DataPointer> pointers);
 	// disable copy constructors
 	PersistentColumnData(const PersistentColumnData &other) = delete;
 	PersistentColumnData &operator=(const PersistentColumnData &) = delete;
@@ -222,7 +218,6 @@ struct PersistentColumnData {
 	~PersistentColumnData();
 
 	PhysicalType physical_type;
-	vector<DataPointer> pointers;
 	vector<PersistentColumnData> child_columns;
 	bool has_updates = false;
 

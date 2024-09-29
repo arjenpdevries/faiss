@@ -1,12 +1,13 @@
 #include "duckdb/catalog/duck_catalog.hpp"
-#include "duckdb/catalog/dependency_manager.hpp"
+
 #include "duckdb/catalog/catalog_entry/duck_schema_entry.hpp"
-#include "duckdb/storage/storage_manager.hpp"
-#include "duckdb/parser/parsed_data/drop_info.hpp"
-#include "duckdb/parser/parsed_data/create_schema_info.hpp"
 #include "duckdb/catalog/default/default_schemas.hpp"
+#include "duckdb/catalog/dependency_manager.hpp"
 #include "duckdb/function/built_in_functions.hpp"
 #include "duckdb/main/attached_database.hpp"
+#include "duckdb/parser/parsed_data/create_schema_info.hpp"
+#include "duckdb/parser/parsed_data/drop_info.hpp"
+#include "duckdb/storage/storage_manager.hpp"
 #include "duckdb/transaction/duck_transaction_manager.hpp"
 #ifndef DISABLE_CORE_FUNCTIONS_EXTENSION
 #include "duckdb/core_functions/core_functions.hpp"
@@ -15,8 +16,7 @@
 namespace duckdb {
 
 DuckCatalog::DuckCatalog(AttachedDatabase &db)
-    : Catalog(db), dependency_manager(make_uniq<DependencyManager>(*this)),
-      schemas(make_uniq<CatalogSet>(*this, make_uniq<DefaultSchemaGenerator>(*this))) {
+    : Catalog(db), dependency_manager(make_uniq<DependencyManager>(*this)), schemas(make_uniq<CatalogSet>(*this)) {
 }
 
 DuckCatalog::~DuckCatalog() {

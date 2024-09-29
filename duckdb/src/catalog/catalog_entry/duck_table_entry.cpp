@@ -168,17 +168,6 @@ DuckTableEntry::DuckTableEntry(Catalog &catalog, SchemaCatalogEntry &schema, Bou
 	}
 }
 
-unique_ptr<BaseStatistics> DuckTableEntry::GetStatistics(ClientContext &context, column_t column_id) {
-	if (column_id == COLUMN_IDENTIFIER_ROW_ID) {
-		return nullptr;
-	}
-	auto &column = columns.GetColumn(LogicalIndex(column_id));
-	if (column.Generated()) {
-		return nullptr;
-	}
-	return storage->GetStatistics(context, column.StorageOid());
-}
-
 unique_ptr<CatalogEntry> DuckTableEntry::AlterEntry(CatalogTransaction transaction, AlterInfo &info) {
 	if (transaction.HasContext()) {
 		return AlterEntry(transaction.GetContext(), info);

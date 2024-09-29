@@ -81,13 +81,6 @@ unique_ptr<Expression> BoundAggregateExpression::Copy() const {
 }
 
 void BoundAggregateExpression::Serialize(Serializer &serializer) const {
-	Expression::Serialize(serializer);
-	serializer.WriteProperty(200, "return_type", return_type);
-	serializer.WriteProperty(201, "children", children);
-	FunctionSerializer::Serialize(serializer, function, bind_info.get());
-	serializer.WriteProperty(203, "aggregate_type", aggr_type);
-	serializer.WritePropertyWithDefault(204, "filter", filter, unique_ptr<Expression>());
-	serializer.WritePropertyWithDefault(205, "order_bys", order_bys, unique_ptr<BoundOrderModifier>());
 }
 
 unique_ptr<Expression> BoundAggregateExpression::Deserialize(Deserializer &deserializer) {

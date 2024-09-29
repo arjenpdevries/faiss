@@ -1,4 +1,5 @@
 #include "duckdb/common/serializer/serializer.hpp"
+
 #include "duckdb/common/types/value.hpp"
 
 namespace duckdb {
@@ -7,9 +8,6 @@ template <>
 void Serializer::WriteValue(const vector<bool> &vec) {
 	auto count = vec.size();
 	OnListBegin(count);
-	for (auto item : vec) {
-		WriteValue(item);
-	}
 	OnListEnd();
 }
 
@@ -23,7 +21,6 @@ void Serializer::WritePropertyWithDefault<Value>(const field_id_t field_id, cons
 		return;
 	}
 	OnOptionalPropertyBegin(field_id, tag, true);
-	WriteValue(value);
 	OnOptionalPropertyEnd(true);
 }
 

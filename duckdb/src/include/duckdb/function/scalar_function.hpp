@@ -8,6 +8,7 @@
 
 #pragma once
 
+#include "duckdb/common/optional_ptr.hpp"
 #include "duckdb/common/vector_operations/binary_executor.hpp"
 #include "duckdb/common/vector_operations/ternary_executor.hpp"
 #include "duckdb/common/vector_operations/unary_executor.hpp"
@@ -15,7 +16,6 @@
 #include "duckdb/execution/expression_executor_state.hpp"
 #include "duckdb/function/function.hpp"
 #include "duckdb/storage/statistics/base_statistics.hpp"
-#include "duckdb/common/optional_ptr.hpp"
 
 namespace duckdb {
 
@@ -58,12 +58,11 @@ struct StatementProperties;
 struct FunctionStatisticsInput {
 	FunctionStatisticsInput(BoundFunctionExpression &expr_p, optional_ptr<FunctionData> bind_data_p,
 	                        vector<BaseStatistics> &child_stats_p, unique_ptr<Expression> *expr_ptr_p)
-	    : expr(expr_p), bind_data(bind_data_p), child_stats(child_stats_p), expr_ptr(expr_ptr_p) {
+	    : expr(expr_p), bind_data(bind_data_p), expr_ptr(expr_ptr_p) {
 	}
 
 	BoundFunctionExpression &expr;
 	optional_ptr<FunctionData> bind_data;
-	vector<BaseStatistics> &child_stats;
 	unique_ptr<Expression> *expr_ptr;
 };
 

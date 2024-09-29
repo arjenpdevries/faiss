@@ -1,11 +1,13 @@
-#include "duckdb/storage/table/column_data.hpp"
 #include "duckdb/storage/table/column_checkpoint_state.hpp"
-#include "duckdb/storage/table/column_segment.hpp"
-#include "duckdb/storage/checkpoint/write_overflow_strings_to_disk.hpp"
-#include "duckdb/storage/table/row_group.hpp"
-#include "duckdb/storage/checkpoint/table_data_writer.hpp"
 
 #include "duckdb/main/config.hpp"
+#include "duckdb/storage/checkpoint/table_data_writer.hpp"
+#include "duckdb/storage/checkpoint/write_overflow_strings_to_disk.hpp"
+#include "duckdb/storage/table/column_data.hpp"
+#include "duckdb/storage/table/column_segment.hpp"
+#include "duckdb/storage/table/row_group.hpp"
+
+#include <cstddef>
 
 namespace duckdb {
 
@@ -15,11 +17,6 @@ ColumnCheckpointState::ColumnCheckpointState(RowGroup &row_group, ColumnData &co
 }
 
 ColumnCheckpointState::~ColumnCheckpointState() {
-}
-
-unique_ptr<BaseStatistics> ColumnCheckpointState::GetStatistics() {
-	D_ASSERT(global_stats);
-	return std::move(global_stats);
 }
 
 PartialBlockForCheckpoint::PartialBlockForCheckpoint(ColumnData &data, ColumnSegment &segment, PartialBlockState state,
@@ -121,9 +118,6 @@ void ColumnCheckpointState::FlushSegment(unique_ptr<ColumnSegment> segment, idx_
 		return;
 	} // LCOV_EXCL_STOP
 
-	// merge the segment stats into the global stats
-	global_stats->Merge(segment->stats.statistics);
-
 	// get the buffer of the segment and pin it
 	auto &db = column_data.GetDatabase();
 	auto &buffer_manager = BufferManager::GetBufferManager(db);
@@ -131,72 +125,14 @@ void ColumnCheckpointState::FlushSegment(unique_ptr<ColumnSegment> segment, idx_
 	uint32_t offset_in_block = 0;
 
 	unique_lock<mutex> partial_block_lock;
-	if (!segment->stats.statistics.IsConstant()) {
-		partial_block_lock = partial_block_manager.GetLock();
-
-		// non-constant block
-		PartialBlockAllocation allocation =
-		    partial_block_manager.GetBlockAllocation(NumericCast<uint32_t>(segment_size));
-		block_id = allocation.state.block_id;
-		offset_in_block = allocation.state.offset;
-
-		if (allocation.partial_block) {
-			// Use an existing block.
-			D_ASSERT(offset_in_block > 0);
-			auto &pstate = allocation.partial_block->Cast<PartialBlockForCheckpoint>();
-			// pin the source block
-			auto old_handle = buffer_manager.Pin(segment->block);
-			// pin the target block
-			auto new_handle = buffer_manager.Pin(pstate.block_handle);
-			// memcpy the contents of the old block to the new block
-			memcpy(new_handle.Ptr() + offset_in_block, old_handle.Ptr(), segment_size);
-			pstate.AddSegmentToTail(column_data, *segment, offset_in_block);
-		} else {
-			// Create a new block for future reuse.
-			if (segment->SegmentSize() != block_size) {
-				// the segment is smaller than the block size
-				// allocate a new block and copy the data over
-				D_ASSERT(segment->SegmentSize() < block_size);
-				segment->Resize(block_size);
-			}
-			D_ASSERT(offset_in_block == 0);
-			allocation.partial_block = make_uniq<PartialBlockForCheckpoint>(column_data, *segment, allocation.state,
-			                                                                *allocation.block_manager);
-		}
-		// Writer will decide whether to reuse this block.
-		partial_block_manager.RegisterPartialBlock(std::move(allocation));
-	} else {
-		// constant block: no need to write anything to disk besides the stats
-		// set up the compression function to constant
-		auto &config = DBConfig::GetConfig(db);
-		segment->function =
-		    *config.GetCompressionFunction(CompressionType::COMPRESSION_CONSTANT, segment->type.InternalType());
-		segment->ConvertToPersistent(nullptr, INVALID_BLOCK);
-	}
 
 	// construct the data pointer
-	DataPointer data_pointer(segment->stats.statistics.Copy());
-	data_pointer.block_pointer.block_id = block_id;
-	data_pointer.block_pointer.offset = offset_in_block;
-	data_pointer.row_start = row_group.start;
-	if (!data_pointers.empty()) {
-		auto &last_pointer = data_pointers.back();
-		data_pointer.row_start = last_pointer.row_start + last_pointer.tuple_count;
-	}
-	data_pointer.tuple_count = tuple_count;
-	data_pointer.compression_type = segment->function.get().type;
-	if (segment->function.get().serialize_state) {
-		data_pointer.segment_state = segment->function.get().serialize_state(*segment);
-	}
 
 	// append the segment to the new segment tree
-	new_tree.AppendSegment(std::move(segment));
-	data_pointers.push_back(std::move(data_pointer));
 }
 
 PersistentColumnData ColumnCheckpointState::ToPersistentData() {
 	PersistentColumnData data(column_data.type.InternalType());
-	data.pointers = std::move(data_pointers);
 	return data;
 }
 

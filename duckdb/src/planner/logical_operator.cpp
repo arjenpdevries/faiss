@@ -158,10 +158,8 @@ void LogicalOperator::Verify(ClientContext &context) {
 		if (expressions[expr_idx]->HasParameter()) {
 			continue;
 		}
-		MemoryStream stream;
 		// We are serializing a query plan
 		try {
-			BinarySerializer::Serialize(*expressions[expr_idx], stream);
 		} catch (NotImplementedException &ex) {
 			// ignore for now (FIXME)
 			continue;
@@ -170,12 +168,6 @@ void LogicalOperator::Verify(ClientContext &context) {
 		stream.Rewind();
 
 		bound_parameter_map_t parameters;
-		auto deserialized_expression = BinaryDeserializer::Deserialize<Expression>(stream, context, parameters);
-
-		// FIXME: expressions might not be equal yet because of statistics propagation
-		continue;
-		D_ASSERT(Expression::Equals(expressions[expr_idx], deserialized_expression));
-		D_ASSERT(expressions[expr_idx]->Hash() == deserialized_expression->Hash());
 	}
 	D_ASSERT(!ToString().empty());
 	for (auto &child : children) {
@@ -212,22 +204,7 @@ vector<idx_t> LogicalOperator::GetTableIndex() const {
 }
 
 unique_ptr<LogicalOperator> LogicalOperator::Copy(ClientContext &context) const {
-	MemoryStream stream;
-	BinarySerializer serializer(stream);
-	try {
-		serializer.Begin();
-		this->Serialize(serializer);
-		serializer.End();
-	} catch (NotImplementedException &ex) {
-		ErrorData error(ex);
-		throw NotImplementedException("Logical Operator Copy requires the logical operator and all of its children to "
-		                              "be serializable: " +
-		                              error.RawMessage());
-	}
-	stream.Rewind();
-	bound_parameter_map_t parameters;
-	auto op_copy = BinaryDeserializer::Deserialize<LogicalOperator>(stream, context, parameters);
-	return op_copy;
+	return nullptr;
 }
 
 } // namespace duckdb

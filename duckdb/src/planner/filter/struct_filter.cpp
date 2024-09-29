@@ -14,13 +14,6 @@ StructFilter::StructFilter(idx_t child_idx_p, string child_name_p, unique_ptr<Ta
       child_filter(std::move(child_filter_p)) {
 }
 
-FilterPropagateResult StructFilter::CheckStatistics(BaseStatistics &stats) {
-	D_ASSERT(stats.GetType().id() == LogicalTypeId::STRUCT);
-	// Check the child statistics
-	auto &child_stats = StructStats::GetChildStats(stats, child_idx);
-	return child_filter->CheckStatistics(child_stats);
-}
-
 string StructFilter::ToString(const string &column_name) {
 	return child_filter->ToString(column_name + "." + child_name);
 }

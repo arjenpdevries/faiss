@@ -793,7 +793,6 @@ BoundStatement Binder::Bind(CreateStatement &stmt) {
 	case CatalogType::SECRET_ENTRY: {
 		CatalogTransaction transaction = CatalogTransaction(Catalog::GetSystemCatalog(context), context);
 		properties.return_type = StatementReturnType::QUERY_RESULT;
-		return SecretManager::Get(context).BindCreateSecret(transaction, stmt.info->Cast<CreateSecretInfo>());
 	}
 	default:
 		throw InternalException("Unrecognized type!");

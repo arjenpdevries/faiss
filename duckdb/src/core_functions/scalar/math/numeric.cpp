@@ -73,66 +73,7 @@ ScalarFunctionSet NextAfterFun::GetFunctions() {
 // abs
 //===--------------------------------------------------------------------===//
 static unique_ptr<BaseStatistics> PropagateAbsStats(ClientContext &context, FunctionStatisticsInput &input) {
-	auto &child_stats = input.child_stats;
-	auto &expr = input.expr;
-	D_ASSERT(child_stats.size() == 1);
-	// can only propagate stats if the children have stats
-	auto &lstats = child_stats[0];
-	Value new_min, new_max;
-	bool potential_overflow = true;
-	if (NumericStats::HasMinMax(lstats)) {
-		switch (expr.return_type.InternalType()) {
-		case PhysicalType::INT8:
-			potential_overflow = NumericStats::Min(lstats).GetValue<int8_t>() == NumericLimits<int8_t>::Minimum();
-			break;
-		case PhysicalType::INT16:
-			potential_overflow = NumericStats::Min(lstats).GetValue<int16_t>() == NumericLimits<int16_t>::Minimum();
-			break;
-		case PhysicalType::INT32:
-			potential_overflow = NumericStats::Min(lstats).GetValue<int32_t>() == NumericLimits<int32_t>::Minimum();
-			break;
-		case PhysicalType::INT64:
-			potential_overflow = NumericStats::Min(lstats).GetValue<int64_t>() == NumericLimits<int64_t>::Minimum();
-			break;
-		default:
-			return nullptr;
-		}
-	}
-	if (potential_overflow) {
-		new_min = Value(expr.return_type);
-		new_max = Value(expr.return_type);
-	} else {
-		// no potential overflow
-
-		// compute stats
-		auto current_min = NumericStats::Min(lstats).GetValue<int64_t>();
-		auto current_max = NumericStats::Max(lstats).GetValue<int64_t>();
-
-		int64_t min_val, max_val;
-
-		if (current_min < 0 && current_max < 0) {
-			// if both min and max are below zero, then min=abs(cur_max) and max=abs(cur_min)
-			min_val = AbsValue(current_max);
-			max_val = AbsValue(current_min);
-		} else if (current_min < 0) {
-			D_ASSERT(current_max >= 0);
-			// if min is below zero and max is above 0, then min=0 and max=max(cur_max, abs(cur_min))
-			min_val = 0;
-			max_val = MaxValue(AbsValue(current_min), current_max);
-		} else {
-			// if both current_min and current_max are > 0, then the abs is a no-op and can be removed entirely
-			*input.expr_ptr = std::move(input.expr.children[0]);
-			return child_stats[0].ToUnique();
-		}
-		new_min = Value::Numeric(expr.return_type, min_val);
-		new_max = Value::Numeric(expr.return_type, max_val);
-		expr.function.function = ScalarFunction::GetScalarUnaryFunction<AbsOperator>(expr.return_type);
-	}
-	auto stats = NumericStats::CreateEmpty(expr.return_type);
-	NumericStats::SetMin(stats, new_min);
-	NumericStats::SetMax(stats, new_max);
-	stats.CopyValidity(lstats);
-	return stats.ToUnique();
+	return nullptr;
 }
 
 template <class OP>
@@ -171,7 +112,6 @@ ScalarFunctionSet AbsOperatorFun::GetFunctions() {
 		case LogicalTypeId::BIGINT:
 		case LogicalTypeId::HUGEINT: {
 			ScalarFunction func({type}, type, ScalarFunction::GetScalarUnaryFunction<TryAbsOperator>(type));
-			func.statistics = PropagateAbsStats;
 			abs.AddFunction(func);
 			break;
 		}

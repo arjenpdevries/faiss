@@ -131,9 +131,6 @@ bool ExpressionExecutor::TryEvaluateScalar(ClientContext &context, const Express
 void ExpressionExecutor::Verify(const Expression &expr, Vector &vector, idx_t count) {
 	D_ASSERT(expr.return_type.id() == vector.GetType().id());
 	vector.Verify(count);
-	if (expr.verification_stats) {
-		expr.verification_stats->Verify(vector, count);
-	}
 #ifdef DUCKDB_VERIFY_DICTIONARY_EXPRESSION
 	Vector::DebugTransformToDictionary(vector, count);
 #endif

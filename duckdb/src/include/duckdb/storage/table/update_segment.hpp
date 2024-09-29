@@ -8,10 +8,10 @@
 
 #pragma once
 
-#include "duckdb/storage/table/row_group.hpp"
-#include "duckdb/storage/storage_lock.hpp"
-#include "duckdb/storage/statistics/segment_statistics.hpp"
 #include "duckdb/common/types/string_heap.hpp"
+#include "duckdb/storage/statistics/segment_statistics.hpp"
+#include "duckdb/storage/storage_lock.hpp"
+#include "duckdb/storage/table/row_group.hpp"
 
 namespace duckdb {
 class ColumnData;
@@ -24,8 +24,6 @@ class UpdateSegment {
 public:
 	explicit UpdateSegment(ColumnData &column_data);
 	~UpdateSegment();
-
-	ColumnData &column_data;
 
 public:
 	bool HasUpdates() const;
@@ -44,7 +42,6 @@ public:
 	void CleanupUpdateInternal(const StorageLockKey &lock, UpdateInfo &info);
 	void CleanupUpdate(UpdateInfo &info);
 
-	unique_ptr<BaseStatistics> GetStatistics();
 	StringHeap &GetStringHeap() {
 		return heap;
 	}

@@ -60,31 +60,17 @@ void SingleFileTableDataWriter::FinalizeTable(const TableStatistics &global_stat
 	auto pointer = table_data_writer.GetMetaBlockPointer();
 
 	// Serialize statistics as a single unit
-	BinarySerializer stats_serializer(table_data_writer);
-	stats_serializer.Begin();
-	global_stats.Serialize(stats_serializer);
-	stats_serializer.End();
 
 	// now start writing the row group pointers to disk
 	table_data_writer.Write<uint64_t>(row_group_pointers.size());
 	idx_t total_rows = 0;
 	for (auto &row_group_pointer : row_group_pointers) {
-		auto row_group_count = row_group_pointer.row_start + row_group_pointer.tuple_count;
-		if (row_group_count > total_rows) {
-			total_rows = row_group_count;
-		}
 
 		// Each RowGroup is its own unit
-		BinarySerializer row_group_serializer(table_data_writer);
-		row_group_serializer.Begin();
-		RowGroup::Serialize(row_group_pointer, row_group_serializer);
-		row_group_serializer.End();
 	}
 
 	// Now begin the metadata as a unit
 	// Pointer to the table itself goes to the metadata stream.
-	serializer.WriteProperty(101, "table_pointer", pointer);
-	serializer.WriteProperty(102, "total_rows", total_rows);
 
 	auto db_options = checkpoint_manager.db.GetDatabase().config.options;
 	auto v1_0_0_storage = db_options.serialization_compatibility.serialization_version < 3;
@@ -103,11 +89,6 @@ void SingleFileTableDataWriter::FinalizeTable(const TableStatistics &global_stat
 		}
 	}
 #endif
-
-	// write empty block pointers for forwards compatibility
-	vector<BlockPointer> compat_block_pointers;
-	serializer.WriteProperty(103, "index_pointers", compat_block_pointers);
-	serializer.WritePropertyWithDefault(104, "index_storage_infos", index_storage_infos);
 }
 
 } // namespace duckdb

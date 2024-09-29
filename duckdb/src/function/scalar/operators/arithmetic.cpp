@@ -85,13 +85,6 @@ struct AddPropagateStatistics {
 	                      Value &new_max) {
 		T min, max;
 		// new min is min+min
-		if (!OP::Operation(NumericStats::GetMin<T>(lstats), NumericStats::GetMin<T>(rstats), min)) {
-			return true;
-		}
-		// new max is max+max
-		if (!OP::Operation(NumericStats::GetMax<T>(lstats), NumericStats::GetMax<T>(rstats), max)) {
-			return true;
-		}
 		new_min = Value::Numeric(type, min);
 		new_max = Value::Numeric(type, max);
 		return false;
@@ -103,12 +96,6 @@ struct SubtractPropagateStatistics {
 	static bool Operation(LogicalType type, BaseStatistics &lstats, BaseStatistics &rstats, Value &new_min,
 	                      Value &new_max) {
 		T min, max;
-		if (!OP::Operation(NumericStats::GetMin<T>(lstats), NumericStats::GetMax<T>(rstats), min)) {
-			return true;
-		}
-		if (!OP::Operation(NumericStats::GetMax<T>(lstats), NumericStats::GetMin<T>(rstats), max)) {
-			return true;
-		}
 		new_min = Value::Numeric(type, min);
 		new_max = Value::Numeric(type, max);
 		return false;
@@ -135,52 +122,7 @@ struct DecimalArithmeticBindData : public FunctionData {
 
 template <class OP, class PROPAGATE, class BASEOP>
 static unique_ptr<BaseStatistics> PropagateNumericStats(ClientContext &context, FunctionStatisticsInput &input) {
-	auto &child_stats = input.child_stats;
-	auto &expr = input.expr;
-	D_ASSERT(child_stats.size() == 2);
-	// can only propagate stats if the children have stats
-	auto &lstats = child_stats[0];
-	auto &rstats = child_stats[1];
-	Value new_min, new_max;
-	bool potential_overflow = true;
-	if (NumericStats::HasMinMax(lstats) && NumericStats::HasMinMax(rstats)) {
-		switch (expr.return_type.InternalType()) {
-		case PhysicalType::INT8:
-			potential_overflow =
-			    PROPAGATE::template Operation<int8_t, OP>(expr.return_type, lstats, rstats, new_min, new_max);
-			break;
-		case PhysicalType::INT16:
-			potential_overflow =
-			    PROPAGATE::template Operation<int16_t, OP>(expr.return_type, lstats, rstats, new_min, new_max);
-			break;
-		case PhysicalType::INT32:
-			potential_overflow =
-			    PROPAGATE::template Operation<int32_t, OP>(expr.return_type, lstats, rstats, new_min, new_max);
-			break;
-		case PhysicalType::INT64:
-			potential_overflow =
-			    PROPAGATE::template Operation<int64_t, OP>(expr.return_type, lstats, rstats, new_min, new_max);
-			break;
-		default:
-			return nullptr;
-		}
-	}
-	if (potential_overflow) {
-		new_min = Value(expr.return_type);
-		new_max = Value(expr.return_type);
-	} else {
-		// no potential overflow: replace with non-overflowing operator
-		if (input.bind_data) {
-			auto &bind_data = input.bind_data->Cast<DecimalArithmeticBindData>();
-			bind_data.check_overflow = false;
-		}
-		expr.function.function = GetScalarIntegerFunction<BASEOP>(expr.return_type.InternalType());
-	}
-	auto result = NumericStats::CreateEmpty(expr.return_type);
-	NumericStats::SetMin(result, new_min);
-	NumericStats::SetMax(result, new_max);
-	result.CombineValidity(lstats, rstats);
-	return result.ToUnique();
+	return nullptr;
 }
 
 template <bool IS_MODULO = false>
@@ -251,12 +193,6 @@ unique_ptr<FunctionData> BindDecimalAddSubtract(ClientContext &context, ScalarFu
 		bound_function.function = GetScalarBinaryFunction<OP>(result_type.InternalType());
 	}
 	if (result_type.InternalType() != PhysicalType::INT128 && result_type.InternalType() != PhysicalType::UINT128) {
-		if (IS_SUBTRACT) {
-			bound_function.statistics =
-			    PropagateNumericStats<TryDecimalSubtract, SubtractPropagateStatistics, SubtractOperator>;
-		} else {
-			bound_function.statistics = PropagateNumericStats<TryDecimalAdd, AddPropagateStatistics, AddOperator>;
-		}
 	}
 	return std::move(bind_data);
 }
@@ -282,7 +218,6 @@ unique_ptr<FunctionData> DeserializeDecimalArithmetic(Deserializer &deserializer
 	} else {
 		bound_function.function = GetScalarBinaryFunction<OP>(return_type.InternalType());
 	}
-	bound_function.statistics = nullptr; // TODO we likely dont want to do stats prop again
 	bound_function.return_type = return_type;
 	bound_function.arguments = arguments;
 
@@ -521,58 +456,12 @@ unique_ptr<FunctionData> DecimalNegateBind(ClientContext &context, ScalarFunctio
 struct NegatePropagateStatistics {
 	template <class T>
 	static bool Operation(LogicalType type, BaseStatistics &istats, Value &new_min, Value &new_max) {
-		auto max_value = NumericStats::GetMax<T>(istats);
-		auto min_value = NumericStats::GetMin<T>(istats);
-		if (!NegateOperator::CanNegate<T>(min_value) || !NegateOperator::CanNegate<T>(max_value)) {
-			return true;
-		}
-		// new min is -max
-		new_min = Value::Numeric(type, NegateOperator::Operation<T, T>(max_value));
-		// new max is -min
-		new_max = Value::Numeric(type, NegateOperator::Operation<T, T>(min_value));
 		return false;
 	}
 };
 
 static unique_ptr<BaseStatistics> NegateBindStatistics(ClientContext &context, FunctionStatisticsInput &input) {
-	auto &child_stats = input.child_stats;
-	auto &expr = input.expr;
-	D_ASSERT(child_stats.size() == 1);
-	// can only propagate stats if the children have stats
-	auto &istats = child_stats[0];
-	Value new_min, new_max;
-	bool potential_overflow = true;
-	if (NumericStats::HasMinMax(istats)) {
-		switch (expr.return_type.InternalType()) {
-		case PhysicalType::INT8:
-			potential_overflow =
-			    NegatePropagateStatistics::Operation<int8_t>(expr.return_type, istats, new_min, new_max);
-			break;
-		case PhysicalType::INT16:
-			potential_overflow =
-			    NegatePropagateStatistics::Operation<int16_t>(expr.return_type, istats, new_min, new_max);
-			break;
-		case PhysicalType::INT32:
-			potential_overflow =
-			    NegatePropagateStatistics::Operation<int32_t>(expr.return_type, istats, new_min, new_max);
-			break;
-		case PhysicalType::INT64:
-			potential_overflow =
-			    NegatePropagateStatistics::Operation<int64_t>(expr.return_type, istats, new_min, new_max);
-			break;
-		default:
-			return nullptr;
-		}
-	}
-	if (potential_overflow) {
-		new_min = Value(expr.return_type);
-		new_max = Value(expr.return_type);
-	}
-	auto stats = NumericStats::CreateEmpty(expr.return_type);
-	NumericStats::SetMin(stats, new_min);
-	NumericStats::SetMax(stats, new_max);
-	stats.CopyValidity(istats);
-	return stats.ToUnique();
+	return nullptr;
 }
 
 ScalarFunction SubtractFun::GetFunction(const LogicalType &type) {
@@ -704,18 +593,12 @@ struct MultiplyPropagateStatistics {
 		// etc
 		// rather than doing all this switcheroo we just multiply all combinations of lmin/lmax with rmin/rmax
 		// and check what the minimum/maximum value is
-		T lvals[] {NumericStats::GetMin<T>(lstats), NumericStats::GetMax<T>(lstats)};
-		T rvals[] {NumericStats::GetMin<T>(rstats), NumericStats::GetMax<T>(rstats)};
 		T min = NumericLimits<T>::Maximum();
 		T max = NumericLimits<T>::Minimum();
 		// multiplications
 		for (idx_t l = 0; l < 2; l++) {
 			for (idx_t r = 0; r < 2; r++) {
 				T result;
-				if (!OP::Operation(lvals[l], rvals[r], result)) {
-					// potential overflow
-					return true;
-				}
 				if (result < min) {
 					min = result;
 				}
@@ -794,8 +677,6 @@ unique_ptr<FunctionData> BindDecimalMultiply(ClientContext &context, ScalarFunct
 		bound_function.function = GetScalarBinaryFunction<MultiplyOperator>(result_type.InternalType());
 	}
 	if (result_type.InternalType() != PhysicalType::INT128) {
-		bound_function.statistics =
-		    PropagateNumericStats<TryDecimalMultiply, MultiplyPropagateStatistics, MultiplyOperator>;
 	}
 	return std::move(bind_data);
 }

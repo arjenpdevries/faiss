@@ -1,8 +1,9 @@
 #include "duckdb/parser/column_definition.hpp"
-#include "duckdb/parser/parsed_expression_iterator.hpp"
+
+#include "duckdb/parser/expression/cast_expression.hpp"
 #include "duckdb/parser/expression/columnref_expression.hpp"
 #include "duckdb/parser/parsed_data/alter_table_info.hpp"
-#include "duckdb/parser/expression/cast_expression.hpp"
+#include "duckdb/parser/parsed_expression_iterator.hpp"
 
 namespace duckdb {
 
@@ -20,7 +21,6 @@ ColumnDefinition ColumnDefinition::Copy() const {
 	copy.oid = oid;
 	copy.storage_oid = storage_oid;
 	copy.expression = expression ? expression->Copy() : nullptr;
-	copy.compression_type = compression_type;
 	copy.category = category;
 	copy.comment = comment;
 	copy.tags = tags;

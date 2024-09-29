@@ -22,8 +22,7 @@ struct FixedSizeAnalyzeState : public AnalyzeState {
 };
 
 unique_ptr<AnalyzeState> FixedSizeInitAnalyze(ColumnData &col_data, PhysicalType type) {
-	CompressionInfo info(col_data.GetBlockManager().GetBlockSize());
-	return make_uniq<FixedSizeAnalyzeState>(info);
+	return nullptr;
 }
 
 bool FixedSizeAnalyze(AnalyzeState &state_p, Vector &input, idx_t count) {
@@ -200,7 +199,6 @@ struct StandardFixedSizeAppend {
 				auto target_idx = target_offset + i;
 				bool is_null = !adata.validity.RowIsValid(source_idx);
 				if (!is_null) {
-					stats.statistics.UpdateNumericStats<T>(sdata[source_idx]);
 					tdata[target_idx] = sdata[source_idx];
 				} else {
 					// we insert a NullValue<T> in the null gap for debuggability
@@ -212,7 +210,6 @@ struct StandardFixedSizeAppend {
 			for (idx_t i = 0; i < count; i++) {
 				auto source_idx = adata.sel->get_index(offset + i);
 				auto target_idx = target_offset + i;
-				stats.statistics.UpdateNumericStats<T>(sdata[source_idx]);
 				tdata[target_idx] = sdata[source_idx];
 			}
 		}

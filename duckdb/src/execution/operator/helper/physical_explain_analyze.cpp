@@ -1,4 +1,5 @@
 #include "duckdb/execution/operator/helper/physical_explain_analyze.hpp"
+
 #include "duckdb/main/client_context.hpp"
 #include "duckdb/main/query_profiler.hpp"
 
@@ -20,8 +21,6 @@ SinkResultType PhysicalExplainAnalyze::Sink(ExecutionContext &context, DataChunk
 SinkFinalizeType PhysicalExplainAnalyze::Finalize(Pipeline &pipeline, Event &event, ClientContext &context,
                                                   OperatorSinkFinalizeInput &input) const {
 	auto &gstate = input.global_state.Cast<ExplainAnalyzeStateGlobalState>();
-	auto &profiler = QueryProfiler::Get(context);
-	gstate.analyzed_plan = profiler.ToString(format);
 	return SinkFinalizeType::READY;
 }
 

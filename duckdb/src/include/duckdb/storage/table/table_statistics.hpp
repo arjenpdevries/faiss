@@ -9,9 +9,9 @@
 #pragma once
 
 #include "duckdb/common/common.hpp"
+#include "duckdb/common/mutex.hpp"
 #include "duckdb/common/types/data_chunk.hpp"
 #include "duckdb/execution/reservoir_sample.hpp"
-#include "duckdb/common/mutex.hpp"
 #include "duckdb/storage/statistics/column_statistics.hpp"
 
 namespace duckdb {
@@ -45,9 +45,6 @@ public:
 	void CopyStats(TableStatistics &other);
 	void CopyStats(TableStatisticsLock &lock, TableStatistics &other);
 	unique_ptr<BaseStatistics> CopyStats(idx_t i);
-	//! Get a reference to the stats - this requires us to hold the lock.
-	//! The reference can only be safely accessed while the lock is held
-	ColumnStatistics &GetStats(TableStatisticsLock &lock, idx_t i);
 
 	bool Empty();
 
@@ -60,7 +57,6 @@ private:
 	//! The statistics lock
 	shared_ptr<mutex> stats_lock;
 	//! Column statistics
-	vector<shared_ptr<ColumnStatistics>> column_stats;
 	//! The table sample
 	//! Sample for table
 	unique_ptr<BlockingSample> table_sample;

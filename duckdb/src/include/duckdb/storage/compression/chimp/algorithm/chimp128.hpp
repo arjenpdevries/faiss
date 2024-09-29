@@ -9,19 +9,18 @@
 #pragma once
 
 #include "duckdb.h"
-#include "duckdb/storage/compression/chimp/algorithm/chimp_utils.hpp"
-#include "duckdb/storage/compression/chimp/algorithm/leading_zero_buffer.hpp"
-#include "duckdb/storage/compression/chimp/algorithm/flag_buffer.hpp"
-#include "duckdb/storage/compression/chimp/algorithm/ring_buffer.hpp"
+#include "duckdb/common/bit_utils.hpp"
+#include "duckdb/common/exception.hpp"
 #include "duckdb/common/fast_mem.hpp"
 #include "duckdb/common/likely.hpp"
-#include "duckdb/storage/compression/chimp/algorithm/packed_data.hpp"
 #include "duckdb/common/limits.hpp"
-#include "duckdb/common/bit_utils.hpp"
-
 #include "duckdb/storage/compression/chimp/algorithm/bit_reader.hpp"
+#include "duckdb/storage/compression/chimp/algorithm/chimp_utils.hpp"
+#include "duckdb/storage/compression/chimp/algorithm/flag_buffer.hpp"
+#include "duckdb/storage/compression/chimp/algorithm/leading_zero_buffer.hpp"
 #include "duckdb/storage/compression/chimp/algorithm/output_bit_stream.hpp"
-#include "duckdb/common/exception.hpp"
+#include "duckdb/storage/compression/chimp/algorithm/packed_data.hpp"
+#include "duckdb/storage/compression/chimp/algorithm/ring_buffer.hpp"
 
 namespace duckdb {
 
@@ -98,7 +97,6 @@ public:
 
 	static void WriteFirst(CHIMP_TYPE in, State &state) {
 		state.ring_buffer.template Insert<true>(in);
-		state.output.template WriteValue<CHIMP_TYPE, BIT_SIZE>(in);
 		state.previous_value = in;
 		state.first = false;
 	}
@@ -139,7 +137,6 @@ public:
 		// Compress the value
 		if (xor_result == 0) {
 			state.flag_buffer.Insert(ChimpConstants::Flags::VALUE_IDENTICAL);
-			state.output.template WriteValue<uint8_t, INDEX_BITS_SIZE>(previous_index);
 			state.SetLeadingZeros();
 		} else {
 			// Values are not identical
@@ -153,17 +150,14 @@ public:
 				    reference_index, ChimpConstants::Compression::LEADING_REPRESENTATION[leading_zeros],
 				    significant_bits);
 				state.packed_data_buffer.Insert(result & 0xFFFF);
-				state.output.template WriteValue<CHIMP_TYPE>(xor_result >> trailing_zeros, significant_bits);
 				state.SetLeadingZeros();
 			} else if (leading_zeros == state.previous_leading_zeros) {
 				state.flag_buffer.Insert(ChimpConstants::Flags::LEADING_ZERO_EQUALITY);
 				int32_t significant_bits = BIT_SIZE - leading_zeros;
-				state.output.template WriteValue<CHIMP_TYPE>(xor_result, significant_bits);
 			} else {
 				state.flag_buffer.Insert(ChimpConstants::Flags::LEADING_ZERO_LOAD);
 				const int32_t significant_bits = BIT_SIZE - leading_zeros;
 				state.leading_zero_buffer.Insert(ChimpConstants::Compression::LEADING_REPRESENTATION[leading_zeros]);
-				state.output.template WriteValue<CHIMP_TYPE>(xor_result, significant_bits);
 				state.SetLeadingZeros(leading_zeros);
 			}
 		}

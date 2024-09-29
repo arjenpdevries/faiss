@@ -8,9 +8,9 @@
 
 #pragma once
 
+#include "duckdb/storage/statistics/column_statistics.hpp"
 #include "duckdb/storage/table/row_group.hpp"
 #include "duckdb/storage/table/segment_tree.hpp"
-#include "duckdb/storage/statistics/column_statistics.hpp"
 #include "duckdb/storage/table/table_statistics.hpp"
 
 namespace duckdb {
@@ -146,8 +146,6 @@ private:
 	idx_t row_start;
 	//! The segment trees holding the various row_groups of the table
 	shared_ptr<RowGroupSegmentTree> row_groups;
-	//! Table statistics
-	TableStatistics stats;
 	//! Allocation size, only tracked for appends
 	idx_t allocation_size;
 };

@@ -1,5 +1,6 @@
 #include "duckdb/main/connection.hpp"
 
+#include "duckdb.h"
 #include "duckdb/common/types/column/column_data_collection.hpp"
 #include "duckdb/function/table/read_csv.hpp"
 #include "duckdb/main/appender.hpp"
@@ -7,12 +8,6 @@
 #include "duckdb/main/connection_manager.hpp"
 #include "duckdb/main/database.hpp"
 #include "duckdb/main/query_profiler.hpp"
-#include "duckdb/main/relation/query_relation.hpp"
-#include "duckdb/main/relation/read_csv_relation.hpp"
-#include "duckdb/main/relation/table_function_relation.hpp"
-#include "duckdb/main/relation/table_relation.hpp"
-#include "duckdb/main/relation/value_relation.hpp"
-#include "duckdb/main/relation/view_relation.hpp"
 #include "duckdb/parser/parser.hpp"
 #include "duckdb/planner/logical_operator.hpp"
 
@@ -49,12 +44,7 @@ Connection::~Connection() {
 }
 
 string Connection::GetProfilingInformation(ProfilerPrintFormat format) {
-	auto &profiler = QueryProfiler::Get(*context);
-	if (format == ProfilerPrintFormat::JSON) {
-		return profiler.ToJSON();
-	} else {
-		return profiler.QueryTreeToString();
-	}
+	return "";
 }
 
 optional_ptr<ProfilingNode> Connection::GetProfilingTree() {
@@ -64,8 +54,7 @@ optional_ptr<ProfilingNode> Connection::GetProfilingTree() {
 	if (!enable_profiler) {
 		throw Exception(ExceptionType::SETTINGS, "Profiling is not enabled for this connection");
 	}
-	auto &profiler = QueryProfiler::Get(*context);
-	return profiler.GetRoot();
+	return nullptr;
 }
 
 void Connection::Interrupt() {
@@ -97,37 +86,27 @@ unique_ptr<QueryResult> Connection::SendQuery(const string &query) {
 }
 
 unique_ptr<MaterializedQueryResult> Connection::Query(const string &query) {
-	auto result = context->Query(query, false);
-	D_ASSERT(result->type == QueryResultType::MATERIALIZED_RESULT);
-	return unique_ptr_cast<QueryResult, MaterializedQueryResult>(std::move(result));
+	return nullptr;
 }
 
 DUCKDB_API string Connection::GetSubstrait(const string &query) {
-	vector<Value> params;
-	params.emplace_back(query);
-	auto result = TableFunction("get_substrait", params)->Execute();
-	auto protobuf = result->FetchRaw()->GetValue(0, 0);
-	return protobuf.GetValueUnsafe<string_t>().GetString();
+	return "protobuf.GetValueUnsafe<string_t>().GetString()";
 }
 
 DUCKDB_API unique_ptr<QueryResult> Connection::FromSubstrait(const string &proto) {
 	vector<Value> params;
 	params.emplace_back(Value::BLOB_RAW(proto));
-	return TableFunction("from_substrait", params)->Execute();
+	return nullptr;
 }
 
 DUCKDB_API string Connection::GetSubstraitJSON(const string &query) {
-	vector<Value> params;
-	params.emplace_back(query);
-	auto result = TableFunction("get_substrait_json", params)->Execute();
-	auto protobuf = result->FetchRaw()->GetValue(0, 0);
-	return protobuf.GetValueUnsafe<string_t>().GetString();
+	return "protobuf.GetValueUnsafe<string_t>().GetString()";
 }
 
 DUCKDB_API unique_ptr<QueryResult> Connection::FromSubstraitJSON(const string &json) {
 	vector<Value> params;
 	params.emplace_back(json);
-	return TableFunction("from_substrait_json", params)->Execute();
+	return nullptr;
 }
 
 unique_ptr<MaterializedQueryResult> Connection::Query(unique_ptr<SQLStatement> statement) {
@@ -189,104 +168,8 @@ void Connection::Append(TableDescription &description, ColumnDataCollection &col
 	context->Append(description, collection);
 }
 
-shared_ptr<Relation> Connection::Table(const string &table_name) {
-	return Table(DEFAULT_SCHEMA, table_name);
-}
-
-shared_ptr<Relation> Connection::Table(const string &schema_name, const string &table_name) {
-	return nullptr;
-}
-
-shared_ptr<Relation> Connection::View(const string &tname) {
-	return View(DEFAULT_SCHEMA, tname);
-}
-
-shared_ptr<Relation> Connection::View(const string &schema_name, const string &table_name) {
-	return nullptr;
-}
-
-shared_ptr<Relation> Connection::TableFunction(const string &fname) {
-	vector<Value> values;
-	named_parameter_map_t named_parameters;
-	return TableFunction(fname, values, named_parameters);
-}
-
-shared_ptr<Relation> Connection::TableFunction(const string &fname, const vector<Value> &values,
-                                               const named_parameter_map_t &named_parameters) {
-	return nullptr;
-}
-
-shared_ptr<Relation> Connection::TableFunction(const string &fname, const vector<Value> &values) {
-	return nullptr;
-}
-
-shared_ptr<Relation> Connection::Values(const vector<vector<Value>> &values) {
-	vector<string> column_names;
-	return Values(values, column_names);
-}
-
-shared_ptr<Relation> Connection::Values(const vector<vector<Value>> &values, const vector<string> &column_names,
-                                        const string &alias) {
-	return nullptr;
-}
-
-shared_ptr<Relation> Connection::Values(const string &values) {
-	vector<string> column_names;
-	return Values(values, column_names);
-}
-
-shared_ptr<Relation> Connection::Values(const string &values, const vector<string> &column_names, const string &alias) {
-	return nullptr;
-}
-
-shared_ptr<Relation> Connection::ReadCSV(const string &csv_file) {
-	named_parameter_map_t options;
-	return ReadCSV(csv_file, std::move(options));
-}
-
-shared_ptr<Relation> Connection::ReadCSV(const vector<string> &csv_input, named_parameter_map_t &&options) {
-	return nullptr;
-}
-
-shared_ptr<Relation> Connection::ReadCSV(const string &csv_input, named_parameter_map_t &&options) {
-	vector<string> csv_files = {csv_input};
-	return ReadCSV(csv_files, std::move(options));
-}
-
-shared_ptr<Relation> Connection::ReadCSV(const string &csv_file, const vector<string> &columns) {
-	// parse columns
-	named_parameter_map_t options;
-	child_list_t<Value> column_list;
-	for (auto &column : columns) {
-		auto col_list = Parser::ParseColumnList(column, context->GetParserOptions());
-		if (col_list.LogicalColumnCount() != 1) {
-			throw ParserException("Expected a single column definition");
-		}
-		auto &col_def = col_list.GetColumnMutable(LogicalIndex(0));
-		column_list.push_back({col_def.GetName(), col_def.GetType().ToString()});
-	}
-	vector<string> files {csv_file};
-	return nullptr;
-}
-
-shared_ptr<Relation> Connection::ReadParquet(const string &parquet_file, bool binary_as_string) {
-	vector<Value> params;
-	params.emplace_back(parquet_file);
-	named_parameter_map_t named_parameters({{"binary_as_string", Value::BOOLEAN(binary_as_string)}});
-	return TableFunction("parquet_scan", params, named_parameters)->Alias(parquet_file);
-}
-
 unordered_set<string> Connection::GetTableNames(const string &query) {
 	return context->GetTableNames(query);
-}
-
-shared_ptr<Relation> Connection::RelationFromQuery(const string &query, const string &alias, const string &error) {
-	return nullptr;
-}
-
-shared_ptr<Relation> Connection::RelationFromQuery(unique_ptr<SelectStatement> select_stmt, const string &alias,
-                                                   const string &query_p) {
-	return nullptr;
 }
 
 void Connection::BeginTransaction() {

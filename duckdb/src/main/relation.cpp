@@ -2,24 +2,6 @@
 
 #include "duckdb/common/printer.hpp"
 #include "duckdb/main/client_context.hpp"
-#include "duckdb/main/relation/aggregate_relation.hpp"
-#include "duckdb/main/relation/create_table_relation.hpp"
-#include "duckdb/main/relation/create_view_relation.hpp"
-#include "duckdb/main/relation/cross_product_relation.hpp"
-#include "duckdb/main/relation/distinct_relation.hpp"
-#include "duckdb/main/relation/explain_relation.hpp"
-#include "duckdb/main/relation/filter_relation.hpp"
-#include "duckdb/main/relation/insert_relation.hpp"
-#include "duckdb/main/relation/join_relation.hpp"
-#include "duckdb/main/relation/limit_relation.hpp"
-#include "duckdb/main/relation/order_relation.hpp"
-#include "duckdb/main/relation/projection_relation.hpp"
-#include "duckdb/main/relation/setop_relation.hpp"
-#include "duckdb/main/relation/subquery_relation.hpp"
-#include "duckdb/main/relation/table_function_relation.hpp"
-#include "duckdb/main/relation/value_relation.hpp"
-#include "duckdb/main/relation/write_csv_relation.hpp"
-#include "duckdb/main/relation/write_parquet_relation.hpp"
 #include "duckdb/parser/expression/columnref_expression.hpp"
 #include "duckdb/parser/expression/conjunction_expression.hpp"
 #include "duckdb/parser/parser.hpp"
@@ -29,28 +11,6 @@
 #include "duckdb/planner/binder.hpp"
 
 namespace duckdb {
-
-shared_ptr<Relation> Relation::Project(const string &select_list) {
-	return Project(select_list, vector<string>());
-}
-
-shared_ptr<Relation> Relation::Project(const string &expression, const string &alias) {
-	return Project(expression, vector<string>({alias}));
-}
-
-shared_ptr<Relation> Relation::Project(const string &select_list, const vector<string> &aliases) {
-	return nullptr;
-}
-
-shared_ptr<Relation> Relation::Project(const vector<string> &expressions) {
-	vector<string> aliases;
-	return Project(expressions, aliases);
-}
-
-shared_ptr<Relation> Relation::Project(vector<unique_ptr<ParsedExpression>> expressions,
-                                       const vector<string> &aliases) {
-	return nullptr;
-}
 
 static vector<unique_ptr<ParsedExpression>> StringListToExpressionList(ClientContext &context,
                                                                        const vector<string> &expressions) {

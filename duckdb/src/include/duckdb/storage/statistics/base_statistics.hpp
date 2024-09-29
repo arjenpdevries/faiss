@@ -43,7 +43,6 @@ class BaseStatistics {
 	friend struct ArrayStats;
 
 public:
-	DUCKDB_API ~BaseStatistics();
 	// disable copy constructors
 	BaseStatistics(const BaseStatistics &other) = delete;
 	BaseStatistics &operator=(const BaseStatistics &) = delete;
@@ -63,9 +62,6 @@ public:
 	DUCKDB_API StatisticsType GetStatsType() const;
 	DUCKDB_API static StatisticsType GetStatsType(const LogicalType &type);
 
-	DUCKDB_API bool CanHaveNull() const;
-	DUCKDB_API bool CanHaveNoNull() const;
-
 	void SetDistinctCount(idx_t distinct_count);
 
 	bool IsConstant() const;
@@ -74,7 +70,6 @@ public:
 		return type;
 	}
 
-	void Set(StatsInfo info);
 	void CombineValidity(BaseStatistics &left, BaseStatistics &right);
 	void CopyValidity(BaseStatistics &stats);
 	//! Set that the CURRENT level can have null values
@@ -91,8 +86,6 @@ public:
 	}
 	void SetHasNull();
 	void SetHasNoNull();
-
-	void Merge(const BaseStatistics &other);
 
 	void Copy(const BaseStatistics &other);
 
@@ -147,8 +140,6 @@ private:
 		//! String stats data, for string stats
 		StringStatsData string_data;
 	} stats_union;
-	//! Child stats (for LIST and STRUCT)
-	unsafe_unique_array<BaseStatistics> child_stats;
 };
 
 template <>

@@ -1,4 +1,5 @@
 #include "duckdb/storage/metadata/metadata_writer.hpp"
+
 #include "duckdb/storage/block_manager.hpp"
 
 namespace duckdb {
@@ -41,7 +42,6 @@ void MetadataWriter::NextBlock() {
 	// write the block id of the new block to the start of the current block
 	if (capacity > 0) {
 		auto disk_block = manager.GetDiskPointer(new_handle.pointer);
-		Store<idx_t>(disk_block.block_pointer, BasePtr());
 	}
 	// now update the block id of the block
 	block = std::move(new_handle);

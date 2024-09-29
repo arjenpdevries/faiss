@@ -40,7 +40,6 @@ public:
 	};
 
 private:
-	Optimizer &optimizer;
 	FilterCombiner combiner;
 	bool convert_mark_joins;
 

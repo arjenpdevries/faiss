@@ -13,12 +13,7 @@ unique_ptr<StatementVerifier> DeserializedStatementVerifier::Create(const SQLSta
 
 	auto &select_stmt = statement.Cast<SelectStatement>();
 
-	MemoryStream stream;
-	BinarySerializer::Serialize(select_stmt, stream);
-	stream.Rewind();
-	auto result = BinaryDeserializer::Deserialize<SelectStatement>(stream);
-
-	return make_uniq<DeserializedStatementVerifier>(std::move(result));
+	return nullptr;
 }
 
 } // namespace duckdb

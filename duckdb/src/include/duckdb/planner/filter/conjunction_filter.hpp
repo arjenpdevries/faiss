@@ -8,8 +8,8 @@
 
 #pragma once
 
-#include "duckdb/planner/table_filter.hpp"
 #include "duckdb/common/vector.hpp"
+#include "duckdb/planner/table_filter.hpp"
 
 namespace duckdb {
 class ConjunctionFilter : public TableFilter {
@@ -37,7 +37,6 @@ public:
 	ConjunctionOrFilter();
 
 public:
-	FilterPropagateResult CheckStatistics(BaseStatistics &stats) override;
 	string ToString(const string &column_name) override;
 	bool Equals(const TableFilter &other) const override;
 	unique_ptr<TableFilter> Copy() const override;
@@ -54,7 +53,6 @@ public:
 	ConjunctionAndFilter();
 
 public:
-	FilterPropagateResult CheckStatistics(BaseStatistics &stats) override;
 	string ToString(const string &column_name) override;
 	bool Equals(const TableFilter &other) const override;
 	unique_ptr<TableFilter> Copy() const override;

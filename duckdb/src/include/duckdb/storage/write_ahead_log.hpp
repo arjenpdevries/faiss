@@ -61,8 +61,6 @@ public:
 	bool Initialized() {
 		return initialized;
 	}
-	//! Initializes the file of the WAL by creating the file writer.
-	BufferedFileWriter &Initialize();
 
 	void WriteVersion();
 
@@ -119,7 +117,6 @@ public:
 protected:
 	AttachedDatabase &database;
 	mutex wal_lock;
-	unique_ptr<BufferedFileWriter> writer;
 	string wal_path;
 	atomic<idx_t> wal_size;
 	atomic<bool> initialized;

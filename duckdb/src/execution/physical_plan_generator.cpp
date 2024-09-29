@@ -3,13 +3,13 @@
 #include "duckdb/catalog/catalog_entry/scalar_function_catalog_entry.hpp"
 #include "duckdb/common/types/column/column_data_collection.hpp"
 #include "duckdb/execution/column_binding_resolver.hpp"
+#include "duckdb/execution/operator/helper/physical_verify_vector.hpp"
 #include "duckdb/main/client_context.hpp"
 #include "duckdb/main/config.hpp"
 #include "duckdb/main/query_profiler.hpp"
 #include "duckdb/planner/expression/bound_function_expression.hpp"
-#include "duckdb/planner/operator/logical_extension_operator.hpp"
 #include "duckdb/planner/operator/list.hpp"
-#include "duckdb/execution/operator/helper/physical_verify_vector.hpp"
+#include "duckdb/planner/operator/logical_extension_operator.hpp"
 
 namespace duckdb {
 
@@ -38,27 +38,20 @@ PhysicalPlanGenerator::~PhysicalPlanGenerator() {
 }
 
 unique_ptr<PhysicalOperator> PhysicalPlanGenerator::CreatePlan(unique_ptr<LogicalOperator> op) {
-	auto &profiler = QueryProfiler::Get(context);
 
 	// first resolve column references
-	profiler.StartPhase(MetricsType::PHYSICAL_PLANNER_COLUMN_BINDING);
 	ColumnBindingResolver resolver;
 	resolver.VisitOperator(*op);
-	profiler.EndPhase();
 
 	// now resolve types of all the operators
-	profiler.StartPhase(MetricsType::PHYSICAL_PLANNER_RESOLVE_TYPES);
 	op->ResolveOperatorTypes();
-	profiler.EndPhase();
 
 	// extract dependencies from the logical plan
 	DependencyExtractor extractor(dependencies);
 	extractor.VisitOperator(*op);
 
 	// then create the main physical plan
-	profiler.StartPhase(MetricsType::PHYSICAL_PLANNER_CREATE_PLAN);
 	auto plan = CreatePlan(*op);
-	profiler.EndPhase();
 
 	plan->Verify();
 	return plan;

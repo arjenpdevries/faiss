@@ -1,29 +1,16 @@
 #include "duckdb/storage/data_pointer.hpp"
-#include "duckdb/common/serializer/serializer.hpp"
+
 #include "duckdb/common/serializer/deserializer.hpp"
-#include "duckdb/main/config.hpp"
+#include "duckdb/common/serializer/serializer.hpp"
 #include "duckdb/function/compression_function.hpp"
+#include "duckdb/main/config.hpp"
 
 namespace duckdb {
 
-DataPointer::DataPointer(BaseStatistics stats) : statistics(std::move(stats)) {
-}
-
-DataPointer::DataPointer(DataPointer &&other) noexcept : statistics(std::move(other.statistics)) {
-	std::swap(row_start, other.row_start);
-	std::swap(tuple_count, other.tuple_count);
-	std::swap(block_pointer, other.block_pointer);
-	std::swap(compression_type, other.compression_type);
-	std::swap(segment_state, other.segment_state);
+DataPointer::DataPointer() {
 }
 
 DataPointer &DataPointer::operator=(DataPointer &&other) noexcept {
-	std::swap(row_start, other.row_start);
-	std::swap(tuple_count, other.tuple_count);
-	std::swap(block_pointer, other.block_pointer);
-	std::swap(compression_type, other.compression_type);
-	std::swap(statistics, other.statistics);
-	std::swap(segment_state, other.segment_state);
 	return *this;
 }
 

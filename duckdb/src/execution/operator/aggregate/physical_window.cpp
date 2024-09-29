@@ -8,7 +8,6 @@
 #include "duckdb/common/radix_partitioning.hpp"
 #include "duckdb/common/row_operations/row_operations.hpp"
 #include "duckdb/common/sort/partition_state.hpp"
-
 #include "duckdb/common/types/column/column_data_consumer.hpp"
 #include "duckdb/common/types/row/row_data_collection_scanner.hpp"
 #include "duckdb/common/uhugeint.hpp"
@@ -153,7 +152,7 @@ public:
 
 	WindowPartitionGlobalSinkState(WindowGlobalSinkState &gsink, const BoundWindowExpression &wexpr)
 	    : PartitionGlobalSinkState(gsink.context, wexpr.partitions, wexpr.orders, gsink.op.children[0]->types,
-	                               wexpr.partitions_stats, gsink.op.estimated_cardinality),
+	                               gsink.op.estimated_cardinality),
 	      gsink(gsink) {
 	}
 	~WindowPartitionGlobalSinkState() override = default;

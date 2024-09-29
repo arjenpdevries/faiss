@@ -24,7 +24,6 @@ class DataChunk;
 class PhysicalOperator;
 class PipelineExecutor;
 class OperatorState;
-class QueryProfiler;
 class ThreadContext;
 class Task;
 
@@ -163,8 +162,6 @@ private:
 	unique_ptr<ProducerToken> producer;
 	//! List of events
 	vector<shared_ptr<Event>> events;
-	//! The query profiler
-	shared_ptr<QueryProfiler> profiler;
 	//! Task error manager
 	TaskErrorManager error_manager;
 

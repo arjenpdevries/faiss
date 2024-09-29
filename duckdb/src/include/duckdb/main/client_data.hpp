@@ -8,11 +8,11 @@
 
 #pragma once
 
+#include "duckdb/common/atomic.hpp"
+#include "duckdb/common/case_insensitive_map.hpp"
 #include "duckdb/common/common.hpp"
 #include "duckdb/common/enums/output_type.hpp"
 #include "duckdb/common/types/value.hpp"
-#include "duckdb/common/case_insensitive_map.hpp"
-#include "duckdb/common/atomic.hpp"
 #include "duckdb/execution/operator/csv_scanner/csv_state_machine_cache.hpp"
 
 namespace duckdb {
@@ -23,7 +23,6 @@ class CatalogSearchPath;
 class FileOpener;
 class FileSystem;
 class HTTPState;
-class QueryProfiler;
 class PreparedStatementData;
 class SchemaCatalogEntry;
 class HTTPLogger;
@@ -33,9 +32,6 @@ struct ClientData {
 	explicit ClientData(ClientContext &context);
 	~ClientData();
 
-	//! Query profiler
-	shared_ptr<QueryProfiler> profiler;
-
 	//! HTTP logger
 	shared_ptr<HTTPLogger> http_logger;
 
@@ -44,8 +40,6 @@ struct ClientData {
 	//! The set of bound prepared statements that belong to this client
 	case_insensitive_map_t<shared_ptr<PreparedStatementData>> prepared_statements;
 
-	//! The writer used to log queries (if logging is enabled)
-	unique_ptr<BufferedFileWriter> log_query_writer;
 	//! The random generator used by random(). Its seed value can be set by setseed().
 	unique_ptr<RandomEngine> random_engine;
 

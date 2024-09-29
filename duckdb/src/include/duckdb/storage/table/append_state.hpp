@@ -70,8 +70,6 @@ struct TableAppendState {
 	RowGroup *start_row_group;
 	//! The transaction data
 	TransactionData transaction;
-	//! Table statistics
-	TableStatistics stats;
 };
 
 struct ConstraintState {

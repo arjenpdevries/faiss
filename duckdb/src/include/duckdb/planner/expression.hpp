@@ -8,8 +8,8 @@
 
 #pragma once
 
-#include "duckdb/parser/base_expression.hpp"
 #include "duckdb/common/types.hpp"
+#include "duckdb/parser/base_expression.hpp"
 
 namespace duckdb {
 class BaseStatistics;
@@ -23,8 +23,6 @@ public:
 
 	//! The return type of the expression
 	LogicalType return_type;
-	//! Expression statistics (if any) - ONLY USED FOR VERIFICATION
-	unique_ptr<BaseStatistics> verification_stats;
 
 public:
 	bool IsAggregate() const override;

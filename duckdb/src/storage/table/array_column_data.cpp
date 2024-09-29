@@ -1,9 +1,10 @@
 #include "duckdb/storage/table/array_column_data.hpp"
-#include "duckdb/storage/statistics/array_stats.hpp"
-#include "duckdb/common/serializer/serializer.hpp"
+
 #include "duckdb/common/serializer/deserializer.hpp"
-#include "duckdb/storage/table/column_checkpoint_state.hpp"
+#include "duckdb/common/serializer/serializer.hpp"
+#include "duckdb/storage/statistics/array_stats.hpp"
 #include "duckdb/storage/table/append_state.hpp"
+#include "duckdb/storage/table/column_checkpoint_state.hpp"
 #include "duckdb/storage/table/scan_state.hpp"
 
 namespace duckdb {
@@ -15,7 +16,6 @@ ArrayColumnData::ArrayColumnData(BlockManager &block_manager, DataTableInfo &inf
 	D_ASSERT(type.InternalType() == PhysicalType::ARRAY);
 	auto &child_type = ArrayType::GetChildType(type);
 	// the child column, with column index 1 (0 is the validity mask)
-	child_column = ColumnData::CreateColumnUnique(block_manager, info, 1, start_row, child_type, this);
 }
 
 void ArrayColumnData::SetStart(idx_t new_start) {
@@ -120,7 +120,6 @@ void ArrayColumnData::Append(BaseStatistics &stats, ColumnAppendState &state, Ve
 	// Append child column
 	auto array_size = ArrayType::GetSize(type);
 	auto &child_vec = ArrayVector::GetEntry(vector);
-	child_column->Append(ArrayStats::GetChildStats(stats), state.child_appends[1], child_vec, count * array_size);
 
 	this->count += count;
 }
@@ -189,19 +188,13 @@ void ArrayColumnData::CommitDropColumn() {
 struct ArrayColumnCheckpointState : public ColumnCheckpointState {
 	ArrayColumnCheckpointState(RowGroup &row_group, ColumnData &column_data, PartialBlockManager &partial_block_manager)
 	    : ColumnCheckpointState(row_group, column_data, partial_block_manager) {
-		global_stats = ArrayStats::CreateEmpty(column_data.type).ToUnique();
+		;
 	}
 
 	unique_ptr<ColumnCheckpointState> validity_state;
 	unique_ptr<ColumnCheckpointState> child_state;
 
 public:
-	unique_ptr<BaseStatistics> GetStatistics() override {
-		auto stats = global_stats->Copy();
-		ArrayStats::SetChildStats(stats, child_state->GetStatistics());
-		return stats.ToUnique();
-	}
-
 	PersistentColumnData ToPersistentData() override {
 		PersistentColumnData data(PhysicalType::ARRAY);
 		data.child_columns.push_back(validity_state->ToPersistentData());
@@ -230,17 +223,10 @@ bool ArrayColumnData::IsPersistent() {
 
 PersistentColumnData ArrayColumnData::Serialize() {
 	PersistentColumnData persistent_data(PhysicalType::ARRAY);
-	persistent_data.child_columns.push_back(validity.Serialize());
-	persistent_data.child_columns.push_back(child_column->Serialize());
 	return persistent_data;
 }
 
 void ArrayColumnData::InitializeColumn(PersistentColumnData &column_data, BaseStatistics &target_stats) {
-	D_ASSERT(column_data.pointers.empty());
-	validity.InitializeColumn(column_data.child_columns[0], target_stats);
-	auto &child_stats = ArrayStats::GetChildStats(target_stats);
-	child_column->InitializeColumn(column_data.child_columns[1], child_stats);
-	this->count = validity.count.load();
 }
 
 void ArrayColumnData::GetColumnSegmentInfo(idx_t row_group_index, vector<idx_t> col_path,
@@ -254,7 +240,6 @@ void ArrayColumnData::GetColumnSegmentInfo(idx_t row_group_index, vector<idx_t> 
 void ArrayColumnData::Verify(RowGroup &parent) {
 #ifdef DEBUG
 	ColumnData::Verify(parent);
-	validity.Verify(parent);
 	child_column->Verify(parent);
 #endif
 }

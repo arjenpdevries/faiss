@@ -6,9 +6,9 @@
 #include "duckdb/execution/operator/join/physical_delim_join.hpp"
 #include "duckdb/execution/operator/scan/physical_positional_scan.hpp"
 #include "duckdb/execution/physical_operator.hpp"
+#include "duckdb/main/query_profiler.hpp"
 #include "duckdb/parallel/pipeline.hpp"
 #include "duckdb/planner/logical_operator.hpp"
-#include "duckdb/main/query_profiler.hpp"
 #include "utf8proc_wrapper.hpp"
 
 #include <sstream>
@@ -86,9 +86,6 @@ digraph G {
 			for (auto &item : node->extra_text) {
 				auto &key = item.first;
 				auto &value_raw = item.second;
-
-				auto value = QueryProfiler::JSONSanitize(value_raw);
-				body.push_back(StringUtil::Format("%s:\\n%s", key, value));
 			}
 			nodes.push_back(StringUtil::Format(node_format, x, y, StringUtil::Join(body, "\\n───\\n")));
 

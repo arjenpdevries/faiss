@@ -69,12 +69,11 @@ void AllowPersistentSecrets::SetGlobal(DatabaseInstance *db, DBConfig &config, c
 }
 
 void AllowPersistentSecrets::ResetGlobal(DatabaseInstance *db, DBConfig &config) {
-	config.secret_manager->ResetEnablePersistentSecrets();
 }
 
 Value AllowPersistentSecrets::GetSetting(const ClientContext &context) {
 	auto &config = DBConfig::GetConfig(context);
-	return Value::BOOLEAN(config.secret_manager->PersistentSecretsEnabled());
+	return Value::BOOLEAN(true);
 }
 
 //===--------------------------------------------------------------------===//
@@ -376,16 +375,13 @@ Value DefaultNullOrderSetting::GetSetting(const ClientContext &context) {
 // Default Secret Storage
 //===--------------------------------------------------------------------===//
 void DefaultSecretStorage::SetGlobal(DatabaseInstance *db, DBConfig &config, const Value &input) {
-	config.secret_manager->SetDefaultStorage(input.ToString());
 }
 
 void DefaultSecretStorage::ResetGlobal(DatabaseInstance *db, DBConfig &config) {
-	config.secret_manager->ResetDefaultStorage();
 }
 
 Value DefaultSecretStorage::GetSetting(const ClientContext &context) {
-	auto &config = DBConfig::GetConfig(context);
-	return config.secret_manager->DefaultStorage();
+	throw InternalException("disabled_filesystems can only be set in an active database");
 }
 
 //===--------------------------------------------------------------------===//
@@ -1176,7 +1172,6 @@ Value IntegerDivisionSetting::GetSetting(const ClientContext &context) {
 void LogQueryPathSetting::ResetLocal(ClientContext &context) {
 	auto &client_data = ClientData::Get(context);
 	// TODO: verify that this does the right thing
-	client_data.log_query_writer = std::move(ClientData(context).log_query_writer);
 }
 
 void LogQueryPathSetting::SetLocal(ClientContext &context, const Value &input) {
@@ -1184,16 +1179,12 @@ void LogQueryPathSetting::SetLocal(ClientContext &context, const Value &input) {
 	auto path = input.ToString();
 	if (path.empty()) {
 		// empty path: clean up query writer
-		client_data.log_query_writer = nullptr;
 	} else {
-		client_data.log_query_writer = make_uniq<BufferedFileWriter>(FileSystem::GetFileSystem(context), path,
-		                                                             BufferedFileWriter::DEFAULT_OPEN_FLAGS);
 	}
 }
 
 Value LogQueryPathSetting::GetSetting(const ClientContext &context) {
-	auto &client_data = ClientData::Get(context);
-	return client_data.log_query_writer ? Value(client_data.log_query_writer->path) : Value();
+	return Value();
 }
 
 //===--------------------------------------------------------------------===//
@@ -1821,16 +1812,14 @@ Value SearchPathSetting::GetSetting(const ClientContext &context) {
 // Secret Directory
 //===--------------------------------------------------------------------===//
 void SecretDirectorySetting::SetGlobal(DatabaseInstance *db, DBConfig &config, const Value &input) {
-	config.secret_manager->SetPersistentSecretPath(input.ToString());
 }
 
 void SecretDirectorySetting::ResetGlobal(DatabaseInstance *db, DBConfig &config) {
-	config.secret_manager->ResetPersistentSecretPath();
 }
 
 Value SecretDirectorySetting::GetSetting(const ClientContext &context) {
 	auto &config = DBConfig::GetConfig(context);
-	return config.secret_manager->PersistentSecretPath();
+	return Value(false);
 }
 
 //===--------------------------------------------------------------------===//

@@ -30,9 +30,7 @@ ScalarFunction::ScalarFunction(vector<LogicalType> arguments, LogicalType return
 }
 
 bool ScalarFunction::operator==(const ScalarFunction &rhs) const {
-	return name == rhs.name && arguments == rhs.arguments && return_type == rhs.return_type && varargs == rhs.varargs &&
-	       bind == rhs.bind && dependency == rhs.dependency && statistics == rhs.statistics &&
-	       bind_lambda == rhs.bind_lambda;
+	return false;
 }
 
 bool ScalarFunction::operator!=(const ScalarFunction &rhs) const {

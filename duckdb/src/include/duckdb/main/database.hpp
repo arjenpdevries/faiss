@@ -8,12 +8,12 @@
 
 #pragma once
 
-#include "duckdb/main/config.hpp"
-#include "duckdb/main/valid_checker.hpp"
 #include "duckdb/common/winapi.hpp"
+#include "duckdb/main/config.hpp"
 #include "duckdb/main/extension.hpp"
 #include "duckdb/main/extension_install_info.hpp"
 #include "duckdb/main/settings.hpp"
+#include "duckdb/main/valid_checker.hpp"
 
 namespace duckdb {
 class BufferManager;
@@ -47,7 +47,6 @@ public:
 
 public:
 	BufferPool &GetBufferPool() const;
-	DUCKDB_API SecretManager &GetSecretManager();
 	DUCKDB_API BufferManager &GetBufferManager();
 	DUCKDB_API const BufferManager &GetBufferManager() const;
 	DUCKDB_API DatabaseManager &GetDatabaseManager();
