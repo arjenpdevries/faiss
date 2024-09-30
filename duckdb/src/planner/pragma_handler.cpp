@@ -1,18 +1,16 @@
 #include "duckdb/planner/pragma_handler.hpp"
-#include "duckdb/planner/binder.hpp"
-#include "duckdb/parser/parser.hpp"
 
 #include "duckdb/catalog/catalog.hpp"
 #include "duckdb/catalog/catalog_entry/pragma_function_catalog_entry.hpp"
-#include "duckdb/parser/statement/multi_statement.hpp"
-#include "duckdb/parser/parsed_data/bound_pragma_info.hpp"
-#include "duckdb/function/function.hpp"
-
-#include "duckdb/main/client_context.hpp"
-
-#include "duckdb/common/string_util.hpp"
 #include "duckdb/common/file_system.hpp"
+#include "duckdb/common/string_util.hpp"
+#include "duckdb/function/function.hpp"
 #include "duckdb/function/function_binder.hpp"
+#include "duckdb/main/client_context.hpp"
+#include "duckdb/parser/parsed_data/bound_pragma_info.hpp"
+#include "duckdb/parser/parser.hpp"
+#include "duckdb/parser/statement/multi_statement.hpp"
+#include "duckdb/planner/binder.hpp"
 
 namespace duckdb {
 
@@ -71,13 +69,6 @@ void PragmaHandler::HandlePragmaStatements(ClientContextLock &lock, vector<uniqu
 bool PragmaHandler::HandlePragma(SQLStatement &statement, string &resulting_query) {
 	auto info = statement.Cast<PragmaStatement>().info->Copy();
 	QueryErrorContext error_context(statement.stmt_location);
-	auto binder = Binder::CreateBinder(context);
-	auto bound_info = binder->BindPragma(*info, error_context);
-	if (bound_info->function.query) {
-		FunctionParameters parameters {bound_info->parameters, bound_info->named_parameters};
-		resulting_query = bound_info->function.query(context, parameters);
-		return true;
-	}
 	return false;
 }
 

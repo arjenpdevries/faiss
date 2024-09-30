@@ -9,8 +9,8 @@
 #pragma once
 
 #include "duckdb/common/common.hpp"
-#include "duckdb/common/vector.hpp"
 #include "duckdb/common/enums/order_type.hpp"
+#include "duckdb/common/vector.hpp"
 #include "duckdb/parser/parsed_expression.hpp"
 
 namespace duckdb {
@@ -80,9 +80,6 @@ struct OrderByNode {
 
 public:
 	string ToString() const;
-
-	void Serialize(Serializer &serializer) const;
-	static OrderByNode Deserialize(Deserializer &deserializer);
 };
 
 class LimitModifier : public ResultModifier {

@@ -10,8 +10,8 @@
 
 #include "duckdb/common/unordered_map.hpp"
 #include "duckdb/common/unordered_set.hpp"
-#include "duckdb/planner/logical_operator.hpp"
 #include "duckdb/parser/tableref/pivotref.hpp"
+#include "duckdb/planner/logical_operator.hpp"
 #include "duckdb/planner/tableref/bound_pivotref.hpp"
 
 namespace duckdb {
@@ -30,8 +30,6 @@ public:
 public:
 	vector<ColumnBinding> GetColumnBindings() override;
 
-	void Serialize(Serializer &serializer) const override;
-	static unique_ptr<LogicalOperator> Deserialize(Deserializer &deserializer);
 	vector<idx_t> GetTableIndex() const override;
 	string GetName() const override;
 

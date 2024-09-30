@@ -29,23 +29,5 @@ namespace duckdb {
 //            modified:  chunk #1 - a: CONSTANT [1, 1]          b: DICTIONARY [1, 10]
 //                       chunk #2 - a: DICTIONARY [20, 15, 13]  b: SEQUENCE [100, 101, 102]
 // * Nested Shuffle: Reshuffle list vectors so that offsets are not contiguous
-//            original: [[1, 2], [3, 4]] - BASE: [1, 2, 3, 4] LISTS: [offset: 0, length: 2][offset: 2, length: 2]
-//            modified: [[1, 2], [3, 4]] - BASE: [3, 4, 1, 2] LISTS: [offset: 2, length: 2][offset: 0, length: 2]
-class PhysicalVerifyVector : public PhysicalOperator {
-public:
-	static constexpr const PhysicalOperatorType TYPE = PhysicalOperatorType::VERIFY_VECTOR;
-
-public:
-	explicit PhysicalVerifyVector(unique_ptr<PhysicalOperator> child);
-
-public:
-	unique_ptr<OperatorState> GetOperatorState(ExecutionContext &context) const override;
-	OperatorResultType Execute(ExecutionContext &context, DataChunk &input, DataChunk &chunk,
-	                           GlobalOperatorState &gstate, OperatorState &state) const override;
-
-	bool ParallelOperator() const override {
-		return true;
-	}
-};
 
 } // namespace duckdb

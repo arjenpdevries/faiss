@@ -20,7 +20,6 @@
 namespace duckdb {
 class Event;
 class Executor;
-class PhysicalOperator;
 class Pipeline;
 class PipelineBuildState;
 class MetaPipeline;
@@ -43,7 +42,7 @@ public:
 	virtual ~OperatorState() {
 	}
 
-	virtual void Finalize(const PhysicalOperator &op, ExecutionContext &context) {
+	virtual void Finalize(ExecutionContext &context) {
 	}
 
 	template <class TARGET>

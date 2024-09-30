@@ -8,10 +8,10 @@
 
 #pragma once
 
+#include "duckdb/common/extra_operator_info.hpp"
 #include "duckdb/function/table_function.hpp"
 #include "duckdb/planner/logical_operator.hpp"
 #include "duckdb/planner/table_filter.hpp"
-#include "duckdb/common/extra_operator_info.hpp"
 
 namespace duckdb {
 class DynamicTableFilterSet;
@@ -64,7 +64,6 @@ public:
 	void SetColumnIds(vector<column_t> &&column_ids);
 	void AddColumnId(column_t column_id);
 	void ClearColumnIds();
-	const vector<column_t> &GetColumnIds() const;
 	vector<column_t> &GetMutableColumnIds();
 	vector<ColumnBinding> GetColumnBindings() override;
 	idx_t EstimateCardinality(ClientContext &context) override;
@@ -74,9 +73,6 @@ public:
 	bool SupportSerialization() const override {
 		return function.verify_serialization;
 	}
-
-	void Serialize(Serializer &serializer) const override;
-	static unique_ptr<LogicalOperator> Deserialize(Deserializer &deserializer);
 
 protected:
 	void ResolveTypes() override;

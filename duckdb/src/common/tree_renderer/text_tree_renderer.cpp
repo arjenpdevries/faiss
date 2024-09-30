@@ -2,11 +2,11 @@
 
 #include "duckdb/common/pair.hpp"
 #include "duckdb/common/string_util.hpp"
+#include "duckdb/common/typedefs.hpp"
 #include "duckdb/execution/physical_operator.hpp"
 #include "duckdb/parallel/pipeline.hpp"
 #include "duckdb/planner/logical_operator.hpp"
 #include "utf8proc_wrapper.hpp"
-#include "duckdb/common/typedefs.hpp"
 
 #include <sstream>
 
@@ -284,47 +284,24 @@ void TextTreeRenderer::RenderBoxContent(RenderTree &root, std::ostream &ss, idx_
 }
 
 string TextTreeRenderer::ToString(const LogicalOperator &op) {
-	std::stringstream ss;
-	Render(op, ss);
-	return ss.str();
-}
-
-string TextTreeRenderer::ToString(const PhysicalOperator &op) {
-	std::stringstream ss;
-	Render(op, ss);
-	return ss.str();
+	return "ss.str()";
 }
 
 string TextTreeRenderer::ToString(const ProfilingNode &op) {
-	std::stringstream ss;
-	Render(op, ss);
-	return ss.str();
+	return "ss.str()";
 }
 
 string TextTreeRenderer::ToString(const Pipeline &op) {
-	std::stringstream ss;
-	Render(op, ss);
-	return ss.str();
+	return "ss.str()";
 }
 
 void TextTreeRenderer::Render(const LogicalOperator &op, std::ostream &ss) {
-	auto tree = RenderTree::CreateRenderTree(op);
-	ToStream(*tree, ss);
-}
-
-void TextTreeRenderer::Render(const PhysicalOperator &op, std::ostream &ss) {
-	auto tree = RenderTree::CreateRenderTree(op);
-	ToStream(*tree, ss);
 }
 
 void TextTreeRenderer::Render(const ProfilingNode &op, std::ostream &ss) {
-	auto tree = RenderTree::CreateRenderTree(op);
-	ToStream(*tree, ss);
 }
 
 void TextTreeRenderer::Render(const Pipeline &op, std::ostream &ss) {
-	auto tree = RenderTree::CreateRenderTree(op);
-	ToStream(*tree, ss);
 }
 
 void TextTreeRenderer::ToStreamInternal(RenderTree &root, std::ostream &ss) {

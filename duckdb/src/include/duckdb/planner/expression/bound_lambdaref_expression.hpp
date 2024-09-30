@@ -46,8 +46,5 @@ public:
 	hash_t Hash() const override;
 
 	unique_ptr<Expression> Copy() const override;
-
-	void Serialize(Serializer &serializer) const override;
-	static unique_ptr<Expression> Deserialize(Deserializer &deserializer);
 };
 } // namespace duckdb

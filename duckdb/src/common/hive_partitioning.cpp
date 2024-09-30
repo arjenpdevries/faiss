@@ -71,7 +71,6 @@ static void ConvertKnownColRefToConstants(ClientContext &context, unique_ptr<Exp
 				result_val = HivePartitioning::GetValue(context, partition_val.key, partition_val.value,
 				                                        bound_colref.return_type);
 			}
-			expr = make_uniq<BoundConstantExpression>(std::move(result_val));
 		}
 	} else {
 		ExpressionIterator::EnumerateChildren(*expr, [&](unique_ptr<Expression> &child) {

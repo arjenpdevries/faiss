@@ -181,7 +181,6 @@ vector<LogicalType> FunctionBinder::GetLogicalTypesFromExpressions(vector<unique
 	vector<LogicalType> types;
 	types.reserve(arguments.size());
 	for (auto &argument : arguments) {
-		types.push_back(ExpressionBinder::GetExpressionReturnType(*argument));
 	}
 	return types;
 }
@@ -319,7 +318,6 @@ unique_ptr<Expression> FunctionBinder::BindScalarFunction(ScalarFunctionCatalogE
 	if (bound_function.null_handling == FunctionNullHandling::DEFAULT_NULL_HANDLING) {
 		for (auto &child : children) {
 			if (child->return_type == LogicalTypeId::SQLNULL) {
-				return make_uniq<BoundConstantExpression>(Value(return_type_if_null));
 			}
 			if (!child->IsFoldable()) {
 				continue;
@@ -329,7 +327,6 @@ unique_ptr<Expression> FunctionBinder::BindScalarFunction(ScalarFunctionCatalogE
 				continue;
 			}
 			if (result.IsNull()) {
-				return make_uniq<BoundConstantExpression>(Value(return_type_if_null));
 			}
 		}
 	}
@@ -344,9 +341,6 @@ unique_ptr<Expression> FunctionBinder::BindScalarFunction(ScalarFunction bound_f
 		bind_info = bound_function.bind(context, bound_function, children);
 	}
 	if (bound_function.get_modified_databases && binder) {
-		auto &properties = binder->GetStatementProperties();
-		FunctionModifiedDatabasesInput input(bind_info, properties);
-		bound_function.get_modified_databases(context, input);
 	}
 	// check if we need to add casts to the children
 	CastToFunctionArguments(bound_function, children);
@@ -354,16 +348,6 @@ unique_ptr<Expression> FunctionBinder::BindScalarFunction(ScalarFunction bound_f
 	// now create the function
 	auto return_type = bound_function.return_type;
 	unique_ptr<Expression> result;
-	auto result_func = make_uniq<BoundFunctionExpression>(std::move(return_type), std::move(bound_function),
-	                                                      std::move(children), std::move(bind_info), is_operator);
-	if (result_func->function.bind_expression) {
-		// if a bind_expression callback is registered - call it and emit the resulting expression
-		FunctionBindExpressionInput input(context, result_func->bind_info.get(), *result_func);
-		result = result_func->function.bind_expression(input);
-	}
-	if (!result) {
-		result = std::move(result_func);
-	}
 	return result;
 }
 
@@ -381,8 +365,7 @@ unique_ptr<BoundAggregateExpression> FunctionBinder::BindAggregateFunction(Aggre
 	// check if we need to add casts to the children
 	CastToFunctionArguments(bound_function, children);
 
-	return make_uniq<BoundAggregateExpression>(std::move(bound_function), std::move(children), std::move(filter),
-	                                           std::move(bind_info), aggr_type);
+	return nullptr;
 }
 
 } // namespace duckdb

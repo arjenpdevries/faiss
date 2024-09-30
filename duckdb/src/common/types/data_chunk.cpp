@@ -274,10 +274,7 @@ void DataChunk::Deserialize(Deserializer &deserializer) {
 
 	// read the types
 	vector<LogicalType> types;
-	deserializer.ReadList(101, "types", [&](Deserializer::List &list, idx_t i) {
-		auto type = list.ReadElement<LogicalType>();
-		types.push_back(type);
-	});
+	deserializer.ReadList(101, "types", [&](Deserializer::List &list, idx_t i) {});
 
 	// initialize the data chunk
 	D_ASSERT(!types.empty());

@@ -17,7 +17,7 @@
 
 namespace duckdb {
 
-Planner::Planner(ClientContext &context) : binder(Binder::CreateBinder(context)), context(context) {
+Planner::Planner(ClientContext &context) : context(context) {
 }
 
 static void CheckTreeDepth(const LogicalOperator &op, idx_t max_depth, idx_t depth = 0) {
@@ -32,20 +32,9 @@ static void CheckTreeDepth(const LogicalOperator &op, idx_t max_depth, idx_t dep
 void Planner::CreatePlan(SQLStatement &statement) {
 	auto parameter_count = statement.named_param_map.size();
 
-	BoundParameterMap bound_parameters(parameter_data);
-
 	// first bind the tables and columns to the catalog
 	bool parameters_resolved = true;
 	try {
-		binder->parameters = &bound_parameters;
-		auto bound_statement = binder->Bind(statement);
-
-		this->names = bound_statement.names;
-		this->types = bound_statement.types;
-		this->plan = std::move(bound_statement.plan);
-
-		auto max_tree_depth = ClientConfig::GetConfig(context).max_expression_depth;
-		CheckTreeDepth(*plan, max_tree_depth);
 	} catch (const std::exception &ex) {
 		ErrorData error(ex);
 		this->plan = nullptr;
@@ -58,14 +47,6 @@ void Planner::CreatePlan(SQLStatement &statement) {
 			// different exception type - try operator_extensions
 			auto &config = DBConfig::GetConfig(context);
 			for (auto &extension_op : config.operator_extensions) {
-				auto bound_statement =
-				    extension_op->Bind(context, *this->binder, extension_op->operator_info.get(), statement);
-				if (bound_statement.plan != nullptr) {
-					this->names = bound_statement.names;
-					this->types = bound_statement.types;
-					this->plan = std::move(bound_statement.plan);
-					break;
-				}
 			}
 			if (!this->plan) {
 				throw;
@@ -74,30 +55,12 @@ void Planner::CreatePlan(SQLStatement &statement) {
 			throw;
 		}
 	}
-	this->properties = binder->GetStatementProperties();
 	this->properties.parameter_count = parameter_count;
-	properties.bound_all_parameters = !bound_parameters.rebind && parameters_resolved;
-
-	Planner::VerifyPlan(context, plan, bound_parameters.GetParametersPtr());
-
-	// set up a map of parameter number -> value entries
-	for (auto &kv : bound_parameters.GetParameters()) {
-		auto &identifier = kv.first;
-		auto &param = kv.second;
-		// check if the type of the parameter could be resolved
-		if (!param->return_type.IsValid()) {
-			properties.bound_all_parameters = false;
-			continue;
-		}
-		param->SetValue(Value(param->return_type));
-		value_map[identifier] = param;
-	}
 }
 
 shared_ptr<PreparedStatementData> Planner::PrepareSQLStatement(unique_ptr<SQLStatement> statement) {
 	auto copied_statement = statement->Copy();
 	// create a plan of the underlying statement
-	CreatePlan(std::move(statement));
 	// now create the logical prepare
 	auto prepared_data = make_shared_ptr<PreparedStatementData>(copied_statement->type);
 	prepared_data->unbound_statement = std::move(copied_statement);
@@ -136,7 +99,6 @@ void Planner::CreatePlan(unique_ptr<SQLStatement> statement) {
 	case StatementType::DETACH_STATEMENT:
 	case StatementType::COPY_DATABASE_STATEMENT:
 	case StatementType::UPDATE_EXTENSIONS_STATEMENT:
-		CreatePlan(*statement);
 		break;
 	default:
 		throw NotImplementedException("Cannot plan statement of type %s!", StatementTypeToString(statement->type));

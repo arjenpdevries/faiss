@@ -8,10 +8,10 @@
 
 #pragma once
 
+#include "duckdb/function/copy_function.hpp"
 #include "duckdb/parser/parsed_data/copy_info.hpp"
 #include "duckdb/parser/parsed_data/exported_table_data.hpp"
 #include "duckdb/planner/logical_operator.hpp"
-#include "duckdb/function/copy_function.hpp"
 
 namespace duckdb {
 
@@ -27,13 +27,6 @@ public:
 	CopyFunction function;
 	unique_ptr<CopyInfo> copy_info;
 	BoundExportData exported_tables;
-
-	void Serialize(Serializer &serializer) const override {
-		throw NotImplementedException("FIXME: Serialize LogicalExport statement");
-	}
-	unique_ptr<LogicalOperator> Deserialize(Deserializer &deserializer) {
-		throw NotImplementedException("FIXME: Deserialize LogicalExport statement");
-	}
 
 public:
 protected:

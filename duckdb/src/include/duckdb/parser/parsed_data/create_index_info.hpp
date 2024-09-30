@@ -50,8 +50,6 @@ public:
 	string ToString() const override;
 	vector<string> ExpressionsToList() const;
 	string ExpressionsToString() const;
-	void Serialize(Serializer &serializer) const override;
-	static unique_ptr<CreateInfo> Deserialize(Deserializer &deserializer);
 };
 
 } // namespace duckdb

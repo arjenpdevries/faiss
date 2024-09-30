@@ -9,11 +9,11 @@
 #pragma once
 
 #include "duckdb/common/common.hpp"
+#include "duckdb/common/exception.hpp"
+#include "duckdb/common/insertion_order_preserving_map.hpp"
+#include "duckdb/parser/common_table_expression_info.hpp"
 #include "duckdb/parser/parsed_expression.hpp"
 #include "duckdb/parser/result_modifier.hpp"
-#include "duckdb/parser/common_table_expression_info.hpp"
-#include "duckdb/common/insertion_order_preserving_map.hpp"
-#include "duckdb/common/exception.hpp"
 
 namespace duckdb {
 
@@ -39,10 +39,6 @@ public:
 public:
 	string ToString() const;
 	CommonTableExpressionMap Copy() const;
-
-	void Serialize(Serializer &serializer) const;
-	// static void Deserialize(Deserializer &deserializer, CommonTableExpressionMap &ret);
-	static CommonTableExpressionMap Deserialize(Deserializer &deserializer);
 };
 
 class QueryNode {

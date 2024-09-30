@@ -13,13 +13,12 @@
 #include "duckdb/common/unordered_map.hpp"
 #include "duckdb/common/unordered_set.hpp"
 #include "duckdb/common/winapi.hpp"
-#include "duckdb/planner/expression/bound_parameter_data.hpp"
 #include "duckdb/planner/bound_parameter_map.hpp"
+#include "duckdb/planner/expression/bound_parameter_data.hpp"
 
 namespace duckdb {
 class CatalogEntry;
 class ClientContext;
-class PhysicalOperator;
 class SQLStatement;
 
 class PreparedStatementData {
@@ -30,8 +29,6 @@ public:
 	StatementType statement_type;
 	//! The unbound SQL statement that was prepared
 	unique_ptr<SQLStatement> unbound_statement;
-	//! The fully prepared physical plan of the prepared statement
-	unique_ptr<PhysicalOperator> plan;
 
 	//! The result names of the transaction
 	vector<string> names;

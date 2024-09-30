@@ -1,4 +1,5 @@
 #include "duckdb/common/render_tree.hpp"
+
 #include "duckdb/execution/operator/aggregate/physical_hash_aggregate.hpp"
 #include "duckdb/execution/operator/join/physical_delim_join.hpp"
 #include "duckdb/execution/operator/scan/physical_positional_scan.hpp"
@@ -6,10 +7,9 @@
 namespace duckdb {
 
 struct PipelineRenderNode {
-	explicit PipelineRenderNode(const PhysicalOperator &op) : op(op) {
+	explicit PipelineRenderNode() {
 	}
 
-	const PhysicalOperator &op;
 	unique_ptr<PipelineRenderNode> child;
 };
 
@@ -18,67 +18,18 @@ struct PipelineRenderNode {
 namespace {
 
 using duckdb::MaxValue;
-using duckdb::PhysicalDelimJoin;
-using duckdb::PhysicalOperator;
 using duckdb::PhysicalOperatorType;
-using duckdb::PhysicalPositionalScan;
 using duckdb::PipelineRenderNode;
 using duckdb::RenderTreeNode;
 
 class TreeChildrenIterator {
 public:
-	template <class T>
-	static bool HasChildren(const T &op) {
-		return !op.children.empty();
+	static bool HasChildren() {
+		return true;
 	}
-	template <class T>
-	static void Iterate(const T &op, const std::function<void(const T &child)> &callback) {
-		for (auto &child : op.children) {
-			callback(*child);
-		}
+	static void Iterate() {
 	}
 };
-
-template <>
-bool TreeChildrenIterator::HasChildren(const PhysicalOperator &op) {
-	switch (op.type) {
-	case PhysicalOperatorType::LEFT_DELIM_JOIN:
-	case PhysicalOperatorType::RIGHT_DELIM_JOIN:
-	case PhysicalOperatorType::POSITIONAL_SCAN:
-		return true;
-	default:
-		return !op.children.empty();
-	}
-}
-template <>
-void TreeChildrenIterator::Iterate(const PhysicalOperator &op,
-                                   const std::function<void(const PhysicalOperator &child)> &callback) {
-	for (auto &child : op.children) {
-		callback(*child);
-	}
-	if (op.type == PhysicalOperatorType::LEFT_DELIM_JOIN || op.type == PhysicalOperatorType::RIGHT_DELIM_JOIN) {
-		auto &delim = op.Cast<PhysicalDelimJoin>();
-		callback(*delim.join);
-	} else if ((op.type == PhysicalOperatorType::POSITIONAL_SCAN)) {
-		auto &pscan = op.Cast<PhysicalPositionalScan>();
-		for (auto &table : pscan.child_tables) {
-			callback(*table);
-		}
-	}
-}
-
-template <>
-bool TreeChildrenIterator::HasChildren(const PipelineRenderNode &op) {
-	return op.child.get();
-}
-
-template <>
-void TreeChildrenIterator::Iterate(const PipelineRenderNode &op,
-                                   const std::function<void(const PipelineRenderNode &child)> &callback) {
-	if (op.child) {
-		callback(*op.child);
-	}
-}
 
 } // namespace
 
@@ -86,7 +37,7 @@ namespace duckdb {
 
 template <class T>
 static void GetTreeWidthHeight(const T &op, idx_t &width, idx_t &height) {
-	if (!TreeChildrenIterator::HasChildren(op)) {
+	if (!TreeChildrenIterator::HasChildren()) {
 		width = 1;
 		height = 1;
 		return;
@@ -94,25 +45,15 @@ static void GetTreeWidthHeight(const T &op, idx_t &width, idx_t &height) {
 	width = 0;
 	height = 0;
 
-	TreeChildrenIterator::Iterate<T>(op, [&](const T &child) {
-		idx_t child_width, child_height;
-		GetTreeWidthHeight<T>(child, child_width, child_height);
-		width += child_width;
-		height = MaxValue<idx_t>(height, child_height);
-	});
 	height++;
 }
 
 static unique_ptr<RenderTreeNode> CreateNode(const LogicalOperator &op) {
-	return make_uniq<RenderTreeNode>(op.GetName(), op.ParamsToString());
-}
-
-static unique_ptr<RenderTreeNode> CreateNode(const PhysicalOperator &op) {
-	return make_uniq<RenderTreeNode>(op.GetName(), op.ParamsToString());
+	return nullptr;
 }
 
 static unique_ptr<RenderTreeNode> CreateNode(const PipelineRenderNode &op) {
-	return CreateNode(op.op);
+	return nullptr;
 }
 
 static unique_ptr<RenderTreeNode> CreateNode(const ProfilingNode &op) {
@@ -142,18 +83,12 @@ template <class T>
 static idx_t CreateTreeRecursive(RenderTree &result, const T &op, idx_t x, idx_t y) {
 	auto node = CreateNode(op);
 
-	if (!TreeChildrenIterator::HasChildren(op)) {
+	if (!TreeChildrenIterator::HasChildren()) {
 		result.SetNode(x, y, std::move(node));
 		return 1;
 	}
 	idx_t width = 0;
 	// render the children of this node
-	TreeChildrenIterator::Iterate<T>(op, [&](const T &child) {
-		auto child_x = x + width;
-		auto child_y = y + 1;
-		node->AddChildPosition(child_x, child_y);
-		width += CreateTreeRecursive<T>(result, child, child_x, child_y);
-	});
 	result.SetNode(x, y, std::move(node));
 	return width;
 }
@@ -196,14 +131,6 @@ void RenderTree::SetNode(idx_t x, idx_t y, unique_ptr<RenderTreeNode> node) {
 	nodes[GetPosition(x, y)] = std::move(node);
 }
 
-unique_ptr<RenderTree> RenderTree::CreateRenderTree(const LogicalOperator &op) {
-	return CreateTree<LogicalOperator>(op);
-}
-
-unique_ptr<RenderTree> RenderTree::CreateRenderTree(const PhysicalOperator &op) {
-	return CreateTree<PhysicalOperator>(op);
-}
-
 unique_ptr<RenderTree> RenderTree::CreateRenderTree(const ProfilingNode &op) {
 	return CreateTree<ProfilingNode>(op);
 }
@@ -233,7 +160,7 @@ unique_ptr<RenderTree> RenderTree::CreateRenderTree(const Pipeline &pipeline) {
 	D_ASSERT(!operators.empty());
 	unique_ptr<PipelineRenderNode> node;
 	for (auto &op : operators) {
-		auto new_node = make_uniq<PipelineRenderNode>(op.get());
+		auto new_node = make_uniq<PipelineRenderNode>();
 		new_node->child = std::move(node);
 		node = std::move(new_node);
 	}

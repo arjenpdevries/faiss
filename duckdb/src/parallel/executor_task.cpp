@@ -10,8 +10,8 @@ ExecutorTask::ExecutorTask(Executor &executor_p, shared_ptr<Event> event_p)
 	executor.RegisterTask();
 }
 
-ExecutorTask::ExecutorTask(ClientContext &context, shared_ptr<Event> event_p, const PhysicalOperator &op_p)
-    : executor(Executor::Get(context)), event(std::move(event_p)), op(&op_p) {
+ExecutorTask::ExecutorTask(ClientContext &context, shared_ptr<Event> event_p)
+    : executor(Executor::Get(context)), event(std::move(event_p)) {
 	thread_context = make_uniq<ThreadContext>(context);
 	executor.RegisterTask();
 }

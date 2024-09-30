@@ -8,13 +8,13 @@
 #include "duckdb/common/operator/string_cast.hpp"
 #include "duckdb/common/string_util.hpp"
 #include "duckdb/common/types/column/column_data_collection.hpp"
+#include "duckdb/execution/expression_executor.hpp"
 #include "duckdb/main/client_context.hpp"
 #include "duckdb/main/connection.hpp"
 #include "duckdb/main/database.hpp"
-#include "duckdb/storage/data_table.hpp"
-#include "duckdb/planner/expression_binder/constant_binder.hpp"
 #include "duckdb/planner/expression/bound_constant_expression.hpp"
-#include "duckdb/execution/expression_executor.hpp"
+#include "duckdb/planner/expression_binder/constant_binder.hpp"
+#include "duckdb/storage/data_table.hpp"
 
 namespace duckdb {
 
@@ -65,8 +65,6 @@ Appender::Appender(Connection &con, const string &schema_name, const string &tab
 		types.push_back(column.Type());
 		defaults.push_back(column.HasDefaultValue() ? &column.DefaultValue() : nullptr);
 	}
-	auto binder = Binder::CreateBinder(*context);
-
 	context->RunFunctionInTransaction([&]() {
 		for (idx_t i = 0; i < types.size(); i++) {
 			auto &type = types[i];
@@ -79,17 +77,6 @@ Appender::Appender(Connection &con, const string &schema_name, const string &tab
 			}
 			auto default_copy = expr->Copy();
 			D_ASSERT(!default_copy->HasParameter());
-			ConstantBinder default_binder(*binder, *context, "DEFAULT value");
-			default_binder.target_type = type;
-			auto bound_default = default_binder.Bind(default_copy);
-			Value result_value;
-			if (bound_default->IsFoldable() &&
-			    ExpressionExecutor::TryEvaluateScalar(*context, *bound_default, result_value)) {
-				// Insert the evaluated Value
-				default_values[i] = result_value;
-			} else {
-				// These are not supported currently, we don't add them to the 'default_values' map
-			}
 		}
 	});
 
@@ -422,9 +409,6 @@ void Appender::AppendDefault() {
 }
 
 void InternalAppender::FlushInternal(ColumnDataCollection &collection) {
-	auto binder = Binder::CreateBinder(context);
-	auto bound_constraints = binder->BindConstraints(table);
-	table.GetStorage().LocalAppend(table, context, collection, bound_constraints);
 }
 
 void BaseAppender::Close() {

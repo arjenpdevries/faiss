@@ -734,19 +734,6 @@ void DataTable::VerifyAppendConstraints(ConstraintState &state, ClientContext &c
 	auto &table = state.table;
 	if (table.HasGeneratedColumns()) {
 		// Verify that the generated columns expression work with the inserted values
-		auto binder = Binder::CreateBinder(context);
-		physical_index_set_t bound_columns;
-		CheckBinder generated_check_binder(*binder, context, table.name, table.GetColumns(), bound_columns);
-		for (auto &col : table.GetColumns().Logical()) {
-			if (!col.Generated()) {
-				continue;
-			}
-			D_ASSERT(col.Type().id() != LogicalTypeId::ANY);
-			generated_check_binder.target_type = col.Type();
-			auto to_be_bound_expression = col.GeneratedExpression().Copy();
-			auto bound_expression = generated_check_binder.Bind(to_be_bound_expression);
-			VerifyGeneratedExpressionSuccess(context, table, chunk, *bound_expression, col.Oid());
-		}
 	}
 
 	if (HasUniqueIndexes(info->indexes)) {
@@ -1155,7 +1142,6 @@ unique_ptr<TableDeleteState> DataTable::InitializeDelete(TableCatalogEntry &tabl
 	// initialize indexes (if any)
 	info->InitializeIndexes(context);
 
-	auto binder = Binder::CreateBinder(context);
 	vector<LogicalType> types;
 	auto result = make_uniq<TableDeleteState>();
 	result->has_delete_constraints = TableHasDeleteConstraints(table);

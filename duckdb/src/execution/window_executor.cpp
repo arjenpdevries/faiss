@@ -1012,10 +1012,6 @@ bool WindowAggregateExecutorGlobalState::IsCustomAggregate() {
 		return false;
 	}
 
-	if (!AggregateObject(wexpr).function.window) {
-		return false;
-	}
-
 	return (mode < WindowAggregationMode::COMBINE);
 }
 
@@ -1048,22 +1044,6 @@ WindowAggregateExecutorGlobalState::WindowAggregateExecutorGlobalState(const Win
 	// Force naive for SEPARATE mode or for (currently!) unsupported functionality
 	const auto force_naive =
 	    !ClientConfig::GetConfig(context).enable_optimizer || mode == WindowAggregationMode::SEPARATE;
-	AggregateObject aggr(wexpr);
-	if (force_naive || (wexpr.distinct && wexpr.exclude_clause != WindowExcludeMode::NO_OTHER)) {
-		aggregator = make_uniq<WindowNaiveAggregator>(aggr, arg_types, return_type, wexpr.exclude_clause);
-	} else if (IsDistinctAggregate()) {
-		// build a merge sort tree
-		// see https://dl.acm.org/doi/pdf/10.1145/3514221.3526184
-		aggregator = make_uniq<WindowDistinctAggregator>(aggr, arg_types, return_type, wexpr.exclude_clause, context);
-	} else if (IsConstantAggregate()) {
-		aggregator = make_uniq<WindowConstantAggregator>(aggr, arg_types, return_type, wexpr.exclude_clause);
-	} else if (IsCustomAggregate()) {
-		aggregator = make_uniq<WindowCustomAggregator>(aggr, arg_types, return_type, wexpr.exclude_clause);
-	} else {
-		// build a segment tree for frame-adhering aggregates
-		// see http://www.vldb.org/pvldb/vol8/p1058-leis.pdf
-		aggregator = make_uniq<WindowSegmentTree>(aggr, arg_types, return_type, mode, wexpr.exclude_clause);
-	}
 
 	gsink = aggregator->GetGlobalState(group_count, partition_mask);
 }

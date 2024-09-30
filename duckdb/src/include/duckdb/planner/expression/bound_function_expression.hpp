@@ -44,9 +44,6 @@ public:
 
 	unique_ptr<Expression> Copy() const override;
 	void Verify() const override;
-
-	void Serialize(Serializer &serializer) const override;
-	static unique_ptr<Expression> Deserialize(Deserializer &deserializer);
 };
 
 } // namespace duckdb

@@ -10,9 +10,9 @@
 
 #include "duckdb/common/assert.hpp"
 #include "duckdb/common/constants.hpp"
+#include "duckdb/common/helper.hpp"
 #include "duckdb/common/optional_ptr.hpp"
 #include "duckdb/common/vector.hpp"
-#include "duckdb/common/helper.hpp"
 
 #include <limits>
 
@@ -171,7 +171,7 @@ enum class PhysicalType : uint8_t {
 	/// DuckDB Extensions
 	VARCHAR = 200, // our own string representation, different from STRING and LARGE_STRING above
 	UINT128 = 203, // 128-bit unsigned integers
-	INT128 = 204, // 128-bit integers
+	INT128 = 204,  // 128-bit integers
 	UNKNOWN = 205, // Unknown physical type of user defined types
 	/// Boolean as 1 bit, LSB bit-packed ordering
 	BIT = 206,
@@ -213,8 +213,8 @@ enum class LogicalTypeId : uint8_t {
 	TIMESTAMP_TZ = 32,
 	TIME_TZ = 34,
 	BIT = 36,
-	STRING_LITERAL = 37, /* string literals, used for constant strings - only exists while binding */
-	INTEGER_LITERAL = 38,/* integer literals, used for constant integers - only exists while binding */
+	STRING_LITERAL = 37,  /* string literals, used for constant strings - only exists while binding */
+	INTEGER_LITERAL = 38, /* integer literals, used for constant integers - only exists while binding */
 	VARINT = 39,
 	UHUGEINT = 49,
 	HUGEINT = 50,
@@ -304,9 +304,6 @@ struct LogicalType {
 		return !(*this == rhs);
 	}
 
-	DUCKDB_API void Serialize(Serializer &serializer) const;
-	DUCKDB_API static LogicalType Deserialize(Deserializer &deserializer);
-
 	static bool TypeIsTimestamp(LogicalTypeId id) {
 		return (id == LogicalTypeId::TIMESTAMP || id == LogicalTypeId::TIMESTAMP_MS ||
 		        id == LogicalTypeId::TIMESTAMP_NS || id == LogicalTypeId::TIMESTAMP_SEC ||
@@ -329,26 +326,28 @@ struct LogicalType {
 	DUCKDB_API optional_ptr<vector<Value>> GetModifiers();
 	DUCKDB_API optional_ptr<const vector<Value>> GetModifiers() const;
 
-	//! Returns the maximum logical type when combining the two types - or throws an exception if combining is not possible
-	DUCKDB_API static LogicalType MaxLogicalType(ClientContext &context, const LogicalType &left, const LogicalType &right);
-	DUCKDB_API static bool TryGetMaxLogicalType(ClientContext &context, const LogicalType &left, const LogicalType &right, LogicalType &result);
-	//! Forcibly returns a maximum logical type - similar to MaxLogicalType but never throws. As a fallback either left or right are returned.
+	//! Returns the maximum logical type when combining the two types - or throws an exception if combining is not
+	//! possible
+	DUCKDB_API static LogicalType MaxLogicalType(ClientContext &context, const LogicalType &left,
+	                                             const LogicalType &right);
+	DUCKDB_API static bool TryGetMaxLogicalType(ClientContext &context, const LogicalType &left,
+	                                            const LogicalType &right, LogicalType &result);
+	//! Forcibly returns a maximum logical type - similar to MaxLogicalType but never throws. As a fallback either left
+	//! or right are returned.
 	DUCKDB_API static LogicalType ForceMaxLogicalType(const LogicalType &left, const LogicalType &right);
 	//! Normalize a type - removing literals
 	DUCKDB_API static LogicalType NormalizeType(const LogicalType &type);
 
-
-		//! Gets the decimal properties of a numeric type. Fails if the type is not numeric.
+	//! Gets the decimal properties of a numeric type. Fails if the type is not numeric.
 	DUCKDB_API bool GetDecimalProperties(uint8_t &width, uint8_t &scale) const;
 
 	DUCKDB_API void Verify() const;
 
 	DUCKDB_API bool IsValid() const;
 
-
 private:
-	LogicalTypeId id_; // NOLINT: allow this naming for legacy reasons
-	PhysicalType physical_type_; // NOLINT: allow this naming for legacy reasons
+	LogicalTypeId id_;                    // NOLINT: allow this naming for legacy reasons
+	PhysicalType physical_type_;          // NOLINT: allow this naming for legacy reasons
 	shared_ptr<ExtraTypeInfo> type_info_; // NOLINT: allow this naming for legacy reasons
 
 private:
@@ -394,25 +393,26 @@ public:
 	static constexpr const LogicalTypeId ROW_TYPE = LogicalTypeId::BIGINT;
 
 	// explicitly allowing these functions to be capitalized to be in-line with the remaining functions
-	DUCKDB_API static LogicalType DECIMAL(uint8_t width, uint8_t scale);                 // NOLINT
-	DUCKDB_API static LogicalType VARCHAR_COLLATION(string collation);           // NOLINT
-	DUCKDB_API static LogicalType LIST(const LogicalType &child);                // NOLINT
-	DUCKDB_API static LogicalType STRUCT(child_list_t<LogicalType> children);    // NOLINT
-	DUCKDB_API static LogicalType AGGREGATE_STATE(aggregate_state_t state_type); // NOLINT
-	DUCKDB_API static LogicalType MAP(const LogicalType &child);                 // NOLINT
-	DUCKDB_API static LogicalType MAP(LogicalType key, LogicalType value);       // NOLINT
-	DUCKDB_API static LogicalType UNION(child_list_t<LogicalType> members);      // NOLINT
-	DUCKDB_API static LogicalType ARRAY(const LogicalType &child, optional_idx index);   // NOLINT
-	DUCKDB_API static LogicalType ENUM(Vector &ordered_data, idx_t size); // NOLINT
+	DUCKDB_API static LogicalType DECIMAL(uint8_t width, uint8_t scale);               // NOLINT
+	DUCKDB_API static LogicalType VARCHAR_COLLATION(string collation);                 // NOLINT
+	DUCKDB_API static LogicalType LIST(const LogicalType &child);                      // NOLINT
+	DUCKDB_API static LogicalType STRUCT(child_list_t<LogicalType> children);          // NOLINT
+	DUCKDB_API static LogicalType AGGREGATE_STATE(aggregate_state_t state_type);       // NOLINT
+	DUCKDB_API static LogicalType MAP(const LogicalType &child);                       // NOLINT
+	DUCKDB_API static LogicalType MAP(LogicalType key, LogicalType value);             // NOLINT
+	DUCKDB_API static LogicalType UNION(child_list_t<LogicalType> members);            // NOLINT
+	DUCKDB_API static LogicalType ARRAY(const LogicalType &child, optional_idx index); // NOLINT
+	DUCKDB_API static LogicalType ENUM(Vector &ordered_data, idx_t size);              // NOLINT
 	// ANY but with special rules (default is LogicalType::ANY, 5)
 	DUCKDB_API static LogicalType ANY_PARAMS(LogicalType target, idx_t cast_score = 5); // NOLINT
 	//! Integer literal of the specified value
-	DUCKDB_API static LogicalType INTEGER_LITERAL(const Value &constant);               // NOLINT
+	DUCKDB_API static LogicalType INTEGER_LITERAL(const Value &constant); // NOLINT
 	// DEPRECATED - provided for backwards compatibility
-	DUCKDB_API static LogicalType ENUM(const string &enum_name, Vector &ordered_data, idx_t size); // NOLINT
-	DUCKDB_API static LogicalType USER(const string &user_type_name);                              // NOLINT
+	DUCKDB_API static LogicalType ENUM(const string &enum_name, Vector &ordered_data, idx_t size);         // NOLINT
+	DUCKDB_API static LogicalType USER(const string &user_type_name);                                      // NOLINT
 	DUCKDB_API static LogicalType USER(const string &user_type_name, const vector<Value> &user_type_mods); // NOLINT
-	DUCKDB_API static LogicalType USER(string catalog, string schema, string name, vector<Value> user_type_mods); // NOLINT
+	DUCKDB_API static LogicalType USER(string catalog, string schema, string name,
+	                                   vector<Value> user_type_mods); // NOLINT
 	//! A list of all NUMERIC types (integral and floating point types)
 	DUCKDB_API static const vector<LogicalType> Numeric();
 	//! A list of all INTEGRAL types
@@ -543,7 +543,5 @@ struct aggregate_state_t {
 	LogicalType return_type;
 	vector<LogicalType> bound_argument_types;
 };
-
-
 
 } // namespace duckdb

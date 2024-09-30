@@ -59,9 +59,6 @@ public:
 	BoundOrderByNode Copy() const;
 	bool Equals(const BoundOrderByNode &other) const;
 	string ToString() const;
-
-	void Serialize(Serializer &serializer) const;
-	static BoundOrderByNode Deserialize(Deserializer &deserializer);
 };
 
 enum class LimitNodeType : uint8_t {

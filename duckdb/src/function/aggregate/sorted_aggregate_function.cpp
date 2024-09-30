@@ -2,13 +2,13 @@
 #include "duckdb/common/sort/sort.hpp"
 #include "duckdb/common/types/column/column_data_collection.hpp"
 #include "duckdb/common/types/list_segment.hpp"
+#include "duckdb/function/aggregate/distributive_functions.hpp"
 #include "duckdb/function/aggregate_function.hpp"
 #include "duckdb/function/function_binder.hpp"
-#include "duckdb/storage/buffer_manager.hpp"
+#include "duckdb/parser/expression_map.hpp"
 #include "duckdb/planner/expression/bound_aggregate_expression.hpp"
 #include "duckdb/planner/expression/bound_constant_expression.hpp"
-#include "duckdb/parser/expression_map.hpp"
-#include "duckdb/function/aggregate/distributive_functions.hpp"
+#include "duckdb/storage/buffer_manager.hpp"
 
 namespace duckdb {
 
@@ -584,8 +584,6 @@ struct SortedAggregateFunction {
 
 		// Sort the input payloads on (state_idx ASC, orders)
 		vector<BoundOrderByNode> orders;
-		orders.emplace_back(BoundOrderByNode(OrderType::ASCENDING, OrderByNullType::NULLS_FIRST,
-		                                     make_uniq<BoundConstantExpression>(Value::USMALLINT(0))));
 		for (const auto &order : order_bind.orders) {
 			orders.emplace_back(order.Copy());
 		}

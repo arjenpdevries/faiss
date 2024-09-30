@@ -337,17 +337,9 @@ void WriteAheadLogDeserializer::ReplayDropView() {
 // Replay Schema
 //===--------------------------------------------------------------------===//
 void WriteAheadLogDeserializer::ReplayCreateSchema() {
-	CreateSchemaInfo info;
-
-	catalog.CreateSchema(context, info);
 }
 
 void WriteAheadLogDeserializer::ReplayDropSchema() {
-	DropInfo info;
-
-	info.type = CatalogType::SCHEMA_ENTRY;
-
-	catalog.DropEntry(context, info);
 }
 
 //===--------------------------------------------------------------------===//

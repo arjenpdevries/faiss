@@ -26,8 +26,7 @@ unique_ptr<Expression> BindCanCastImplicitlyExpression(FunctionBindExpressionInp
 		return nullptr;
 	}
 	// emit a constant expression
-	return make_uniq<BoundConstantExpression>(
-	    Value::BOOLEAN(CanCastImplicitly(input.context, source_type, target_type)));
+	return nullptr;
 }
 
 ScalarFunction CanCastImplicitlyFun::GetFunction() {

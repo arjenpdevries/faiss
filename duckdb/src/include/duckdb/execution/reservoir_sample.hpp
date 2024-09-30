@@ -10,10 +10,9 @@
 
 #include "duckdb/common/allocator.hpp"
 #include "duckdb/common/common.hpp"
+#include "duckdb/common/queue.hpp"
 #include "duckdb/common/random_engine.hpp"
 #include "duckdb/common/types/data_chunk.hpp"
-
-#include "duckdb/common/queue.hpp"
 
 namespace duckdb {
 
@@ -76,9 +75,6 @@ public:
 	virtual unique_ptr<DataChunk> GetChunk() = 0;
 	BaseReservoirSampling old_base_reservoir_sample;
 
-	virtual void Serialize(Serializer &serializer) const;
-	static unique_ptr<BlockingSample> Deserialize(Deserializer &deserializer);
-
 public:
 	template <class TARGET>
 	TARGET &Cast() {
@@ -125,8 +121,6 @@ public:
 	//! sample is completely built.
 	unique_ptr<DataChunk> GetChunk() override;
 	void Finalize() override;
-	void Serialize(Serializer &serializer) const override;
-	static unique_ptr<BlockingSample> Deserialize(Deserializer &deserializer);
 
 private:
 	//! Replace a single element of the input
@@ -166,9 +160,6 @@ public:
 	//! sample is completely built.
 	unique_ptr<DataChunk> GetChunk() override;
 	void Finalize() override;
-
-	void Serialize(Serializer &serializer) const override;
-	static unique_ptr<BlockingSample> Deserialize(Deserializer &deserializer);
 
 private:
 	Allocator &allocator;

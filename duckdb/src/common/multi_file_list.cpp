@@ -1,37 +1,30 @@
-#include "duckdb/common/multi_file_reader.hpp"
-
 #include "duckdb/common/exception.hpp"
 #include "duckdb/common/hive_partitioning.hpp"
+#include "duckdb/common/multi_file_reader.hpp"
+#include "duckdb/common/string_util.hpp"
 #include "duckdb/common/types.hpp"
 #include "duckdb/function/function_set.hpp"
 #include "duckdb/function/table_function.hpp"
 #include "duckdb/main/config.hpp"
 #include "duckdb/planner/operator/logical_get.hpp"
-#include "duckdb/common/string_util.hpp"
 
 #include <algorithm>
 
 namespace duckdb {
 
 MultiFilePushdownInfo::MultiFilePushdownInfo(LogicalGet &get)
-    : table_index(get.table_index), column_names(get.names), column_ids(get.GetColumnIds()),
-      extra_info(get.extra_info) {
+    : table_index(get.table_index), column_names(get.names), extra_info(get.extra_info) {
 }
 
 MultiFilePushdownInfo::MultiFilePushdownInfo(idx_t table_index, const vector<string> &column_names,
                                              const vector<column_t> &column_ids, ExtraOperatorInfo &extra_info)
-    : table_index(table_index), column_names(column_names), column_ids(column_ids), extra_info(extra_info) {
+    : table_index(table_index), column_names(column_names), extra_info(extra_info) {
 }
 
 // Helper method to do Filter Pushdown into a MultiFileList
 bool PushdownInternal(ClientContext &context, const MultiFileReaderOptions &options, MultiFilePushdownInfo &info,
                       vector<unique_ptr<Expression>> &filters, vector<string> &expanded_files) {
 	HivePartitioningFilterInfo filter_info;
-	for (idx_t i = 0; i < info.column_ids.size(); i++) {
-		if (!IsRowIdColumnId(info.column_ids[i])) {
-			filter_info.column_map.insert({info.column_names[info.column_ids[i]], i});
-		}
-	}
 	filter_info.hive_enabled = options.hive_partitioning;
 	filter_info.filename_enabled = options.filename;
 
@@ -57,11 +50,6 @@ bool PushdownInternal(ClientContext &context, const MultiFileReaderOptions &opti
 	// construct the set of expressions from the table filters
 	vector<unique_ptr<Expression>> filter_expressions;
 	for (auto &entry : filters.filters) {
-		auto column_idx = column_ids[entry.first];
-		auto column_ref =
-		    make_uniq<BoundColumnRefExpression>(types[column_idx], ColumnBinding(table_index, entry.first));
-		auto filter_expr = entry.second->ToExpression(*column_ref);
-		filter_expressions.push_back(std::move(filter_expr));
 	}
 
 	// call the original PushdownInternal method
@@ -217,13 +205,6 @@ SimpleMultiFileList::DynamicFilterPushdown(ClientContext &context, const MultiFi
                                            const vector<column_t> &column_ids, TableFilterSet &filters) const {
 	if (!options.hive_partitioning && !options.filename) {
 		return nullptr;
-	}
-
-	// FIXME: don't copy list until first file is filtered
-	auto file_copy = paths;
-	auto res = PushdownInternal(context, options, names, types, column_ids, filters, file_copy);
-	if (res) {
-		return make_uniq<SimpleMultiFileList>(file_copy);
 	}
 
 	return nullptr;

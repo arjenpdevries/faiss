@@ -1,10 +1,11 @@
 #include "duckdb/parser/parsed_data/create_view_info.hpp"
-#include "duckdb/catalog/catalog_entry/schema_catalog_entry.hpp"
+
 #include "duckdb/catalog/catalog.hpp"
+#include "duckdb/catalog/catalog_entry/schema_catalog_entry.hpp"
 #include "duckdb/parser/parser.hpp"
-#include "duckdb/planner/binder.hpp"
-#include "duckdb/parser/statement/select_statement.hpp"
 #include "duckdb/parser/statement/create_statement.hpp"
+#include "duckdb/parser/statement/select_statement.hpp"
+#include "duckdb/planner/binder.hpp"
 
 namespace duckdb {
 
@@ -76,10 +77,7 @@ unique_ptr<CreateViewInfo> CreateViewInfo::FromSelect(ClientContext &context, un
 
 	info->query = ParseSelect(info->sql);
 
-	auto binder = Binder::CreateBinder(context);
-	binder->BindCreateViewInfo(*info);
-
-	return info;
+	return nullptr;
 }
 
 unique_ptr<CreateViewInfo> CreateViewInfo::FromCreateView(ClientContext &context, const string &sql) {
@@ -101,9 +99,6 @@ unique_ptr<CreateViewInfo> CreateViewInfo::FromCreateView(ClientContext &context
 	}
 
 	auto result = unique_ptr_cast<CreateInfo, CreateViewInfo>(std::move(create_statement.info));
-
-	auto binder = Binder::CreateBinder(context);
-	binder->BindCreateViewInfo(*result);
 
 	return result;
 }

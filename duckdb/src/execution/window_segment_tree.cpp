@@ -5,8 +5,8 @@
 #include "duckdb/common/sort/partition_state.hpp"
 #include "duckdb/common/vector_operations/vector_operations.hpp"
 #include "duckdb/execution/merge_sort_tree.hpp"
-#include "duckdb/planner/expression/bound_constant_expression.hpp"
 #include "duckdb/execution/window_executor.hpp"
+#include "duckdb/planner/expression/bound_constant_expression.hpp"
 
 #include <numeric>
 #include <thread>
@@ -1497,16 +1497,12 @@ WindowDistinctAggregatorGlobalState::WindowDistinctAggregatorGlobalState(const W
 
 	vector<BoundOrderByNode> orders;
 	for (const auto &type : sort_types) {
-		auto expr = make_uniq<BoundConstantExpression>(Value(type));
-		orders.emplace_back(BoundOrderByNode(OrderType::ASCENDING, OrderByNullType::NULLS_FIRST, std::move(expr)));
 	}
 
 	RowLayout payload_layout;
 	payload_layout.Initialize(payload_types);
 
 	global_sort = make_uniq<GlobalSortState>(BufferManager::GetBufferManager(context), orders, payload_layout);
-
-	memory_per_thread = PhysicalOperator::GetMaxThreadMemory(context);
 
 	//	6:	prevIdcs ← []
 	//	7:	prevIdcs[0] ← “-”

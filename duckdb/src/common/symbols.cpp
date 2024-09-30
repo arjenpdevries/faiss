@@ -119,11 +119,9 @@ template class unique_ptr<QueryResult>;
 template class unique_ptr<MaterializedQueryResult>;
 template class unique_ptr<StreamQueryResult>;
 template class unique_ptr<LogicalOperator>;
-template class unique_ptr<PhysicalOperator>;
 template class unique_ptr<OperatorState>;
 template class unique_ptr<sel_t[]>;
 template class unique_ptr<StringHeap>;
-template class unique_ptr<GroupedAggregateHashTable>;
 template class unique_ptr<TableRef>;
 template class unique_ptr<Transaction>;
 template class unique_ptr<uint64_t[]>;
@@ -173,7 +171,6 @@ INSTANTIATE_VECTOR(vector<BoundParameterExpression *>)
 INSTANTIATE_VECTOR(vector<unique_ptr<Expression>>)
 INSTANTIATE_VECTOR(vector<unique_ptr<DataChunk>>)
 INSTANTIATE_VECTOR(vector<unique_ptr<SQLStatement>>)
-INSTANTIATE_VECTOR(vector<unique_ptr<PhysicalOperator>>)
 INSTANTIATE_VECTOR(vector<unique_ptr<LogicalOperator>>)
 INSTANTIATE_VECTOR(vector<unique_ptr<Transaction>>)
 INSTANTIATE_VECTOR(vector<unique_ptr<Rule>>)
@@ -201,8 +198,6 @@ template struct std::atomic<uint64_t>;
 #endif
 
 template class std::bitset<STANDARD_VECTOR_SIZE>;
-template class std::unordered_map<PhysicalOperator *, ProfilingNode *>;
-template class std::stack<PhysicalOperator *>;
 
 /* -pedantic does not like this
 #define INSTANTIATE_UNORDERED_MAP(MAP_DEFINITION)                                                                      \

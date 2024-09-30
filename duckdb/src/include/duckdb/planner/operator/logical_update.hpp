@@ -8,8 +8,8 @@
 
 #pragma once
 
-#include "duckdb/planner/logical_operator.hpp"
 #include "duckdb/planner/bound_constraint.hpp"
+#include "duckdb/planner/logical_operator.hpp"
 
 namespace duckdb {
 class TableCatalogEntry;
@@ -33,9 +33,6 @@ public:
 	bool update_is_del_and_insert;
 
 public:
-	void Serialize(Serializer &serializer) const override;
-	static unique_ptr<LogicalOperator> Deserialize(Deserializer &deserializer);
-
 	idx_t EstimateCardinality(ClientContext &context) override;
 	string GetName() const override;
 

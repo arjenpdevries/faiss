@@ -21,7 +21,6 @@
 namespace duckdb {
 class ClientContext;
 class DataChunk;
-class PhysicalOperator;
 class PipelineExecutor;
 class OperatorState;
 class ThreadContext;
@@ -47,9 +46,6 @@ public:
 
 public:
 	static Executor &Get(ClientContext &context);
-
-	void Initialize(PhysicalOperator &physical_plan);
-	void Initialize(unique_ptr<PhysicalOperator> physical_plan);
 
 	void CancelTasks();
 	PendingExecutionResult ExecuteTask(bool dry_run = false);
@@ -94,7 +90,6 @@ public:
 	}
 	void AddEvent(shared_ptr<Event> event);
 
-	void AddRecursiveCTE(PhysicalOperator &rec_cte);
 	void ReschedulePipelines(const vector<shared_ptr<MetaPipeline>> &pipelines, vector<shared_ptr<Event>> &events);
 
 	//! Whether or not the root of the pipeline is a result collector object
@@ -125,7 +120,6 @@ public:
 private:
 	//! Check if the streaming query result is waiting to be fetched from, must hold the 'executor_lock'
 	bool ResultCollectorIsBlocked();
-	void InitializeInternal(PhysicalOperator &physical_plan);
 
 	void ScheduleEvents(const vector<shared_ptr<MetaPipeline>> &meta_pipelines);
 	void ScheduleEventsInternal(ScheduleEventData &event_data);
@@ -138,22 +132,15 @@ private:
 
 	bool NextExecutor();
 
-	shared_ptr<Pipeline> CreateChildPipeline(Pipeline &current, PhysicalOperator &op);
-
 	void VerifyPipeline(Pipeline &pipeline);
 	void VerifyPipelines();
 
 private:
-	optional_ptr<PhysicalOperator> physical_plan;
-	unique_ptr<PhysicalOperator> owned_plan;
-
 	mutex executor_lock;
 	//! All pipelines of the query plan
 	vector<shared_ptr<Pipeline>> pipelines;
 	//! The root pipelines of the query
 	vector<shared_ptr<Pipeline>> root_pipelines;
-	//! The recursive CTE's in this query plan
-	vector<reference<PhysicalOperator>> recursive_ctes;
 	//! The pipeline executor for the root pipeline
 	unique_ptr<PipelineExecutor> root_executor;
 	//! The current root pipeline index

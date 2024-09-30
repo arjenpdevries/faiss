@@ -54,97 +54,50 @@ public:
 	// Read into an existing value
 	template <typename T>
 	inline void ReadProperty(const field_id_t field_id, const char *tag, T &ret) {
-		OnPropertyBegin(field_id, tag);
-		ret = Read<T>();
-		OnPropertyEnd();
 	}
 
 	// Read and return a value
 	template <typename T>
 	inline T ReadProperty(const field_id_t field_id, const char *tag) {
-		OnPropertyBegin(field_id, tag);
-		auto ret = Read<T>();
-		OnPropertyEnd();
-		return ret;
+		throw NotImplementedException("ReadChar not implemented");
 	}
 
 	// Default Value return
 	template <typename T>
 	inline T ReadPropertyWithDefault(const field_id_t field_id, const char *tag) {
-		if (!OnOptionalPropertyBegin(field_id, tag)) {
-			OnOptionalPropertyEnd(false);
-			return std::forward<T>(SerializationDefaultValue::GetDefault<T>());
-		}
-		auto ret = Read<T>();
-		OnOptionalPropertyEnd(true);
-		return ret;
+		throw NotImplementedException("ReadChar not implemented");
 	}
 
 	template <typename T>
 	inline T ReadPropertyWithExplicitDefault(const field_id_t field_id, const char *tag, T &&default_value) {
-		if (!OnOptionalPropertyBegin(field_id, tag)) {
-			OnOptionalPropertyEnd(false);
-			return std::forward<T>(default_value);
-		}
-		auto ret = Read<T>();
-		OnOptionalPropertyEnd(true);
-		return ret;
+		throw NotImplementedException("ReadChar not implemented");
 	}
 
 	// Default value in place
 	template <typename T>
 	inline void ReadPropertyWithDefault(const field_id_t field_id, const char *tag, T &ret) {
-		if (!OnOptionalPropertyBegin(field_id, tag)) {
-			ret = std::forward<T>(SerializationDefaultValue::GetDefault<T>());
-			OnOptionalPropertyEnd(false);
-			return;
-		}
-		ret = Read<T>();
-		OnOptionalPropertyEnd(true);
+		throw NotImplementedException("ReadChar not implemented");
 	}
 
 	template <typename T>
 	inline void ReadPropertyWithExplicitDefault(const field_id_t field_id, const char *tag, T &ret, T &&default_value) {
-		if (!OnOptionalPropertyBegin(field_id, tag)) {
-			ret = std::forward<T>(default_value);
-			OnOptionalPropertyEnd(false);
-			return;
-		}
-		ret = Read<T>();
-		OnOptionalPropertyEnd(true);
+		throw NotImplementedException("ReadChar not implemented");
 	}
 
 	template <typename T>
 	inline void ReadPropertyWithExplicitDefault(const field_id_t field_id, const char *tag, CSVOption<T> &ret,
 	                                            T &&default_value) {
-		if (!OnOptionalPropertyBegin(field_id, tag)) {
-			ret = std::forward<T>(default_value);
-			OnOptionalPropertyEnd(false);
-			return;
-		}
-		ret = Read<T>();
-		OnOptionalPropertyEnd(true);
+		throw NotImplementedException("ReadChar not implemented");
 	}
 
 	// Special case:
 	// Read into an existing data_ptr_t
 	inline void ReadProperty(const field_id_t field_id, const char *tag, data_ptr_t ret, idx_t count) {
-		OnPropertyBegin(field_id, tag);
-		ReadDataPtr(ret, count);
-		OnPropertyEnd();
 	}
 
 	// Try to read a property, if it is not present, continue, otherwise read and discard the value
 	template <typename T>
 	inline void ReadDeletedProperty(const field_id_t field_id, const char *tag) {
-		// Try to read the property. If not present, great!
-		if (!OnOptionalPropertyBegin(field_id, tag)) {
-			OnOptionalPropertyEnd(false);
-			return;
-		}
-		// Otherwise read and discard the value
-		(void)Read<T>();
-		OnOptionalPropertyEnd(true);
 	}
 
 	//! Set a serialization property
@@ -214,13 +167,6 @@ private:
 	template <class T, typename ELEMENT_TYPE = typename is_unique_ptr<T>::ELEMENT_TYPE>
 	inline typename std::enable_if<is_unique_ptr<T>::value && has_deserialize<ELEMENT_TYPE>::value, T>::type Read() {
 		unique_ptr<ELEMENT_TYPE> ptr = nullptr;
-		auto is_present = OnNullableBegin();
-		if (is_present) {
-			OnObjectBegin();
-			ptr = ELEMENT_TYPE::Deserialize(*this);
-			OnObjectEnd();
-		}
-		OnNullableEnd();
 		return ptr;
 	}
 
@@ -228,13 +174,6 @@ private:
 	template <class T, typename ELEMENT_TYPE = typename is_unique_ptr<T>::ELEMENT_TYPE>
 	inline typename std::enable_if<is_unique_ptr<T>::value && !has_deserialize<ELEMENT_TYPE>::value, T>::type Read() {
 		unique_ptr<ELEMENT_TYPE> ptr = nullptr;
-		auto is_present = OnNullableBegin();
-		if (is_present) {
-			OnObjectBegin();
-			ptr = make_uniq<ELEMENT_TYPE>(Read<ELEMENT_TYPE>());
-			OnObjectEnd();
-		}
-		OnNullableEnd();
 		return ptr;
 	}
 
@@ -243,119 +182,52 @@ private:
 	inline typename std::enable_if<is_shared_ptr<T>::value, T>::type Read() {
 		using ELEMENT_TYPE = typename is_shared_ptr<T>::ELEMENT_TYPE;
 		shared_ptr<ELEMENT_TYPE> ptr = nullptr;
-		auto is_present = OnNullableBegin();
-		if (is_present) {
-			OnObjectBegin();
-			ptr = ELEMENT_TYPE::Deserialize(*this);
-			OnObjectEnd();
-		}
-		OnNullableEnd();
 		return ptr;
 	}
 
 	// Deserialize a vector
 	template <typename T = void>
 	inline typename std::enable_if<is_vector<T>::value, T>::type Read() {
-		using ELEMENT_TYPE = typename is_vector<T>::ELEMENT_TYPE;
 		T vec;
-		auto size = OnListBegin();
-		for (idx_t i = 0; i < size; i++) {
-			vec.push_back(Read<ELEMENT_TYPE>());
-		}
-		OnListEnd();
 		return vec;
 	}
 
 	template <typename T = void>
 	inline typename std::enable_if<is_unsafe_vector<T>::value, T>::type Read() {
-		using ELEMENT_TYPE = typename is_unsafe_vector<T>::ELEMENT_TYPE;
 		T vec;
-		auto size = OnListBegin();
-		for (idx_t i = 0; i < size; i++) {
-			vec.push_back(Read<ELEMENT_TYPE>());
-		}
-		OnListEnd();
-
 		return vec;
 	}
 
 	// Deserialize a map
 	template <typename T = void>
 	inline typename std::enable_if<is_unordered_map<T>::value, T>::type Read() {
-		using KEY_TYPE = typename is_unordered_map<T>::KEY_TYPE;
-		using VALUE_TYPE = typename is_unordered_map<T>::VALUE_TYPE;
-
 		T map;
-		auto size = OnListBegin();
-		for (idx_t i = 0; i < size; i++) {
-			OnObjectBegin();
-			auto key = ReadProperty<KEY_TYPE>(0, "key");
-			auto value = ReadProperty<VALUE_TYPE>(1, "value");
-			OnObjectEnd();
-			map[std::move(key)] = std::move(value);
-		}
-		OnListEnd();
 		return map;
 	}
 
 	template <typename T = void>
 	inline typename std::enable_if<is_map<T>::value, T>::type Read() {
-		using KEY_TYPE = typename is_map<T>::KEY_TYPE;
-		using VALUE_TYPE = typename is_map<T>::VALUE_TYPE;
-
 		T map;
-		auto size = OnListBegin();
-		for (idx_t i = 0; i < size; i++) {
-			OnObjectBegin();
-			auto key = ReadProperty<KEY_TYPE>(0, "key");
-			auto value = ReadProperty<VALUE_TYPE>(1, "value");
-			OnObjectEnd();
-			map[std::move(key)] = std::move(value);
-		}
-		OnListEnd();
 		return map;
 	}
 
 	template <typename T = void>
 	inline typename std::enable_if<is_insertion_preserving_map<T>::value, T>::type Read() {
-		using VALUE_TYPE = typename is_insertion_preserving_map<T>::VALUE_TYPE;
-
 		T map;
-		auto size = OnListBegin();
-		for (idx_t i = 0; i < size; i++) {
-			OnObjectBegin();
-			auto key = ReadProperty<string>(0, "key");
-			auto value = ReadProperty<VALUE_TYPE>(1, "value");
-			OnObjectEnd();
-			map[key] = std::move(value);
-		}
-		OnListEnd();
 		return map;
 	}
 
 	// Deserialize an unordered set
 	template <typename T = void>
 	inline typename std::enable_if<is_unordered_set<T>::value, T>::type Read() {
-		using ELEMENT_TYPE = typename is_unordered_set<T>::ELEMENT_TYPE;
-		auto size = OnListBegin();
 		T set;
-		for (idx_t i = 0; i < size; i++) {
-			set.insert(Read<ELEMENT_TYPE>());
-		}
-		OnListEnd();
 		return set;
 	}
 
 	// Deserialize a set
 	template <typename T = void>
 	inline typename std::enable_if<is_set<T>::value, T>::type Read() {
-		using ELEMENT_TYPE = typename is_set<T>::ELEMENT_TYPE;
-		auto size = OnListBegin();
 		T set;
-		for (idx_t i = 0; i < size; i++) {
-			set.insert(Read<ELEMENT_TYPE>());
-		}
-		OnListEnd();
 		return set;
 	}
 
@@ -374,13 +246,7 @@ private:
 	// Deserialize a priority_queue
 	template <typename T = void>
 	inline typename std::enable_if<is_queue<T>::value, T>::type Read() {
-		using ELEMENT_TYPE = typename is_queue<T>::ELEMENT_TYPE;
 		T queue;
-		auto size = OnListBegin();
-		for (idx_t i = 0; i < size; i++) {
-			queue.emplace(Read<ELEMENT_TYPE>());
-		}
-		OnListEnd();
 		return queue;
 	}
 
@@ -549,12 +415,12 @@ void Deserializer::List::ReadObject(FUNC f) {
 
 template <class T>
 T Deserializer::List::ReadElement() {
-	return deserializer.Read<T>();
+	throw NotImplementedException("ReadChar not implemented");
 }
 
 template <class T>
 void Deserializer::List::ReadElement(data_ptr_t &ptr, idx_t size) {
-	deserializer.ReadDataPtr(ptr, size);
+	throw NotImplementedException("ReadChar not implemented");
 }
 
 } // namespace duckdb

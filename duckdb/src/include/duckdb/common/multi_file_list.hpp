@@ -9,8 +9,8 @@
 #pragma once
 
 #include "duckdb/common/common.hpp"
-#include "duckdb/common/multi_file_reader_options.hpp"
 #include "duckdb/common/extra_operator_info.hpp"
+#include "duckdb/common/multi_file_reader_options.hpp"
 
 namespace duckdb {
 class MultiFileList;
@@ -59,7 +59,6 @@ struct MultiFilePushdownInfo {
 
 	idx_t table_index;
 	const vector<string> &column_names;
-	const vector<column_t> &column_ids;
 	ExtraOperatorInfo &extra_info;
 };
 

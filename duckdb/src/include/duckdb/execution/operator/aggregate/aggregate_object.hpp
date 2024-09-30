@@ -58,16 +58,4 @@ struct AggregateFilterData {
 	SelectionVector true_sel;
 };
 
-struct AggregateFilterDataSet {
-	AggregateFilterDataSet();
-
-	vector<unique_ptr<AggregateFilterData>> filter_data;
-
-public:
-	void Initialize(ClientContext &context, const vector<AggregateObject> &aggregates,
-	                const vector<LogicalType> &payload_types);
-
-	AggregateFilterData &GetFilterData(idx_t aggr_idx);
-};
-
 } // namespace duckdb

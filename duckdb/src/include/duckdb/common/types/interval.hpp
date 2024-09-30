@@ -8,8 +8,8 @@
 
 #pragma once
 
-#include "duckdb/common/types.hpp"
 #include "duckdb/common/numeric_utils.hpp"
+#include "duckdb/common/types.hpp"
 
 namespace duckdb {
 
@@ -76,10 +76,6 @@ struct interval_t { // NOLINT
 	inline bool operator>=(const interval_t &right) const {
 		return !(*this < right);
 	}
-
-	// Serialization
-	void Serialize(Serializer &serializer) const;
-	static interval_t Deserialize(Deserializer &source);
 };
 
 //! The Interval class is a static class that holds helper functions for the Interval

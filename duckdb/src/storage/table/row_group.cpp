@@ -332,20 +332,8 @@ static idx_t GetFilterScanCount(ColumnScanState &state, TableFilter &filter) {
 		return GetFilterScanCount(child_state, *child_filter);
 	}
 	case TableFilterType::CONJUNCTION_AND: {
-		auto &conjunction_state = filter.Cast<ConjunctionAndFilter>();
-		idx_t max_count = 0;
-		for (auto &child_filter : conjunction_state.child_filters) {
-			max_count = std::max(GetFilterScanCount(state, *child_filter), max_count);
-		}
-		return max_count;
 	}
 	case TableFilterType::CONJUNCTION_OR: {
-		auto &conjunction_state = filter.Cast<ConjunctionOrFilter>();
-		idx_t max_count = 0;
-		for (auto &child_filter : conjunction_state.child_filters) {
-			max_count = std::max(GetFilterScanCount(state, *child_filter), max_count);
-		}
-		return max_count;
 	}
 	case TableFilterType::IS_NULL:
 	case TableFilterType::IS_NOT_NULL:

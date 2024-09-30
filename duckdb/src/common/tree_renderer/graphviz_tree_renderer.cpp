@@ -15,18 +15,6 @@
 
 namespace duckdb {
 
-string GRAPHVIZTreeRenderer::ToString(const LogicalOperator &op) {
-	std::stringstream ss;
-	Render(op, ss);
-	return ss.str();
-}
-
-string GRAPHVIZTreeRenderer::ToString(const PhysicalOperator &op) {
-	std::stringstream ss;
-	Render(op, ss);
-	return ss.str();
-}
-
 string GRAPHVIZTreeRenderer::ToString(const ProfilingNode &op) {
 	std::stringstream ss;
 	Render(op, ss);
@@ -37,16 +25,6 @@ string GRAPHVIZTreeRenderer::ToString(const Pipeline &op) {
 	std::stringstream ss;
 	Render(op, ss);
 	return ss.str();
-}
-
-void GRAPHVIZTreeRenderer::Render(const LogicalOperator &op, std::ostream &ss) {
-	auto tree = RenderTree::CreateRenderTree(op);
-	ToStream(*tree, ss);
-}
-
-void GRAPHVIZTreeRenderer::Render(const PhysicalOperator &op, std::ostream &ss) {
-	auto tree = RenderTree::CreateRenderTree(op);
-	ToStream(*tree, ss);
 }
 
 void GRAPHVIZTreeRenderer::Render(const ProfilingNode &op, std::ostream &ss) {

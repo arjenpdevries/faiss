@@ -9,8 +9,8 @@
 #pragma once
 
 #include "duckdb/common/common.hpp"
-#include "duckdb/common/vector.hpp"
 #include "duckdb/common/exception.hpp"
+#include "duckdb/common/vector.hpp"
 
 namespace duckdb {
 
@@ -59,9 +59,6 @@ public:
 	DUCKDB_API void Print() const;
 
 	DUCKDB_API virtual unique_ptr<Constraint> Copy() const = 0;
-
-	DUCKDB_API virtual void Serialize(Serializer &serializer) const;
-	DUCKDB_API static unique_ptr<Constraint> Deserialize(Deserializer &deserializer);
 
 public:
 	template <class TARGET>

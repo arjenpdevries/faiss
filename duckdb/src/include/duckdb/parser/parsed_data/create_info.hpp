@@ -8,12 +8,12 @@
 
 #pragma once
 
-#include "duckdb/common/enums/catalog_type.hpp"
-#include "duckdb/parser/parsed_data/parse_info.hpp"
+#include "duckdb/catalog/dependency_list.hpp"
 #include "duckdb/common/enum_util.hpp"
+#include "duckdb/common/enums/catalog_type.hpp"
 #include "duckdb/common/enums/on_create_conflict.hpp"
 #include "duckdb/common/types/value.hpp"
-#include "duckdb/catalog/dependency_list.hpp"
+#include "duckdb/parser/parsed_data/parse_info.hpp"
 
 namespace duckdb {
 struct AlterInfo;
@@ -52,9 +52,6 @@ public:
 	unordered_map<string, string> tags;
 
 public:
-	void Serialize(Serializer &serializer) const override;
-	static unique_ptr<CreateInfo> Deserialize(Deserializer &deserializer);
-
 	virtual unique_ptr<CreateInfo> Copy() const = 0;
 
 	DUCKDB_API void CopyProperties(CreateInfo &other) const;

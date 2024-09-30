@@ -78,67 +78,30 @@ public:
 	// Serialize a value
 	template <class T>
 	void WriteProperty(const field_id_t field_id, const char *tag, const T &value) {
-		OnPropertyBegin(field_id, tag);
-		WriteValue(value);
-		OnPropertyEnd();
 	}
 
 	// Default value
 	template <class T>
 	void WritePropertyWithDefault(const field_id_t field_id, const char *tag, const T &value) {
-		// If current value is default, don't write it
-		if (!options.serialize_default_values && SerializationDefaultValue::IsDefault<T>(value)) {
-			OnOptionalPropertyBegin(field_id, tag, false);
-			OnOptionalPropertyEnd(false);
-			return;
-		}
-		OnOptionalPropertyBegin(field_id, tag, true);
-		WriteValue(value);
-		OnOptionalPropertyEnd(true);
 	}
 
 	// Specialization for Value (default Value comparison throws when comparing nulls)
 	template <class T>
 	void WritePropertyWithDefault(const field_id_t field_id, const char *tag, const CSVOption<T> &value,
 	                              const T &&default_value) {
-		// If current value is default, don't write it
-		if (!options.serialize_default_values && (value == default_value)) {
-			OnOptionalPropertyBegin(field_id, tag, false);
-			OnOptionalPropertyEnd(false);
-			return;
-		}
-		OnOptionalPropertyBegin(field_id, tag, true);
-		WriteValue(value.GetValue());
-		OnOptionalPropertyEnd(true);
 	}
 
 	// Special case: data_ptr_T
 	void WriteProperty(const field_id_t field_id, const char *tag, const_data_ptr_t ptr, idx_t count) {
-		OnPropertyBegin(field_id, tag);
-		WriteDataPtr(ptr, count);
-		OnPropertyEnd();
 	}
 
 	// Manually begin an object
 	template <class FUNC>
 	void WriteObject(const field_id_t field_id, const char *tag, FUNC f) {
-		OnPropertyBegin(field_id, tag);
-		OnObjectBegin();
-		f(*this);
-		OnObjectEnd();
-		OnPropertyEnd();
 	}
 
 	template <class FUNC>
 	void WriteList(const field_id_t field_id, const char *tag, idx_t count, FUNC func) {
-		OnPropertyBegin(field_id, tag);
-		OnListBegin(count);
-		List list {*this};
-		for (idx_t i = 0; i < count; i++) {
-			func(list, i);
-		}
-		OnListEnd();
-		OnPropertyEnd();
 	}
 
 protected:
@@ -356,14 +319,10 @@ protected:
 // List Impl
 template <class FUNC>
 void Serializer::List::WriteObject(FUNC f) {
-	serializer.OnObjectBegin();
-	f(serializer);
-	serializer.OnObjectEnd();
 }
 
 template <class T>
 void Serializer::List::WriteElement(const T &value) {
-	serializer.WriteValue(value);
 }
 
 } // namespace duckdb

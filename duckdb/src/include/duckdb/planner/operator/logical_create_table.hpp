@@ -8,8 +8,8 @@
 
 #pragma once
 
-#include "duckdb/planner/parsed_data/bound_create_table_info.hpp"
 #include "duckdb/planner/logical_operator.hpp"
+#include "duckdb/planner/parsed_data/bound_create_table_info.hpp"
 
 namespace duckdb {
 
@@ -26,9 +26,6 @@ public:
 	unique_ptr<BoundCreateTableInfo> info;
 
 public:
-	void Serialize(Serializer &serializer) const override;
-	static unique_ptr<LogicalOperator> Deserialize(Deserializer &deserializer);
-
 	idx_t EstimateCardinality(ClientContext &context) override;
 
 protected:

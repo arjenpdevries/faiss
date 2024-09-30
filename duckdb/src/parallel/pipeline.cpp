@@ -343,7 +343,7 @@ void PipelineBuildState::SetPipelineOperators(Pipeline &pipeline, vector<referen
 
 shared_ptr<Pipeline> PipelineBuildState::CreateChildPipeline(Executor &executor, Pipeline &pipeline,
                                                              PhysicalOperator &op) {
-	return executor.CreateChildPipeline(pipeline, op);
+	return nullptr;
 }
 
 vector<reference<PhysicalOperator>> PipelineBuildState::GetPipelineOperators(Pipeline &pipeline) {

@@ -330,7 +330,6 @@ ClientContext::CreatePreparedStatementInternal(ClientContextLock &lock, const st
 		}
 	}
 
-	planner.CreatePlan(std::move(statement));
 	D_ASSERT(planner.plan || !planner.properties.bound_all_parameters);
 
 	auto plan = std::move(planner.plan);
@@ -352,15 +351,7 @@ ClientContext::CreatePreparedStatementInternal(ClientContextLock &lock, const st
 #endif
 	}
 
-	// now convert logical query plan into a physical query plan
-	PhysicalPlanGenerator physical_planner(*this);
-	auto physical_plan = physical_planner.CreatePlan(std::move(plan));
-
-#ifdef DEBUG
-	D_ASSERT(!physical_plan->ToString().empty());
-#endif
-	result->plan = std::move(physical_plan);
-	return result;
+	return nullptr;
 }
 
 shared_ptr<PreparedStatementData>
@@ -423,7 +414,6 @@ void BindPreparedStatementParameters(PreparedStatementData &statement, const Pen
 			owned_values.emplace(val);
 		}
 	}
-	statement.Bind(std::move(owned_values));
 }
 
 void ClientContext::RebindPreparedStatement(ClientContextLock &lock, const string &query,
@@ -487,15 +477,8 @@ ClientContext::PendingPreparedStatementInternal(ClientContextLock &lock, shared_
 	}
 	auto stream_result = parameters.allow_stream_result && statement.properties.allow_stream_result;
 
-	get_result_collector_t get_method = PhysicalResultCollector::GetResultCollector;
 	auto &client_config = ClientConfig::GetConfig(*this);
-	if (!stream_result && client_config.result_collector) {
-		get_method = client_config.result_collector;
-	}
 	statement.is_streaming = stream_result;
-	auto collector = get_method(*this, statement);
-	D_ASSERT(collector->type == PhysicalOperatorType::RESULT_COLLECTOR);
-	executor.Initialize(std::move(collector));
 
 	auto types = executor.GetTypes();
 	D_ASSERT(types == statement.types);
@@ -617,7 +600,6 @@ unique_ptr<LogicalOperator> ClientContext::ExtractPlan(const string &query) {
 	unique_ptr<LogicalOperator> plan;
 	RunFunctionInTransactionInternal(*lock, [&]() {
 		Planner planner(*this);
-		planner.CreatePlan(std::move(statements[0]));
 		D_ASSERT(planner.plan);
 
 		plan = std::move(planner.plan);
@@ -1100,10 +1082,6 @@ void ClientContext::Append(TableDescription &description, ColumnDataCollection &
 				throw InvalidInputException("Failed to append: table entry has different number of columns!");
 			}
 		}
-		auto binder = Binder::CreateBinder(*this);
-		auto bound_constraints = binder->BindConstraints(table_entry);
-		MetaTransaction::Get(*this).ModifyDatabase(table_entry.ParentCatalog().GetAttached());
-		table_entry.GetStorage().LocalAppend(table_entry, *this, collection, bound_constraints);
 	});
 }
 
@@ -1118,10 +1096,6 @@ unordered_set<string> ClientContext::GetTableNames(const string &query) {
 	unordered_set<string> result;
 	RunFunctionInTransactionInternal(*lock, [&]() {
 		// bind the expressions
-		auto binder = Binder::CreateBinder(*this);
-		binder->SetBindingMode(BindingMode::EXTRACT_NAMES);
-		binder->Bind(*statements[0]);
-		result = binder->GetTableNames();
 	});
 	return result;
 }

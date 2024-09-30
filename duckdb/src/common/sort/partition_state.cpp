@@ -546,8 +546,8 @@ PartitionGlobalMergeStates::PartitionGlobalMergeStates(PartitionGlobalSinkState 
 class PartitionMergeTask : public ExecutorTask {
 public:
 	PartitionMergeTask(shared_ptr<Event> event_p, ClientContext &context_p, PartitionGlobalMergeStates &hash_groups_p,
-	                   PartitionGlobalSinkState &gstate, const PhysicalOperator &op)
-	    : ExecutorTask(context_p, std::move(event_p), op), local_state(gstate), hash_groups(hash_groups_p) {
+	                   PartitionGlobalSinkState &gstate)
+	    : ExecutorTask(context_p, std::move(event_p)), local_state(gstate), hash_groups(hash_groups_p) {
 	}
 
 	TaskExecutionResult ExecuteTask(TaskExecutionMode mode) override;
@@ -647,7 +647,6 @@ void PartitionMergeEvent::Schedule() {
 
 	vector<shared_ptr<Task>> merge_tasks;
 	for (idx_t tnum = 0; tnum < num_threads; tnum++) {
-		merge_tasks.emplace_back(make_uniq<PartitionMergeTask>(shared_from_this(), context, merge_states, gstate, op));
 	}
 	SetTasks(std::move(merge_tasks));
 }

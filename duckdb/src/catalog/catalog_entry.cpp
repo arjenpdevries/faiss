@@ -103,7 +103,7 @@ void CatalogEntry::Serialize(Serializer &serializer) const {
 }
 
 unique_ptr<CreateInfo> CatalogEntry::Deserialize(Deserializer &deserializer) {
-	return CreateInfo::Deserialize(deserializer);
+	return nullptr;
 }
 
 void CatalogEntry::Verify(Catalog &catalog_p) {

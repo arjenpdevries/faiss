@@ -29,9 +29,6 @@ public:
 public:
 	vector<ColumnBinding> GetColumnBindings() override;
 
-	void Serialize(Serializer &serializer) const override;
-	static unique_ptr<LogicalOperator> Deserialize(Deserializer &deserializer);
-
 	InsertionOrderPreservingMap<string> ParamsToString() const override;
 
 protected:

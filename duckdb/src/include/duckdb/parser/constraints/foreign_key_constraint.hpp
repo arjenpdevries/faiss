@@ -8,8 +8,8 @@
 
 #pragma once
 
-#include "duckdb/parser/constraint.hpp"
 #include "duckdb/common/vector.hpp"
+#include "duckdb/parser/constraint.hpp"
 
 namespace duckdb {
 
@@ -30,9 +30,6 @@ public:
 	DUCKDB_API string ToString() const override;
 
 	DUCKDB_API unique_ptr<Constraint> Copy() const override;
-
-	DUCKDB_API void Serialize(Serializer &serializer) const override;
-	DUCKDB_API static unique_ptr<Constraint> Deserialize(Deserializer &deserializer);
 
 private:
 	ForeignKeyConstraint();

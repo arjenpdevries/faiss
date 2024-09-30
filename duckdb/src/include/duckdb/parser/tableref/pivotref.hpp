@@ -8,8 +8,8 @@
 
 #pragma once
 
-#include "duckdb/parser/tableref.hpp"
 #include "duckdb/parser/query_node/select_node.hpp"
+#include "duckdb/parser/tableref.hpp"
 
 namespace duckdb {
 
@@ -48,9 +48,6 @@ struct PivotColumn {
 	string ToString() const;
 	bool Equals(const PivotColumn &other) const;
 	PivotColumn Copy() const;
-
-	void Serialize(Serializer &serializer) const;
-	static PivotColumn Deserialize(Deserializer &source);
 };
 
 //! Represents a PIVOT or UNPIVOT expression

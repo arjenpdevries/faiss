@@ -8,8 +8,9 @@
 
 #pragma once
 
-#include "duckdb/planner/expression.hpp"
 #include "duckdb/function/aggregate_function.hpp"
+#include "duckdb/planner/expression.hpp"
+
 #include <memory>
 
 namespace duckdb {
@@ -55,8 +56,5 @@ public:
 	hash_t Hash() const override;
 	bool Equals(const BaseExpression &other) const override;
 	unique_ptr<Expression> Copy() const override;
-
-	void Serialize(Serializer &serializer) const override;
-	static unique_ptr<Expression> Deserialize(Deserializer &deserializer);
 };
 } // namespace duckdb

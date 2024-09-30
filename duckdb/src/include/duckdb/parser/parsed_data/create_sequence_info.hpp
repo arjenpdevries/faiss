@@ -8,8 +8,8 @@
 
 #pragma once
 
-#include "duckdb/parser/parsed_data/create_info.hpp"
 #include "duckdb/common/limits.hpp"
+#include "duckdb/parser/parsed_data/create_info.hpp"
 
 namespace duckdb {
 
@@ -50,9 +50,6 @@ public:
 	unique_ptr<CreateInfo> Copy() const override;
 
 public:
-	DUCKDB_API void Serialize(Serializer &serializer) const override;
-	DUCKDB_API static unique_ptr<CreateInfo> Deserialize(Deserializer &deserializer);
-
 	string ToString() const override;
 };
 

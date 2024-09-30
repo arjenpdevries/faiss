@@ -38,9 +38,6 @@ public:
 		return children[1]->GetColumnBindings();
 	}
 
-	void Serialize(Serializer &serializer) const override;
-	static unique_ptr<LogicalOperator> Deserialize(Deserializer &deserializer);
-
 	vector<idx_t> GetTableIndex() const override;
 
 protected:

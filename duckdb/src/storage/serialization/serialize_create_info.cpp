@@ -42,8 +42,6 @@ unique_ptr<CreateInfo> CreateInfo::Deserialize(Deserializer &deserializer) {
 		result = CreateMacroInfo::Deserialize(deserializer);
 		break;
 	case CatalogType::SCHEMA_ENTRY:
-		result = CreateSchemaInfo::Deserialize(deserializer);
-		break;
 	case CatalogType::SEQUENCE_ENTRY:
 		result = CreateSequenceInfo::Deserialize(deserializer);
 		break;
@@ -105,15 +103,6 @@ unique_ptr<CreateInfo> CreateMacroInfo::Deserialize(Deserializer &deserializer) 
 	auto result = duckdb::unique_ptr<CreateMacroInfo>(
 	    new CreateMacroInfo(deserializer.Get<CatalogType>(), std::move(function), std::move(extra_functions)));
 	result->name = std::move(name);
-	return std::move(result);
-}
-
-void CreateSchemaInfo::Serialize(Serializer &serializer) const {
-	CreateInfo::Serialize(serializer);
-}
-
-unique_ptr<CreateInfo> CreateSchemaInfo::Deserialize(Deserializer &deserializer) {
-	auto result = duckdb::unique_ptr<CreateSchemaInfo>(new CreateSchemaInfo());
 	return std::move(result);
 }
 

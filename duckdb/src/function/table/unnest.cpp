@@ -1,8 +1,8 @@
-#include "duckdb/function/table/range.hpp"
 #include "duckdb/common/algorithm.hpp"
+#include "duckdb/execution/operator/projection/physical_unnest.hpp"
+#include "duckdb/function/table/range.hpp"
 #include "duckdb/planner/expression/bound_reference_expression.hpp"
 #include "duckdb/planner/expression/bound_unnest_expression.hpp"
-#include "duckdb/execution/operator/projection/physical_unnest.hpp"
 
 namespace duckdb {
 
@@ -56,25 +56,18 @@ static unique_ptr<LocalTableFunctionState> UnnestLocalInit(ExecutionContext &con
 	auto &gstate = global_state->Cast<UnnestGlobalState>();
 
 	auto result = make_uniq<UnnestLocalState>();
-	result->operator_state = PhysicalUnnest::GetState(context, gstate.select_list);
 	return std::move(result);
 }
 
 static unique_ptr<GlobalTableFunctionState> UnnestInit(ClientContext &context, TableFunctionInitInput &input) {
 	auto &bind_data = input.bind_data->Cast<UnnestBindData>();
 	auto result = make_uniq<UnnestGlobalState>();
-	auto ref = make_uniq<BoundReferenceExpression>(bind_data.input_type, 0U);
-	auto bound_unnest = make_uniq<BoundUnnestExpression>(ListType::GetChildType(bind_data.input_type));
-	bound_unnest->child = std::move(ref);
-	result->select_list.push_back(std::move(bound_unnest));
-	return std::move(result);
+	return nullptr;
 }
 
 static OperatorResultType UnnestFunction(ExecutionContext &context, TableFunctionInput &data_p, DataChunk &input,
                                          DataChunk &output) {
-	auto &state = data_p.global_state->Cast<UnnestGlobalState>();
-	auto &lstate = data_p.local_state->Cast<UnnestLocalState>();
-	return PhysicalUnnest::ExecuteInternal(context, input, output, *lstate.operator_state, state.select_list, false);
+	throw BinderException("UNNEST requires a single list as input");
 }
 
 void UnnestTableFunction::RegisterFunction(BuiltinFunctions &set) {

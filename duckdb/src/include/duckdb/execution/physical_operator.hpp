@@ -9,17 +9,17 @@
 #pragma once
 
 #include "duckdb/catalog/catalog.hpp"
+#include "duckdb/common/case_insensitive_map.hpp"
 #include "duckdb/common/common.hpp"
-#include "duckdb/common/enums/operator_result_type.hpp"
-#include "duckdb/common/enums/physical_operator_type.hpp"
 #include "duckdb/common/enums/explain_format.hpp"
+#include "duckdb/common/enums/operator_result_type.hpp"
+#include "duckdb/common/enums/order_preservation_type.hpp"
+#include "duckdb/common/enums/physical_operator_type.hpp"
+#include "duckdb/common/optional_idx.hpp"
 #include "duckdb/common/types/data_chunk.hpp"
 #include "duckdb/execution/execution_context.hpp"
-#include "duckdb/optimizer/join_order/join_node.hpp"
-#include "duckdb/common/optional_idx.hpp"
 #include "duckdb/execution/physical_operator_states.hpp"
-#include "duckdb/common/enums/order_preservation_type.hpp"
-#include "duckdb/common/case_insensitive_map.hpp"
+#include "duckdb/optimizer/join_order/join_node.hpp"
 
 namespace duckdb {
 class Event;
@@ -222,41 +222,13 @@ public:
 	~CachingOperatorState() override {
 	}
 
-	void Finalize(const PhysicalOperator &op, ExecutionContext &context) override {
+	void Finalize(ExecutionContext &context) override {
 	}
 
 	unique_ptr<DataChunk> cached_chunk;
 	bool initialized = false;
 	//! Whether or not the chunk can be cached
 	bool can_cache_chunk = false;
-};
-
-//! Base class that caches output from child Operator class. Note that Operators inheriting from this class should also
-//! inherit their state class from the CachingOperatorState.
-class CachingPhysicalOperator : public PhysicalOperator {
-public:
-	static constexpr const idx_t CACHE_THRESHOLD = 64;
-	CachingPhysicalOperator(PhysicalOperatorType type, vector<LogicalType> types, idx_t estimated_cardinality);
-
-	bool caching_supported;
-
-public:
-	OperatorResultType Execute(ExecutionContext &context, DataChunk &input, DataChunk &chunk,
-	                           GlobalOperatorState &gstate, OperatorState &state) const final;
-	OperatorFinalizeResultType FinalExecute(ExecutionContext &context, DataChunk &chunk, GlobalOperatorState &gstate,
-	                                        OperatorState &state) const final;
-
-	bool RequiresFinalExecute() const final {
-		return caching_supported;
-	}
-
-protected:
-	//! Child classes need to implement the ExecuteInternal method instead of the Execute
-	virtual OperatorResultType ExecuteInternal(ExecutionContext &context, DataChunk &input, DataChunk &chunk,
-	                                           GlobalOperatorState &gstate, OperatorState &state) const = 0;
-
-private:
-	bool CanCacheType(const LogicalType &type);
 };
 
 } // namespace duckdb

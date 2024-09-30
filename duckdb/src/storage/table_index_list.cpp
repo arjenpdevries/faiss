@@ -1,14 +1,14 @@
 #include "duckdb/storage/table/table_index_list.hpp"
 
+#include "duckdb/catalog/catalog_entry/duck_table_entry.hpp"
 #include "duckdb/common/types/conflict_manager.hpp"
 #include "duckdb/execution/index/index_type_set.hpp"
 #include "duckdb/execution/index/unbound_index.hpp"
 #include "duckdb/main/config.hpp"
 #include "duckdb/main/database.hpp"
+#include "duckdb/planner/expression_binder/index_binder.hpp"
 #include "duckdb/storage/data_table.hpp"
 #include "duckdb/storage/table/data_table_info.hpp"
-#include "duckdb/catalog/catalog_entry/duck_table_entry.hpp"
-#include "duckdb/planner/expression_binder/index_binder.hpp"
 
 namespace duckdb {
 void TableIndexList::AddIndex(unique_ptr<Index> index) {
@@ -89,20 +89,8 @@ void TableIndexList::InitializeIndexes(ClientContext &context, DataTableInfo &ta
 	for (auto &index : indexes) {
 		if (!index->IsBound() && (index_type == nullptr || index->GetIndexType() == index_type)) {
 			// Create a binder to bind this index (we cant reuse this binder for other indexes)
-			auto binder = Binder::CreateBinder(context);
-
-			// Add the table to the binder
-			// We're not interested in the column_ids here, so just pass a dummy vector
-			vector<column_t> dummy_column_ids;
-			binder->bind_context.AddBaseTable(0, table_info.GetTableName(), column_names, column_types,
-			                                  dummy_column_ids, &table);
-
-			// Create an IndexBinder to bind the index
-			IndexBinder idx_binder(*binder, context);
 
 			// Replace the unbound index with a bound index
-			auto bound_idx = idx_binder.BindIndex(index->Cast<UnboundIndex>());
-			index = std::move(bound_idx);
 		}
 	}
 }

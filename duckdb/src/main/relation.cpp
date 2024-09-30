@@ -163,9 +163,7 @@ unique_ptr<QueryResult> Relation::ExecuteOrThrow() {
 }
 
 BoundStatement Relation::Bind(Binder &binder) {
-	SelectStatement stmt;
-	stmt.node = GetQueryNode();
-	return binder.Bind(stmt.Cast<SQLStatement>());
+	throw InvalidInputException("UPDATE can only be used on base tables!");
 }
 
 shared_ptr<Relation> Relation::InsertRel(const string &schema_name, const string &table_name) {

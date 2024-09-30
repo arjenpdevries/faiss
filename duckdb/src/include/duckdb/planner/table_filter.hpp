@@ -101,9 +101,6 @@ public:
 		}
 		return left->Equals(*right);
 	}
-
-	void Serialize(Serializer &serializer) const;
-	static TableFilterSet Deserialize(Deserializer &deserializer);
 };
 
 class DynamicTableFilterSet {

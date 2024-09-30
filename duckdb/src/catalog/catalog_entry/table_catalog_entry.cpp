@@ -4,16 +4,16 @@
 #include "duckdb/catalog/catalog_entry/schema_catalog_entry.hpp"
 #include "duckdb/common/algorithm.hpp"
 #include "duckdb/common/exception.hpp"
+#include "duckdb/common/extra_type_info.hpp"
 #include "duckdb/main/database.hpp"
 #include "duckdb/parser/constraints/list.hpp"
-#include "duckdb/parser/parsed_data/create_table_info.hpp"
-#include "duckdb/storage/table_storage_info.hpp"
-#include "duckdb/planner/operator/logical_update.hpp"
-#include "duckdb/planner/operator/logical_get.hpp"
-#include "duckdb/planner/constraints/bound_check_constraint.hpp"
-#include "duckdb/planner/operator/logical_projection.hpp"
-#include "duckdb/common/extra_type_info.hpp"
 #include "duckdb/parser/expression/cast_expression.hpp"
+#include "duckdb/parser/parsed_data/create_table_info.hpp"
+#include "duckdb/planner/constraints/bound_check_constraint.hpp"
+#include "duckdb/planner/operator/logical_get.hpp"
+#include "duckdb/planner/operator/logical_projection.hpp"
+#include "duckdb/planner/operator/logical_update.hpp"
+#include "duckdb/storage/table_storage_info.hpp"
 
 #include <sstream>
 
@@ -223,11 +223,6 @@ static void BindExtraColumns(TableCatalogEntry &table, LogicalGet &get, LogicalP
 			}
 			// column is not projected yet: project it by adding the clause "i=i" to the set of updated columns
 			auto &column = table.GetColumns().GetColumn(check_column_id);
-			update.expressions.push_back(make_uniq<BoundColumnRefExpression>(
-			    column.Type(), ColumnBinding(proj.table_index, proj.expressions.size())));
-			proj.expressions.push_back(make_uniq<BoundColumnRefExpression>(
-			    column.Type(), ColumnBinding(get.table_index, get.GetColumnIds().size())));
-			get.AddColumnId(check_column_id.index);
 			update.columns.push_back(check_column_id);
 		}
 	}
@@ -261,59 +256,7 @@ vector<ColumnSegmentInfo> TableCatalogEntry::GetColumnSegmentInfo() {
 
 void TableCatalogEntry::BindUpdateConstraints(Binder &binder, LogicalGet &get, LogicalProjection &proj,
                                               LogicalUpdate &update, ClientContext &context) {
-	// check the constraints and indexes of the table to see if we need to project any additional columns
-	// we do this for indexes with multiple columns and CHECK constraints in the UPDATE clause
-	// suppose we have a constraint CHECK(i + j < 10); now we need both i and j to check the constraint
-	// if we are only updating one of the two columns we add the other one to the UPDATE set
-	// with a "useless" update (i.e. i=i) so we can verify that the CHECK constraint is not violated
-	auto bound_constraints = binder.BindConstraints(constraints, name, columns);
-	for (auto &constraint : bound_constraints) {
-		if (constraint->type == ConstraintType::CHECK) {
-			auto &check = constraint->Cast<BoundCheckConstraint>();
-			// check constraint! check if we need to add any extra columns to the UPDATE clause
-			BindExtraColumns(*this, get, proj, update, check.bound_columns);
-		}
-	}
-	if (update.return_chunk) {
-		physical_index_set_t all_columns;
-		for (auto &column : GetColumns().Physical()) {
-			all_columns.insert(column.Physical());
-		}
-		BindExtraColumns(*this, get, proj, update, all_columns);
-	}
-	// for index updates we always turn any update into an insert and a delete
-	// we thus need all the columns to be available, hence we check if the update touches any index columns
-	// If the returning keyword is used, we need access to the whole row in case the user requests it.
-	// Therefore switch the update to a delete and insert.
-	update.update_is_del_and_insert = false;
-	TableStorageInfo table_storage_info = GetStorageInfo(context);
-	for (auto index : table_storage_info.index_info) {
-		for (auto &column : update.columns) {
-			if (index.column_set.find(column.index) != index.column_set.end()) {
-				update.update_is_del_and_insert = true;
-				break;
-			}
-		}
-	};
-
-	// we also convert any updates on LIST columns into delete + insert
-	for (auto &col_index : update.columns) {
-		auto &column = GetColumns().GetColumn(col_index);
-		if (!TypeSupportsRegularUpdate(column.Type())) {
-			update.update_is_del_and_insert = true;
-			break;
-		}
-	}
-
-	if (update.update_is_del_and_insert) {
-		// the update updates a column required by an index or requires returning the updated rows,
-		// push projections for all columns
-		physical_index_set_t all_columns;
-		for (auto &column : GetColumns().Physical()) {
-			all_columns.insert(column.Physical());
-		}
-		BindExtraColumns(*this, get, proj, update, all_columns);
-	}
+	return;
 }
 
 } // namespace duckdb

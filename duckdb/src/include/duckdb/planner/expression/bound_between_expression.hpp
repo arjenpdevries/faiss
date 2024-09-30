@@ -33,9 +33,6 @@ public:
 
 	unique_ptr<Expression> Copy() const override;
 
-	void Serialize(Serializer &serializer) const override;
-	static unique_ptr<Expression> Deserialize(Deserializer &deserializer);
-
 public:
 	ExpressionType LowerComparisonType() {
 		return lower_inclusive ? ExpressionType::COMPARE_GREATERTHANOREQUALTO : ExpressionType::COMPARE_GREATERTHAN;

@@ -33,25 +33,13 @@ public:
 	}
 
 public:
-	DUCKDB_API optional_ptr<CatalogEntry> CreateSchema(CatalogTransaction transaction, CreateSchemaInfo &info) override;
+	DUCKDB_API optional_ptr<CatalogEntry> CreateSchema(CatalogTransaction transaction) override;
 	DUCKDB_API void ScanSchemas(ClientContext &context, std::function<void(SchemaCatalogEntry &)> callback) override;
 	DUCKDB_API void ScanSchemas(std::function<void(SchemaCatalogEntry &)> callback);
 
 	DUCKDB_API optional_ptr<SchemaCatalogEntry>
 	GetSchema(CatalogTransaction transaction, const string &schema_name, OnEntryNotFound if_not_found,
 	          QueryErrorContext error_context = QueryErrorContext()) override;
-
-	DUCKDB_API unique_ptr<PhysicalOperator> PlanCreateTableAs(ClientContext &context, LogicalCreateTable &op,
-	                                                          unique_ptr<PhysicalOperator> plan) override;
-	DUCKDB_API unique_ptr<PhysicalOperator> PlanInsert(ClientContext &context, LogicalInsert &op,
-	                                                   unique_ptr<PhysicalOperator> plan) override;
-	DUCKDB_API unique_ptr<PhysicalOperator> PlanDelete(ClientContext &context, LogicalDelete &op,
-	                                                   unique_ptr<PhysicalOperator> plan) override;
-	DUCKDB_API unique_ptr<PhysicalOperator> PlanUpdate(ClientContext &context, LogicalUpdate &op,
-	                                                   unique_ptr<PhysicalOperator> plan) override;
-	DUCKDB_API unique_ptr<LogicalOperator> BindCreateIndex(Binder &binder, CreateStatement &stmt,
-	                                                       TableCatalogEntry &table,
-	                                                       unique_ptr<LogicalOperator> plan) override;
 
 	DatabaseSize GetDatabaseSize(ClientContext &context) override;
 	vector<MetadataBlockInfo> GetMetadataInfo(ClientContext &context) override;
@@ -64,7 +52,7 @@ public:
 private:
 	DUCKDB_API void DropSchema(CatalogTransaction transaction, DropInfo &info);
 	DUCKDB_API void DropSchema(ClientContext &context, DropInfo &info) override;
-	optional_ptr<CatalogEntry> CreateSchemaInternal(CatalogTransaction transaction, CreateSchemaInfo &info);
+	optional_ptr<CatalogEntry> CreateSchemaInternal(CatalogTransaction transaction);
 	void Verify() override;
 
 private:

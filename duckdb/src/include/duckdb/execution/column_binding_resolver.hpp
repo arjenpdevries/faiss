@@ -8,9 +8,9 @@
 
 #pragma once
 
-#include "duckdb/planner/logical_operator_visitor.hpp"
-#include "duckdb/planner/column_binding_map.hpp"
 #include "duckdb/common/vector.hpp"
+#include "duckdb/planner/column_binding_map.hpp"
+#include "duckdb/planner/logical_operator_visitor.hpp"
 
 namespace duckdb {
 
@@ -21,14 +21,14 @@ class ColumnBindingResolver : public LogicalOperatorVisitor {
 public:
 	explicit ColumnBindingResolver(bool verify_only = false);
 
-	void VisitOperator(LogicalOperator &op) override;
+	void VisitOperator(LogicalOperator &op);
 	static void Verify(LogicalOperator &op);
 
 protected:
 	vector<ColumnBinding> bindings;
 	bool verify_only;
 
-	unique_ptr<Expression> VisitReplace(BoundColumnRefExpression &expr, unique_ptr<Expression> *expr_ptr) override;
+	unique_ptr<Expression> VisitReplace(BoundColumnRefExpression &expr, unique_ptr<Expression> *expr_ptr);
 	static unordered_set<idx_t> VerifyInternal(LogicalOperator &op);
 };
 } // namespace duckdb

@@ -288,7 +288,6 @@ void DefaultCollationSetting::ResetLocal(ClientContext &context) {
 void DefaultCollationSetting::SetLocal(ClientContext &context, const Value &input) {
 	auto parameter = input.ToString();
 	// bind the collation to verify that it exists
-	ExpressionBinder::TestCollation(context, parameter);
 	auto &config = DBConfig::GetConfig(context);
 	config.options.collation = parameter;
 }

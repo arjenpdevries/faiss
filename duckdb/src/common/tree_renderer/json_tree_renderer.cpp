@@ -9,7 +9,6 @@
 #include "duckdb/parallel/pipeline.hpp"
 #include "duckdb/planner/logical_operator.hpp"
 #include "utf8proc_wrapper.hpp"
-
 #include "yyjson.hpp"
 
 #include <sstream>
@@ -17,18 +16,6 @@
 using namespace duckdb_yyjson; // NOLINT
 
 namespace duckdb {
-
-string JSONTreeRenderer::ToString(const LogicalOperator &op) {
-	std::stringstream ss;
-	Render(op, ss);
-	return ss.str();
-}
-
-string JSONTreeRenderer::ToString(const PhysicalOperator &op) {
-	std::stringstream ss;
-	Render(op, ss);
-	return ss.str();
-}
 
 string JSONTreeRenderer::ToString(const ProfilingNode &op) {
 	std::stringstream ss;
@@ -40,16 +27,6 @@ string JSONTreeRenderer::ToString(const Pipeline &op) {
 	std::stringstream ss;
 	Render(op, ss);
 	return ss.str();
-}
-
-void JSONTreeRenderer::Render(const LogicalOperator &op, std::ostream &ss) {
-	auto tree = RenderTree::CreateRenderTree(op);
-	ToStream(*tree, ss);
-}
-
-void JSONTreeRenderer::Render(const PhysicalOperator &op, std::ostream &ss) {
-	auto tree = RenderTree::CreateRenderTree(op);
-	ToStream(*tree, ss);
 }
 
 void JSONTreeRenderer::Render(const ProfilingNode &op, std::ostream &ss) {

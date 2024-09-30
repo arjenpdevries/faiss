@@ -8,8 +8,8 @@
 
 #pragma once
 
-#include "duckdb/parser/parsed_data/create_function_info.hpp"
 #include "duckdb/function/macro_function.hpp"
+#include "duckdb/parser/parsed_data/create_function_info.hpp"
 
 namespace duckdb {
 
@@ -22,8 +22,6 @@ public:
 	unique_ptr<CreateInfo> Copy() const override;
 
 	string ToString() const override;
-	DUCKDB_API void Serialize(Serializer &serializer) const override;
-	DUCKDB_API static unique_ptr<CreateInfo> Deserialize(Deserializer &deserializer);
 
 	//! This is a weird function that exists only for backwards compatibility of serialization
 	//! Essentially we used to only support a single function in the CreateMacroInfo

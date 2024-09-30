@@ -36,8 +36,5 @@ public:
 	unique_ptr<Expression> Copy() const override {
 		return make_uniq<BoundDefaultExpression>(return_type);
 	}
-
-	void Serialize(Serializer &serializer) const override;
-	static unique_ptr<Expression> Deserialize(Deserializer &deserializer);
 };
 } // namespace duckdb

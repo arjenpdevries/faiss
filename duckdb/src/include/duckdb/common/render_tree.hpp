@@ -8,15 +8,14 @@
 
 #pragma once
 
-#include "duckdb/common/unique_ptr.hpp"
-#include "duckdb/common/string.hpp"
 #include "duckdb/common/optional_ptr.hpp"
-#include "duckdb/main/query_profiler.hpp"
+#include "duckdb/common/string.hpp"
+#include "duckdb/common/unique_ptr.hpp"
 #include "duckdb/main/profiling_node.hpp"
+#include "duckdb/main/query_profiler.hpp"
 
 namespace duckdb {
 class LogicalOperator;
-class PhysicalOperator;
 class Pipeline;
 struct PipelineRenderNode;
 
@@ -59,8 +58,6 @@ struct RenderTree {
 	idx_t height;
 
 public:
-	static unique_ptr<RenderTree> CreateRenderTree(const LogicalOperator &op);
-	static unique_ptr<RenderTree> CreateRenderTree(const PhysicalOperator &op);
 	static unique_ptr<RenderTree> CreateRenderTree(const ProfilingNode &op);
 	static unique_ptr<RenderTree> CreateRenderTree(const Pipeline &op);
 

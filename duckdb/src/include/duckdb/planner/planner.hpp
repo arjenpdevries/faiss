@@ -10,8 +10,8 @@
 
 #include "duckdb/parser/sql_statement.hpp"
 #include "duckdb/planner/binder.hpp"
-#include "duckdb/planner/logical_operator.hpp"
 #include "duckdb/planner/bound_parameter_map.hpp"
+#include "duckdb/planner/logical_operator.hpp"
 
 namespace duckdb {
 class ClientContext;
@@ -31,7 +31,6 @@ public:
 	vector<LogicalType> types;
 	case_insensitive_map_t<BoundParameterData> parameter_data;
 
-	shared_ptr<Binder> binder;
 	ClientContext &context;
 
 	StatementProperties properties;

@@ -14,8 +14,6 @@ namespace duckdb {
 
 //! The RETURNING binder is responsible for binding expressions within the RETURNING statement
 class ReturningBinder : public ExpressionBinder {
-public:
-	ReturningBinder(Binder &binder, ClientContext &context);
 
 protected:
 	BindResult BindExpression(unique_ptr<ParsedExpression> &expr_ptr, idx_t depth,

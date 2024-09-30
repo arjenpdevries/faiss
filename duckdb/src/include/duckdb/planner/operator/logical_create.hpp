@@ -8,8 +8,8 @@
 
 #pragma once
 
-#include "duckdb/planner/logical_operator.hpp"
 #include "duckdb/parser/parsed_data/create_info.hpp"
+#include "duckdb/planner/logical_operator.hpp"
 
 namespace duckdb {
 
@@ -26,9 +26,6 @@ public:
 	unique_ptr<CreateInfo> info;
 
 public:
-	void Serialize(Serializer &serializer) const override;
-	static unique_ptr<LogicalOperator> Deserialize(Deserializer &deserializer);
-
 	idx_t EstimateCardinality(ClientContext &context) override;
 
 protected:

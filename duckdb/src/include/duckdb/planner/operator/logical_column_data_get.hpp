@@ -8,9 +8,9 @@
 
 #pragma once
 
+#include "duckdb/common/optionally_owned_ptr.hpp"
 #include "duckdb/common/types/column/column_data_collection.hpp"
 #include "duckdb/planner/logical_operator.hpp"
-#include "duckdb/common/optionally_owned_ptr.hpp"
 
 namespace duckdb {
 
@@ -34,9 +34,6 @@ public:
 
 public:
 	vector<ColumnBinding> GetColumnBindings() override;
-
-	void Serialize(Serializer &serializer) const override;
-	static unique_ptr<LogicalOperator> Deserialize(Deserializer &deserializer);
 
 	vector<idx_t> GetTableIndex() const override;
 	string GetName() const override;

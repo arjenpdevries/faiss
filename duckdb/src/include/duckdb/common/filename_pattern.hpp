@@ -27,9 +27,6 @@ public:
 	void SetFilenamePattern(const string &pattern);
 	string CreateFilename(FileSystem &fs, const string &path, const string &extension, idx_t offset) const;
 
-	void Serialize(Serializer &serializer) const;
-	static FilenamePattern Deserialize(Deserializer &deserializer);
-
 	bool HasUUID() const {
 		return uuid;
 	}

@@ -1,6 +1,6 @@
 #include "duckdb/common/operator/comparison_operators.hpp"
-#include "duckdb/core_functions/scalar/generic_functions.hpp"
 #include "duckdb/core_functions/create_sort_key.hpp"
+#include "duckdb/core_functions/scalar/generic_functions.hpp"
 #include "duckdb/planner/expression/bound_function_expression.hpp"
 
 namespace duckdb {
@@ -158,59 +158,6 @@ static void LeastGreatestFunction(DataChunk &args, ExpressionState &state, Vecto
 template <class OP>
 unique_ptr<FunctionData> BindLeastGreatest(ClientContext &context, ScalarFunction &bound_function,
                                            vector<unique_ptr<Expression>> &arguments) {
-	LogicalType child_type = ExpressionBinder::GetExpressionReturnType(*arguments[0]);
-	for (idx_t i = 1; i < arguments.size(); i++) {
-		auto arg_type = ExpressionBinder::GetExpressionReturnType(*arguments[i]);
-		if (!LogicalType::TryGetMaxLogicalType(context, child_type, arg_type, child_type)) {
-			throw BinderException(arguments[i]->query_location,
-			                      "Cannot combine types of %s and %s - an explicit cast is required",
-			                      child_type.ToString(), arg_type.ToString());
-		}
-	}
-	switch (child_type.id()) {
-	case LogicalTypeId::UNKNOWN:
-		throw ParameterNotResolvedException();
-	case LogicalTypeId::INTEGER_LITERAL:
-		child_type = IntegerLiteral::GetType(child_type);
-		break;
-	case LogicalTypeId::STRING_LITERAL:
-		child_type = LogicalType::VARCHAR;
-		break;
-	default:
-		break;
-	}
-	switch (child_type.InternalType()) {
-	case PhysicalType::BOOL:
-	case PhysicalType::INT8:
-		bound_function.function = LeastGreatestFunction<int8_t, OP>;
-		break;
-	case PhysicalType::INT16:
-		bound_function.function = LeastGreatestFunction<int16_t, OP>;
-		break;
-	case PhysicalType::INT32:
-		bound_function.function = LeastGreatestFunction<int32_t, OP>;
-		break;
-	case PhysicalType::INT64:
-		bound_function.function = LeastGreatestFunction<int64_t, OP>;
-		break;
-	case PhysicalType::INT128:
-		bound_function.function = LeastGreatestFunction<hugeint_t, OP>;
-		break;
-	case PhysicalType::DOUBLE:
-		bound_function.function = LeastGreatestFunction<double, OP>;
-		break;
-	case PhysicalType::VARCHAR:
-		bound_function.function = LeastGreatestFunction<string_t, OP, StandardLeastGreatest<true>>;
-		break;
-	default:
-		// fallback with sort keys
-		bound_function.function = LeastGreatestFunction<string_t, OP, SortKeyLeastGreatest>;
-		bound_function.init_local_state = LeastGreatestSortKeyInit;
-		break;
-	}
-	bound_function.arguments[0] = child_type;
-	bound_function.varargs = child_type;
-	bound_function.return_type = child_type;
 	return nullptr;
 }
 

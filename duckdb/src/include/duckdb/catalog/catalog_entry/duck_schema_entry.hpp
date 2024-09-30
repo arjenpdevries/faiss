@@ -15,7 +15,7 @@ namespace duckdb {
 //! A schema in the catalog
 class DuckSchemaEntry : public SchemaCatalogEntry {
 public:
-	DuckSchemaEntry(Catalog &catalog, CreateSchemaInfo &info);
+	DuckSchemaEntry(Catalog &catalog);
 
 private:
 	//! The catalog set holding the tables

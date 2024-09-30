@@ -8,17 +8,14 @@
 
 #pragma once
 
-#include "duckdb/parser/parsed_expression.hpp"
 #include "duckdb/common/vector.hpp"
+#include "duckdb/parser/parsed_expression.hpp"
 
 namespace duckdb {
 
 struct CaseCheck {
 	unique_ptr<ParsedExpression> when_expr;
 	unique_ptr<ParsedExpression> then_expr;
-
-	void Serialize(Serializer &serializer) const;
-	static CaseCheck Deserialize(Deserializer &deserializer);
 };
 
 //! The CaseExpression represents a CASE expression in the query

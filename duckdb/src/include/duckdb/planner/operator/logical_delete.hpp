@@ -8,8 +8,8 @@
 
 #pragma once
 
-#include "duckdb/planner/logical_operator.hpp"
 #include "duckdb/planner/bound_constraint.hpp"
+#include "duckdb/planner/logical_operator.hpp"
 
 namespace duckdb {
 class TableCatalogEntry;
@@ -27,9 +27,6 @@ public:
 	vector<unique_ptr<BoundConstraint>> bound_constraints;
 
 public:
-	void Serialize(Serializer &serializer) const override;
-	static unique_ptr<LogicalOperator> Deserialize(Deserializer &deserializer);
-
 	idx_t EstimateCardinality(ClientContext &context) override;
 	vector<idx_t> GetTableIndex() const override;
 	string GetName() const override;

@@ -80,19 +80,15 @@ static void LazyLoadIndexes(ClientContext &context, CatalogEntry &entry) {
 	}
 }
 
-DuckSchemaEntry::DuckSchemaEntry(Catalog &catalog, CreateSchemaInfo &info)
-    : SchemaCatalogEntry(catalog, info), tables(catalog), indexes(catalog), table_functions(catalog),
-      copy_functions(catalog), pragma_functions(catalog), functions(catalog), sequences(catalog), collations(catalog),
-      types(catalog) {
+DuckSchemaEntry::DuckSchemaEntry(Catalog &catalog)
+    : SchemaCatalogEntry(catalog), tables(catalog), indexes(catalog), table_functions(catalog), copy_functions(catalog),
+      pragma_functions(catalog), functions(catalog), sequences(catalog), collations(catalog), types(catalog) {
 }
 
 unique_ptr<CatalogEntry> DuckSchemaEntry::Copy(ClientContext &context) const {
 	auto info_copy = GetInfo();
-	auto &cast_info = info_copy->Cast<CreateSchemaInfo>();
 
-	auto result = make_uniq<DuckSchemaEntry>(catalog, cast_info);
-
-	return std::move(result);
+	return nullptr;
 }
 
 optional_ptr<CatalogEntry> DuckSchemaEntry::AddEntryInternal(CatalogTransaction transaction,

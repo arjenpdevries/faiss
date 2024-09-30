@@ -239,10 +239,7 @@ public:
 	explicit LogicalBoundNodeVisitor(BoundNodeVisitor &parent) : parent(parent) {
 	}
 
-	void VisitExpression(unique_ptr<Expression> *expression) override {
-		auto &expr = **expression;
-		parent.VisitExpression(*expression);
-		VisitExpressionChildren(expr);
+	void VisitExpression(unique_ptr<Expression> *expression) {
 	}
 
 protected:
@@ -276,10 +273,6 @@ void BoundNodeVisitor::VisitBoundTableRef(BoundTableRef &ref) {
 	}
 	case TableReferenceType::TABLE_FUNCTION: {
 		auto &bound_table_function = ref.Cast<BoundTableFunction>();
-		LogicalBoundNodeVisitor node_visitor(*this);
-		if (bound_table_function.get) {
-			node_visitor.VisitOperator(*bound_table_function.get);
-		}
 		if (bound_table_function.subquery) {
 			VisitBoundTableRef(*bound_table_function.subquery);
 		}

@@ -9,9 +9,9 @@
 #pragma once
 
 #include "duckdb/common/common.hpp"
-#include "duckdb/parser/parsed_expression.hpp"
-#include "duckdb/common/vector.hpp"
 #include "duckdb/common/types/value.hpp"
+#include "duckdb/common/vector.hpp"
+#include "duckdb/parser/parsed_expression.hpp"
 
 namespace duckdb {
 
@@ -28,8 +28,6 @@ struct SampleOptions {
 
 	unique_ptr<SampleOptions> Copy();
 	static bool Equals(SampleOptions *a, SampleOptions *b);
-	void Serialize(Serializer &serializer) const;
-	static unique_ptr<SampleOptions> Deserialize(Deserializer &deserializer);
 };
 
 } // namespace duckdb

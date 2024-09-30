@@ -30,8 +30,6 @@ protected:
 	TupleDataLayout layout;
 	//! The types of the payload columns stored in the hashtable
 	vector<LogicalType> payload_types;
-	//! Intermediate structures and data for aggregate filters
-	AggregateFilterDataSet filter_set;
 };
 
 } // namespace duckdb

@@ -8,9 +8,9 @@
 
 #pragma once
 
-#include "duckdb/planner/logical_operator.hpp"
 #include "duckdb/common/index_vector.hpp"
 #include "duckdb/parser/statement/insert_statement.hpp"
+#include "duckdb/planner/logical_operator.hpp"
 
 namespace duckdb {
 class TableCatalogEntry;
@@ -60,10 +60,6 @@ public:
 	vector<column_t> columns_to_fetch;
 	// The columns to fetch from the 'source' table
 	vector<column_t> source_columns;
-
-public:
-	void Serialize(Serializer &serializer) const override;
-	static unique_ptr<LogicalOperator> Deserialize(Deserializer &deserializer);
 
 protected:
 	vector<ColumnBinding> GetColumnBindings() override;

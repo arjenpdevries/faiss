@@ -26,9 +26,6 @@ public:
 public:
 	vector<ColumnBinding> GetColumnBindings() override;
 
-	void Serialize(Serializer &serializer) const override;
-	static unique_ptr<LogicalOperator> Deserialize(Deserializer &deserializer);
-
 	bool SplitPredicates() {
 		return SplitPredicates(expressions);
 	}

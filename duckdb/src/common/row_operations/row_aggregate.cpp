@@ -56,15 +56,6 @@ void RowOperations::UpdateStates(RowOperationsState &state, AggregateObject &agg
 
 void RowOperations::UpdateFilteredStates(RowOperationsState &state, AggregateFilterData &filter_data,
                                          AggregateObject &aggr, Vector &addresses, DataChunk &payload, idx_t arg_idx) {
-	idx_t count = filter_data.ApplyFilter(payload);
-	if (count == 0) {
-		return;
-	}
-
-	Vector filtered_addresses(addresses, filter_data.true_sel, count);
-	filtered_addresses.Flatten(count);
-
-	UpdateStates(state, aggr, filtered_addresses, filter_data.filtered_payload, arg_idx, count);
 }
 
 void RowOperations::CombineStates(RowOperationsState &state, TupleDataLayout &layout, Vector &sources, Vector &targets,

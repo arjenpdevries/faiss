@@ -8,9 +8,9 @@
 
 #pragma once
 
+#include "duckdb/common/types/value.hpp"
 #include "duckdb/optimizer/rule.hpp"
 #include "duckdb/planner/logical_operator_visitor.hpp"
-#include "duckdb/common/types/value.hpp"
 
 namespace duckdb {
 class ClientContext;
@@ -28,8 +28,8 @@ public:
 	ClientContext &context;
 
 public:
-	void VisitOperator(LogicalOperator &op) override;
-	void VisitExpression(unique_ptr<Expression> *expression) override;
+	void VisitOperator(LogicalOperator &op);
+	void VisitExpression(unique_ptr<Expression> *expression);
 
 	// Generates either a constant_or_null(child) expression
 	static unique_ptr<Expression> ConstantOrNull(unique_ptr<Expression> child, Value value);

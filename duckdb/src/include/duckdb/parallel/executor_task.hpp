@@ -8,9 +8,9 @@
 
 #pragma once
 
-#include "duckdb/parallel/task.hpp"
-#include "duckdb/parallel/event.hpp"
 #include "duckdb/common/optional_ptr.hpp"
+#include "duckdb/parallel/event.hpp"
+#include "duckdb/parallel/task.hpp"
 
 namespace duckdb {
 class PhysicalOperator;
@@ -21,7 +21,7 @@ class ThreadContext;
 class ExecutorTask : public Task {
 public:
 	ExecutorTask(Executor &executor, shared_ptr<Event> event);
-	ExecutorTask(ClientContext &context, shared_ptr<Event> event, const PhysicalOperator &op);
+	ExecutorTask(ClientContext &context, shared_ptr<Event> event);
 	~ExecutorTask() override;
 
 public:
@@ -32,7 +32,6 @@ public:
 	Executor &executor;
 	shared_ptr<Event> event;
 	unique_ptr<ThreadContext> thread_context;
-	optional_ptr<const PhysicalOperator> op;
 
 public:
 	virtual TaskExecutionResult ExecuteTask(TaskExecutionMode mode) = 0;

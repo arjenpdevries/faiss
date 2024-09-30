@@ -165,12 +165,6 @@ void Executor::SchedulePipeline(const shared_ptr<MetaPipeline> &meta_pipeline, S
 	for (auto &pipeline : pipelines) {
 		auto source = pipeline->GetSource();
 		if (source->type == PhysicalOperatorType::TABLE_SCAN) {
-			auto &table_function = source->Cast<PhysicalTableScan>();
-			if (table_function.function.global_initialization == TableFunctionInitialization::INITIALIZE_ON_SCHEDULE) {
-				// certain functions have to be eagerly initialized during scheduling
-				// if that is the case - initialize the function here
-				pipeline->ResetSource(true);
-			}
 		}
 	}
 }
@@ -326,10 +320,6 @@ void Executor::VerifyScheduledEventsInternal(const idx_t vertex, const vector<re
 	recursion_stack[vertex] = false;
 }
 
-void Executor::AddRecursiveCTE(PhysicalOperator &rec_cte) {
-	recursive_ctes.push_back(rec_cte);
-}
-
 void Executor::ReschedulePipelines(const vector<shared_ptr<MetaPipeline>> &pipelines_p,
                                    vector<shared_ptr<Event>> &events_p) {
 	ScheduleEventData event_data(pipelines_p, events_p, false);
@@ -371,52 +361,6 @@ void Executor::VerifyPipelines() {
 		VerifyPipeline(*pipeline);
 	}
 #endif
-}
-
-void Executor::Initialize(unique_ptr<PhysicalOperator> physical_plan_p) {
-	Reset();
-	owned_plan = std::move(physical_plan_p);
-	InitializeInternal(*owned_plan);
-}
-
-void Executor::Initialize(PhysicalOperator &plan) {
-	Reset();
-	InitializeInternal(plan);
-}
-
-void Executor::InitializeInternal(PhysicalOperator &plan) {
-
-	auto &scheduler = TaskScheduler::GetScheduler(context);
-	{
-		lock_guard<mutex> elock(executor_lock);
-		physical_plan = &plan;
-
-		this->producer = scheduler.CreateProducer();
-
-		// build and ready the pipelines
-		PipelineBuildState state;
-		auto root_pipeline = make_shared_ptr<MetaPipeline>(*this, state, nullptr);
-		root_pipeline->Build(*physical_plan);
-		root_pipeline->Ready();
-
-		// set root pipelines, i.e., all pipelines that end in the final sink
-		root_pipeline->GetPipelines(root_pipelines, false);
-		root_pipeline_idx = 0;
-
-		// collect all meta-pipelines from the root pipeline
-		vector<shared_ptr<MetaPipeline>> to_schedule;
-		root_pipeline->GetMetaPipelines(to_schedule, true, true);
-
-		// number of 'PipelineCompleteEvent's is equal to the number of meta pipelines, so we have to set it here
-		total_pipelines = to_schedule.size();
-
-		// collect all pipelines from the root pipelines (recursively) for the progress bar and verify them
-		root_pipeline->GetPipelines(pipelines, true);
-
-		// finally, verify and schedule
-		VerifyPipelines();
-		ScheduleEvents(to_schedule);
-	}
 }
 
 void Executor::CancelTasks() {
@@ -602,9 +546,7 @@ PendingExecutionResult Executor::ExecuteTask(bool dry_run) {
 
 void Executor::Reset() {
 	lock_guard<mutex> elock(executor_lock);
-	physical_plan = nullptr;
 	cancelled = false;
-	owned_plan.reset();
 	root_executor.reset();
 	root_pipelines.clear();
 	root_pipeline_idx = 0;
@@ -617,29 +559,8 @@ void Executor::Reset() {
 	execution_result = PendingExecutionResult::RESULT_NOT_READY;
 }
 
-shared_ptr<Pipeline> Executor::CreateChildPipeline(Pipeline &current, PhysicalOperator &op) {
-	D_ASSERT(!current.operators.empty());
-	D_ASSERT(op.IsSource());
-	// found another operator that is a source, schedule a child pipeline
-	// 'op' is the source, and the sink is the same
-	auto child_pipeline = make_shared_ptr<Pipeline>(*this);
-	child_pipeline->sink = current.sink;
-	child_pipeline->source = &op;
-
-	// the child pipeline has the same operators up until 'op'
-	for (auto current_op : current.operators) {
-		if (&current_op.get() == &op) {
-			break;
-		}
-		child_pipeline->operators.push_back(current_op);
-	}
-
-	return child_pipeline;
-}
-
 vector<LogicalType> Executor::GetTypes() {
-	D_ASSERT(physical_plan);
-	return physical_plan->GetTypes();
+	return vector<LogicalType>();
 }
 
 void Executor::PushError(ErrorData exception) {
@@ -701,22 +622,15 @@ bool Executor::GetPipelinesProgress(double &current_progress, uint64_t &current_
 } // LCOV_EXCL_STOP
 
 bool Executor::HasResultCollector() {
-	return physical_plan->type == PhysicalOperatorType::RESULT_COLLECTOR;
+	return false;
 }
 
 bool Executor::HasStreamingResultCollector() {
-	if (!HasResultCollector()) {
-		return false;
-	}
-	auto &result_collector = physical_plan->Cast<PhysicalResultCollector>();
-	return result_collector.IsStreaming();
+	return false;
 }
 
 unique_ptr<QueryResult> Executor::GetResult() {
-	D_ASSERT(HasResultCollector());
-	auto &result_collector = physical_plan->Cast<PhysicalResultCollector>();
-	D_ASSERT(result_collector.sink_state);
-	return result_collector.GetResult(*result_collector.sink_state);
+	return nullptr;
 }
 
 } // namespace duckdb

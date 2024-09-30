@@ -356,7 +356,6 @@ PipelineExecuteResult PipelineExecutor::PushFinalize() {
 	finalized = true;
 	// flush all query profiler info
 	for (idx_t i = 0; i < intermediate_states.size(); i++) {
-		intermediate_states[i]->Finalize(pipeline.operators[i].get(), context);
 	}
 	pipeline.executor.Flush(thread);
 	local_sink_state.reset();

@@ -92,7 +92,6 @@ static catalog_entry_vector_t GetCatalogEntries(vector<reference<SchemaCatalogEn
 			}
 		});
 		// Reorder tables because of foreign key constraint
-		ReorderTableEntries(tables);
 		for (auto &table : tables) {
 			entries.push_back(table.get());
 		}
@@ -368,12 +367,6 @@ void CheckpointReader::ReadEntry(CatalogTransaction transaction, Deserializer &d
 
 void CheckpointReader::ReadSchema(CatalogTransaction transaction, Deserializer &deserializer) {
 	// Read the schema and create it in the catalog
-	auto info = deserializer.ReadProperty<unique_ptr<CreateInfo>>(100, "schema");
-	auto &schema_info = info->Cast<CreateSchemaInfo>();
-
-	// we set create conflict to IGNORE_ON_CONFLICT, so that we can ignore a failure when recreating the main schema
-	schema_info.on_conflict = OnCreateConflict::IGNORE_ON_CONFLICT;
-	catalog.CreateSchema(transaction, schema_info);
 }
 
 //===--------------------------------------------------------------------===//

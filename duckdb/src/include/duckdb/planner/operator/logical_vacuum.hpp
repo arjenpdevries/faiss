@@ -10,8 +10,8 @@
 
 #include "duckdb/common/enums/statement_type.hpp"
 #include "duckdb/parser/parsed_data/parse_info.hpp"
-#include "duckdb/planner/logical_operator.hpp"
 #include "duckdb/parser/parsed_data/vacuum_info.hpp"
+#include "duckdb/planner/logical_operator.hpp"
 
 namespace duckdb {
 
@@ -39,8 +39,6 @@ public:
 	unique_ptr<VacuumInfo> info;
 
 public:
-	void Serialize(Serializer &serializer) const override;
-	static unique_ptr<LogicalOperator> Deserialize(Deserializer &deserializer);
 	idx_t EstimateCardinality(ClientContext &context) override;
 
 protected:

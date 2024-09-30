@@ -50,9 +50,6 @@ public:
 
 	unique_ptr<Expression> Copy() const override;
 
-	void Serialize(Serializer &serializer) const override;
-	static unique_ptr<Expression> Deserialize(Deserializer &deserializer);
-
 private:
 	BoundCastExpression(ClientContext &context, unique_ptr<Expression> child, LogicalType target_type);
 };

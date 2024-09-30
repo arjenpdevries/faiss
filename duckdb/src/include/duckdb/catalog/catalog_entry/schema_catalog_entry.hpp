@@ -30,7 +30,6 @@ struct CreateViewInfo;
 struct BoundCreateTableInfo;
 struct CreatePragmaFunctionInfo;
 struct CreateSequenceInfo;
-struct CreateSchemaInfo;
 struct CreateTableFunctionInfo;
 struct CreateCopyFunctionInfo;
 struct CreateTypeInfo;
@@ -44,7 +43,7 @@ public:
 	static constexpr const char *Name = "schema";
 
 public:
-	SchemaCatalogEntry(Catalog &catalog, CreateSchemaInfo &info);
+	SchemaCatalogEntry(Catalog &catalog);
 
 public:
 	unique_ptr<CreateInfo> GetInfo() const override;

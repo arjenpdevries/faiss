@@ -8,12 +8,12 @@
 
 #pragma once
 
-#include "duckdb/common/common.hpp"
-#include "duckdb/common/types/value.hpp"
-#include "duckdb/parser/parsed_expression.hpp"
-#include "duckdb/common/enums/compression_type.hpp"
 #include "duckdb/catalog/catalog_entry/table_column_type.hpp"
 #include "duckdb/common/case_insensitive_map.hpp"
+#include "duckdb/common/common.hpp"
+#include "duckdb/common/enums/compression_type.hpp"
+#include "duckdb/common/types/value.hpp"
+#include "duckdb/parser/parsed_expression.hpp"
 
 namespace duckdb {
 
@@ -68,9 +68,6 @@ public:
 	//! Whether this column is a Generated Column
 	bool Generated() const;
 	DUCKDB_API ColumnDefinition Copy() const;
-
-	DUCKDB_API void Serialize(Serializer &serializer) const;
-	DUCKDB_API static ColumnDefinition Deserialize(Deserializer &deserializer);
 
 	//===--------------------------------------------------------------------===//
 	// Generated Columns (VIRTUAL)

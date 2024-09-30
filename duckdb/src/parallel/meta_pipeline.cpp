@@ -150,7 +150,7 @@ static bool PipelineExceedsThreadCount(Pipeline &pipeline, const idx_t thread_co
 	// we always add the dependency in debug mode so that this is well-tested
 	return true;
 #else
-	return pipeline.GetSource()->EstimatedThreadCount() > thread_count;
+	return false;
 #endif
 }
 

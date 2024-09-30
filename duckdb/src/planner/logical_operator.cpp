@@ -122,11 +122,7 @@ vector<ColumnBinding> LogicalOperator::MapBindings(const vector<ColumnBinding> &
 }
 
 string LogicalOperator::ToString(ExplainFormat format) const {
-	auto renderer = TreeRenderer::CreateRenderer(format);
-	stringstream ss;
-	auto tree = RenderTree::CreateRenderTree(*this);
-	renderer->ToStream(*tree, ss);
-	return ss.str();
+	return "";
 }
 
 void LogicalOperator::Verify(ClientContext &context) {

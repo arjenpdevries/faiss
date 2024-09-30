@@ -99,8 +99,8 @@ Catalog &Catalog::GetCatalog(ClientContext &context, const string &catalog_name)
 //===--------------------------------------------------------------------===//
 // Schema
 //===--------------------------------------------------------------------===//
-optional_ptr<CatalogEntry> Catalog::CreateSchema(ClientContext &context, CreateSchemaInfo &info) {
-	return CreateSchema(GetCatalogTransaction(context), info);
+optional_ptr<CatalogEntry> Catalog::CreateSchema(ClientContext &context) {
+	return CreateSchema(GetCatalogTransaction(context));
 }
 
 CatalogTransaction Catalog::GetCatalogTransaction(ClientContext &context) {
@@ -115,9 +115,7 @@ optional_ptr<CatalogEntry> Catalog::CreateTable(ClientContext &context, BoundCre
 }
 
 optional_ptr<CatalogEntry> Catalog::CreateTable(ClientContext &context, unique_ptr<CreateTableInfo> info) {
-	auto binder = Binder::CreateBinder(context);
-	auto bound_info = binder->BindCreateTableInfo(std::move(info));
-	return CreateTable(context, *bound_info);
+	return nullptr;
 }
 
 optional_ptr<CatalogEntry> Catalog::CreateTable(CatalogTransaction transaction, SchemaCatalogEntry &schema,

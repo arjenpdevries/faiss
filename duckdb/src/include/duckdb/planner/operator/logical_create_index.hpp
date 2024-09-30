@@ -8,9 +8,9 @@
 
 #pragma once
 
+#include "duckdb/function/table_function.hpp"
 #include "duckdb/parser/parsed_data/create_index_info.hpp"
 #include "duckdb/planner/logical_operator.hpp"
-#include "duckdb/function/table_function.hpp"
 
 namespace duckdb {
 
@@ -30,10 +30,6 @@ public:
 
 	//! Unbound expressions to be used in the optimizer
 	vector<unique_ptr<Expression>> unbound_expressions;
-
-public:
-	void Serialize(Serializer &serializer) const override;
-	static unique_ptr<LogicalOperator> Deserialize(Deserializer &deserializer);
 
 protected:
 	void ResolveTypes() override;

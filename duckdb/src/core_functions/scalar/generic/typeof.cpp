@@ -16,7 +16,7 @@ unique_ptr<Expression> BindTypeOfFunctionExpression(FunctionBindExpressionInput 
 		return nullptr;
 	}
 	// emit a constant expression
-	return make_uniq<BoundConstantExpression>(Value(return_type.ToString()));
+	return nullptr;
 }
 
 ScalarFunction TypeOfFun::GetFunction() {

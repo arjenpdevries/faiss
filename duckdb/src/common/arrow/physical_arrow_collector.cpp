@@ -11,15 +11,7 @@ namespace duckdb {
 
 unique_ptr<PhysicalResultCollector> PhysicalArrowCollector::Create(ClientContext &context, PreparedStatementData &data,
                                                                    idx_t batch_size) {
-	if (!PhysicalPlanGenerator::PreserveInsertionOrder(context, *data.plan)) {
-		// the plan is not order preserving, so we just use the parallel materialized collector
-		return make_uniq_base<PhysicalResultCollector, PhysicalArrowCollector>(data, true, batch_size);
-	} else if (!PhysicalPlanGenerator::UseBatchIndex(context, *data.plan)) {
-		// the plan is order preserving, but we cannot use the batch index: use a single-threaded result collector
-		return make_uniq_base<PhysicalResultCollector, PhysicalArrowCollector>(data, false, batch_size);
-	} else {
-		return make_uniq_base<PhysicalResultCollector, PhysicalArrowBatchCollector>(data, batch_size);
-	}
+	return nullptr;
 }
 
 SinkResultType PhysicalArrowCollector::Sink(ExecutionContext &context, DataChunk &chunk,

@@ -26,9 +26,6 @@ public:
 
 public:
 	InsertionOrderPreservingMap<string> ParamsToString() const override;
-
-	void Serialize(Serializer &serializer) const override;
-	static unique_ptr<LogicalOperator> Deserialize(Deserializer &deserializer);
 };
 
 } // namespace duckdb

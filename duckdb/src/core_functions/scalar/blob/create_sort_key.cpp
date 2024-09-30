@@ -1,10 +1,11 @@
-#include "duckdb/core_functions/scalar/blob_functions.hpp"
-#include "duckdb/execution/expression_executor.hpp"
+#include "duckdb/core_functions/create_sort_key.hpp"
+
 #include "duckdb/common/enums/order_type.hpp"
 #include "duckdb/common/radix.hpp"
+#include "duckdb/core_functions/scalar/blob_functions.hpp"
+#include "duckdb/execution/expression_executor.hpp"
 #include "duckdb/planner/expression/bound_function_expression.hpp"
 #include "duckdb/planner/expression_binder.hpp"
-#include "duckdb/core_functions/create_sort_key.hpp"
 
 namespace duckdb {
 
@@ -44,7 +45,6 @@ unique_ptr<FunctionData> CreateSortKeyBind(ClientContext &context, ScalarFunctio
 	}
 	// push collations
 	for (idx_t i = 0; i < arguments.size(); i += 2) {
-		ExpressionBinder::PushCollation(context, arguments[i], arguments[i]->return_type);
 	}
 	// check if all types are constant
 	bool all_constant = true;

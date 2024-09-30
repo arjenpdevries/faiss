@@ -8,13 +8,12 @@
 #include "duckdb/common/tree_renderer/text_tree_renderer.hpp"
 #include "duckdb/execution/expression_executor.hpp"
 #include "duckdb/execution/operator/helper/physical_execute.hpp"
+#include "duckdb/execution/operator/scan/physical_table_scan.hpp"
 #include "duckdb/execution/physical_operator.hpp"
 #include "duckdb/main/client_config.hpp"
 #include "duckdb/main/client_context.hpp"
 #include "duckdb/main/client_data.hpp"
 #include "duckdb/planner/expression/bound_function_expression.hpp"
-#include "duckdb/execution/operator/scan/physical_table_scan.hpp"
-
 #include "yyjson.hpp"
 
 #include <algorithm>
@@ -315,20 +314,7 @@ OperatorProfiler::OperatorProfiler(ClientContext &context) : context(context) {
 }
 
 void OperatorProfiler::StartOperator(optional_ptr<const PhysicalOperator> phys_op) {
-	if (!enabled) {
-		return;
-	}
-
-	if (active_operator) {
-		throw InternalException("OperatorProfiler: Attempting to call StartOperator while another operator is active");
-	}
-
-	active_operator = phys_op;
-
-	// start timing for current element
-	if (HasOperatorSetting(MetricsType::OPERATOR_TIMING)) {
-		op.Start();
-	}
+	return;
 }
 
 void OperatorProfiler::EndOperator(optional_ptr<DataChunk> chunk) {
@@ -361,23 +347,11 @@ void OperatorProfiler::EndOperator(optional_ptr<DataChunk> chunk) {
 }
 
 OperatorInformation &OperatorProfiler::GetOperatorInfo(const PhysicalOperator &phys_op) {
-	auto entry = timings.find(phys_op);
-	if (entry != timings.end()) {
-		return entry->second;
-	} else {
-		// add new entry
-		timings[phys_op] = OperatorInformation();
-		return timings[phys_op];
-	}
+	return timings[phys_op];
 }
 
 void OperatorProfiler::Flush(const PhysicalOperator &phys_op) {
-	auto entry = timings.find(phys_op);
-	if (entry == timings.end()) {
-		return;
-	}
-	auto &operator_timing = timings.find(phys_op)->second;
-	operator_timing.name = phys_op.GetName();
+	return;
 }
 
 void QueryProfiler::Flush(OperatorProfiler &profiler) {
@@ -726,7 +700,6 @@ unique_ptr<ProfilingNode> QueryProfiler::CreateTree(const PhysicalOperator &root
 		info.extra_info = root_p.ParamsToString();
 	}
 
-	tree_map.insert(make_pair(reference<const PhysicalOperator>(root_p), reference<ProfilingNode>(*node)));
 	auto children = root_p.GetChildren();
 	for (auto &child : children) {
 		auto child_node = CreateTree(child.get(), child_settings, depth + 1);

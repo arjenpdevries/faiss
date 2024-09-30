@@ -8,8 +8,8 @@
 
 #pragma once
 
-#include "duckdb/planner/expression.hpp"
 #include "duckdb/planner/bound_parameter_map.hpp"
+#include "duckdb/planner/expression.hpp"
 
 namespace duckdb {
 
@@ -39,9 +39,6 @@ public:
 	hash_t Hash() const override;
 
 	unique_ptr<Expression> Copy() const override;
-
-	void Serialize(Serializer &serializer) const override;
-	static unique_ptr<Expression> Deserialize(Deserializer &deserializer);
 
 private:
 	BoundParameterExpression(bound_parameter_map_t &global_parameter_set, string identifier, LogicalType return_type,

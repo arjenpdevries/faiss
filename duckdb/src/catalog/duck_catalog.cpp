@@ -29,20 +29,6 @@ void DuckCatalog::Initialize(bool load_builtin) {
 	auto data = CatalogTransaction::GetSystemTransaction(GetDatabase());
 
 	// create the default schema
-	CreateSchemaInfo info;
-	info.schema = DEFAULT_SCHEMA;
-	info.internal = true;
-	CreateSchema(data, info);
-
-	if (load_builtin) {
-		// initialize default functions
-		BuiltinFunctions builtin(data, *this);
-		builtin.Initialize();
-
-#ifndef DISABLE_CORE_FUNCTIONS_EXTENSION
-		CoreFunctions::RegisterFunctions(*this, data);
-#endif
-	}
 
 	Verify();
 }
@@ -54,43 +40,12 @@ bool DuckCatalog::IsDuckCatalog() {
 //===--------------------------------------------------------------------===//
 // Schema
 //===--------------------------------------------------------------------===//
-optional_ptr<CatalogEntry> DuckCatalog::CreateSchemaInternal(CatalogTransaction transaction, CreateSchemaInfo &info) {
-	LogicalDependencyList dependencies;
-	auto entry = make_uniq<DuckSchemaEntry>(*this, info);
-	auto result = entry.get();
-	if (!schemas->CreateEntry(transaction, info.schema, std::move(entry), dependencies)) {
-		return nullptr;
-	}
-	return (CatalogEntry *)result;
+optional_ptr<CatalogEntry> DuckCatalog::CreateSchemaInternal(CatalogTransaction transaction) {
+	return nullptr;
 }
 
-optional_ptr<CatalogEntry> DuckCatalog::CreateSchema(CatalogTransaction transaction, CreateSchemaInfo &info) {
-	D_ASSERT(!info.schema.empty());
-	auto result = CreateSchemaInternal(transaction, info);
-	if (!result) {
-		switch (info.on_conflict) {
-		case OnCreateConflict::ERROR_ON_CONFLICT:
-			throw CatalogException::EntryAlreadyExists(CatalogType::SCHEMA_ENTRY, info.schema);
-		case OnCreateConflict::REPLACE_ON_CONFLICT: {
-			DropInfo drop_info;
-			drop_info.type = CatalogType::SCHEMA_ENTRY;
-			drop_info.catalog = info.catalog;
-			drop_info.name = info.schema;
-			DropSchema(transaction, drop_info);
-			result = CreateSchemaInternal(transaction, info);
-			if (!result) {
-				throw InternalException("Failed to create schema entry in CREATE_OR_REPLACE");
-			}
-			break;
-		}
-		case OnCreateConflict::IGNORE_ON_CONFLICT:
-			break;
-		default:
-			throw InternalException("Unsupported OnCreateConflict for CreateSchema");
-		}
-		return nullptr;
-	}
-	return result;
+optional_ptr<CatalogEntry> DuckCatalog::CreateSchema(CatalogTransaction transaction) {
+	return nullptr;
 }
 
 void DuckCatalog::DropSchema(CatalogTransaction transaction, DropInfo &info) {
