@@ -8,9 +8,9 @@
 
 #pragma once
 
-#include "duckdb/execution/index/bound_index.hpp"
-#include "duckdb/execution/index/art/node.hpp"
 #include "duckdb/common/array.hpp"
+#include "duckdb/execution/index/art/node.hpp"
+#include "duckdb/execution/index/bound_index.hpp"
 
 namespace duckdb {
 
@@ -50,9 +50,7 @@ public:
 
 	//! Create a index instance of this type.
 	static unique_ptr<BoundIndex> Create(CreateIndexInput &input) {
-		auto art = make_uniq<ART>(input.name, input.constraint_type, input.column_ids, input.table_io_manager,
-		                          input.unbound_expressions, input.db, nullptr, input.storage_info);
-		return std::move(art);
+		return nullptr;
 	}
 
 	//! Root of the tree.

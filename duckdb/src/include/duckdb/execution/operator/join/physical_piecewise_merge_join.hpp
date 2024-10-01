@@ -27,8 +27,6 @@ public:
 	                           idx_t estimated_cardinality);
 
 	vector<LogicalType> join_key_types;
-	vector<BoundOrderByNode> lhs_orders;
-	vector<BoundOrderByNode> rhs_orders;
 
 public:
 	// Operator Interface

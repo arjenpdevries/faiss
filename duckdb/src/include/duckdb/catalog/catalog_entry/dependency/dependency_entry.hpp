@@ -8,15 +8,16 @@
 
 #pragma once
 
-#include "duckdb/common/common.hpp"
-#include "duckdb/common/enums/catalog_type.hpp"
-#include "duckdb/common/exception.hpp"
-#include "duckdb/common/atomic.hpp"
-#include "duckdb/common/optional_ptr.hpp"
 #include "duckdb/catalog/catalog_entry.hpp"
 #include "duckdb/catalog/catalog_set.hpp"
 #include "duckdb/catalog/dependency.hpp"
 #include "duckdb/catalog/dependency_manager.hpp"
+#include "duckdb/common/atomic.hpp"
+#include "duckdb/common/common.hpp"
+#include "duckdb/common/enums/catalog_type.hpp"
+#include "duckdb/common/exception.hpp"
+#include "duckdb/common/optional_ptr.hpp"
+
 #include <memory>
 
 namespace duckdb {
@@ -32,7 +33,7 @@ enum class DependencyEntryType : uint8_t { SUBJECT, DEPENDENT };
 
 class DependencyEntry : public InCatalogEntry {
 public:
-	~DependencyEntry() override;
+	~DependencyEntry();
 
 protected:
 	DependencyEntry(Catalog &catalog, DependencyEntryType type, const MangledDependencyName &name,

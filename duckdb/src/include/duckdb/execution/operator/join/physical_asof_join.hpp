@@ -29,10 +29,6 @@ public:
 	vector<unique_ptr<Expression>> lhs_partitions;
 	vector<unique_ptr<Expression>> rhs_partitions;
 
-	// Inequality Only
-	vector<BoundOrderByNode> lhs_orders;
-	vector<BoundOrderByNode> rhs_orders;
-
 	// Projection mappings
 	vector<column_t> right_projection_map;
 

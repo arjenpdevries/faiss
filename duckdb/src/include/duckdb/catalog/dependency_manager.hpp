@@ -9,10 +9,10 @@
 #pragma once
 
 #include "duckdb/catalog/catalog_entry.hpp"
-#include "duckdb/catalog/catalog_set.hpp"
-#include "duckdb/catalog/dependency.hpp"
 #include "duckdb/catalog/catalog_entry_map.hpp"
+#include "duckdb/catalog/catalog_set.hpp"
 #include "duckdb/catalog/catalog_transaction.hpp"
+#include "duckdb/catalog/dependency.hpp"
 #include "duckdb/common/stack.hpp"
 #include "duckdb/common/string_util.hpp"
 
@@ -90,11 +90,6 @@ public:
 	          const std::function<void(CatalogEntry &, CatalogEntry &, const DependencyDependentFlags &)> &callback);
 
 	void AddOwnership(CatalogTransaction transaction, CatalogEntry &owner, CatalogEntry &entry);
-
-private:
-	DuckCatalog &catalog;
-	CatalogSet subjects;
-	CatalogSet dependents;
 
 private:
 	bool IsSystemEntry(CatalogEntry &entry) const;

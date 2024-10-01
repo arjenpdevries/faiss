@@ -43,9 +43,6 @@ struct ClientData {
 	//! The random generator used by random(). Its seed value can be set by setseed().
 	unique_ptr<RandomEngine> random_engine;
 
-	//! The catalog search path
-	unique_ptr<CatalogSearchPath> catalog_search_path;
-
 	//! The file opener of the client context
 	unique_ptr<FileOpener> file_opener;
 

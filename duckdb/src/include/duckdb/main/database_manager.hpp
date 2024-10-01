@@ -92,8 +92,6 @@ private:
 private:
 	//! The system database is a special database that holds system entries (e.g. functions)
 	unique_ptr<AttachedDatabase> system;
-	//! The set of attached databases
-	unique_ptr<CatalogSet> databases;
 	//! The next object id handed out by the NextOid method
 	atomic<idx_t> next_oid;
 	//! The current query number

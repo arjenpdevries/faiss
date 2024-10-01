@@ -39,8 +39,6 @@ protected:
 public:
 	//! Associated table io manager
 	TableIOManager &table_io_manager;
-	//! Attached database instance
-	AttachedDatabase &db;
 
 public:
 	virtual ~Index() = default;

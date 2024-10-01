@@ -65,12 +65,9 @@ void PartitionGlobalSinkState::GenerateOrderings(Orders &partitions, Orders &ord
 	const auto partition_cols = partition_bys.size();
 	for (idx_t prt_idx = 0; prt_idx < partition_cols; prt_idx++) {
 		auto &pexpr = partition_bys[prt_idx];
-
-		partitions.emplace_back(orders.back().Copy());
 	}
 
 	for (const auto &order : order_bys) {
-		orders.emplace_back(order.Copy());
 	}
 }
 
@@ -178,14 +175,13 @@ void PartitionGlobalSinkState::CombineLocalPartition(GroupingPartition &local_pa
 }
 
 PartitionLocalMergeState::PartitionLocalMergeState(PartitionGlobalSinkState &gstate)
-    : merge_state(nullptr), stage(PartitionSortStage::INIT), finished(true), executor(gstate.context) {
+    : merge_state(nullptr), stage(PartitionSortStage::INIT), finished(true) {
 
 	//	 Set up the sort expression computation.
 	vector<LogicalType> sort_types;
 	for (auto &order : gstate.orders) {
 		auto &oexpr = order.expression;
 		sort_types.emplace_back(oexpr->return_type);
-		executor.AddExpression(*oexpr);
 	}
 	sort_chunk.Initialize(gstate.allocator, sort_types);
 	payload_chunk.Initialize(gstate.allocator, gstate.payload_types);
@@ -210,7 +206,6 @@ void PartitionLocalMergeState::Scan() {
 	group_data.InitializeScan(local_scan, merge_state->column_ids);
 	while (group_data.Scan(chunk_state, local_scan, payload_chunk)) {
 		sort_chunk.Reset();
-		executor.Execute(payload_chunk, sort_chunk);
 
 		local_sort.SinkChunk(sort_chunk, payload_chunk);
 		if (local_sort.SizeInBytes() > merge_state->memory_per_thread) {
@@ -224,13 +219,12 @@ void PartitionLocalMergeState::Scan() {
 
 //	Per-thread sink state
 PartitionLocalSinkState::PartitionLocalSinkState(ClientContext &context, PartitionGlobalSinkState &gstate_p)
-    : gstate(gstate_p), allocator(Allocator::Get(context)), executor(context) {
+    : gstate(gstate_p), allocator(Allocator::Get(context)) {
 
 	vector<LogicalType> group_types;
 	for (idx_t prt_idx = 0; prt_idx < gstate.partitions.size(); prt_idx++) {
 		auto &pexpr = *gstate.partitions[prt_idx].expression.get();
 		group_types.push_back(pexpr.return_type);
-		executor.AddExpression(pexpr);
 	}
 	sort_cols = gstate.orders.size() + group_types.size();
 
@@ -245,7 +239,6 @@ PartitionLocalSinkState::PartitionLocalSinkState(ClientContext &context, Partiti
 			for (idx_t ord_idx = 0; ord_idx < gstate.orders.size(); ord_idx++) {
 				auto &pexpr = *gstate.orders[ord_idx].expression.get();
 				group_types.push_back(pexpr.return_type);
-				executor.AddExpression(pexpr);
 			}
 			group_chunk.Initialize(allocator, group_types);
 
@@ -268,7 +261,6 @@ void PartitionLocalSinkState::Hash(DataChunk &input_chunk, Vector &hash_vector) 
 
 	// OVER(PARTITION BY...) (hash grouping)
 	group_chunk.Reset();
-	executor.Execute(input_chunk, group_chunk);
 	VectorOperations::Hash(group_chunk.data[0], hash_vector, count);
 	for (idx_t prt_idx = 1; prt_idx < group_chunk.ColumnCount(); ++prt_idx) {
 		VectorOperations::CombineHash(hash_vector, group_chunk.data[prt_idx], count);
@@ -309,7 +301,6 @@ void PartitionLocalSinkState::Sink(DataChunk &input_chunk) {
 	if (local_sort) {
 		//	OVER(ORDER BY...)
 		group_chunk.Reset();
-		executor.Execute(input_chunk, group_chunk);
 		local_sort->SinkChunk(group_chunk, input_chunk);
 
 		auto &hash_group = *gstate.hash_groups[0];

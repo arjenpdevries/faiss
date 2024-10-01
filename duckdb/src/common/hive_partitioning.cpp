@@ -73,9 +73,6 @@ static void ConvertKnownColRefToConstants(ClientContext &context, unique_ptr<Exp
 			}
 		}
 	} else {
-		ExpressionIterator::EnumerateChildren(*expr, [&](unique_ptr<Expression> &child) {
-			ConvertKnownColRefToConstants(context, child, known_column_values, table_index);
-		});
 	}
 }
 
@@ -170,23 +167,6 @@ void HivePartitioning::ApplyFiltersToFileList(ClientContext &context, vector<str
 			ConvertKnownColRefToConstants(context, filter_copy, known_values, table_index);
 			// Evaluate the filter, if it can be evaluated here, we can not prune this filter
 			Value result_value;
-
-			if (!filter_copy->IsScalar() || !filter_copy->IsFoldable() ||
-			    !ExpressionExecutor::TryEvaluateScalar(context, *filter_copy, result_value)) {
-				// can not be evaluated only with the filename/hive columns added, we can not prune this filter
-				if (!have_preserved_filter[j]) {
-					pruned_filters.emplace_back(filter->Copy());
-					have_preserved_filter[j] = true;
-				}
-			} else if (result_value.IsNull() || !result_value.GetValue<bool>()) {
-				// filter evaluates to false
-				should_prune_file = true;
-				// convert the filter to a table filter.
-				if (filters_applied_to_files.find(j) == filters_applied_to_files.end()) {
-					info.extra_info.file_filters += filter->ToString();
-					filters_applied_to_files.insert(j);
-				}
-			}
 		}
 
 		if (!should_prune_file) {

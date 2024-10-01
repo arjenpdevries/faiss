@@ -63,9 +63,6 @@ public:
 	//! Constructs a DataTable as a delta on an existing data table but with one column added new constraint
 	explicit DataTable(ClientContext &context, DataTable &parent, unique_ptr<BoundConstraint> constraint);
 
-	//! A reference to the database instance
-	AttachedDatabase &db;
-
 public:
 	AttachedDatabase &GetAttached();
 	TableIOManager &GetTableIOManager();

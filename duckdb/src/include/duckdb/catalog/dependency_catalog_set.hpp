@@ -24,7 +24,6 @@ private:
 	MangledDependencyName ApplyPrefix(const MangledEntryName &name) const;
 
 public:
-	CatalogSet &set;
 	CatalogEntryInfo info;
 	MangledEntryName mangled_name;
 };

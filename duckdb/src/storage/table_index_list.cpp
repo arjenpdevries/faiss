@@ -31,14 +31,6 @@ void TableIndexList::RemoveIndex(const string &name) {
 }
 
 void TableIndexList::CommitDrop(const string &name) {
-	lock_guard<mutex> lock(indexes_lock);
-
-	for (idx_t index_idx = 0; index_idx < indexes.size(); index_idx++) {
-		auto &index_entry = indexes[index_idx];
-		if (index_entry->GetIndexName() == name) {
-			index_entry->CommitDrop();
-		}
-	}
 }
 
 bool TableIndexList::NameIsUnique(const string &name) {
@@ -58,41 +50,6 @@ bool TableIndexList::NameIsUnique(const string &name) {
 }
 
 void TableIndexList::InitializeIndexes(ClientContext &context, DataTableInfo &table_info, const char *index_type) {
-	// Fast path: do we have any unbound indexes?
-	bool needs_binding = false;
-	{
-		lock_guard<mutex> lock(indexes_lock);
-		for (auto &index : indexes) {
-			if (!index->IsBound() && (index_type == nullptr || index->GetIndexType() == index_type)) {
-				needs_binding = true;
-				break;
-			}
-		}
-	}
-	if (!needs_binding) {
-		return;
-	}
-
-	// Get the table from the catalog so we can add it to the binder
-	auto &catalog = table_info.GetDB().GetCatalog();
-	auto &table =
-	    catalog.GetEntry(context, CatalogType::TABLE_ENTRY, table_info.GetSchemaName(), table_info.GetTableName())
-	        .Cast<DuckTableEntry>();
-	vector<LogicalType> column_types;
-	vector<string> column_names;
-	for (auto &col : table.GetColumns().Logical()) {
-		column_types.push_back(col.Type());
-		column_names.push_back(col.Name());
-	}
-
-	lock_guard<mutex> lock(indexes_lock);
-	for (auto &index : indexes) {
-		if (!index->IsBound() && (index_type == nullptr || index->GetIndexType() == index_type)) {
-			// Create a binder to bind this index (we cant reuse this binder for other indexes)
-
-			// Replace the unbound index with a bound index
-		}
-	}
 }
 
 bool TableIndexList::Empty() {
@@ -136,7 +93,6 @@ void TableIndexList::VerifyForeignKey(const vector<PhysicalIndex> &fk_keys, Data
 		throw InternalException("Internal Foreign Key error: trying to verify an unbound index...");
 	}
 	conflict_manager.SetIndexCount(1);
-	index->Cast<BoundIndex>().CheckConstraintsForChunk(chunk, conflict_manager);
 }
 
 vector<column_t> TableIndexList::GetRequiredColumns() {
@@ -159,16 +115,6 @@ vector<IndexStorageInfo> TableIndexList::GetStorageInfos(const case_insensitive_
 
 	vector<IndexStorageInfo> index_storage_infos;
 	for (auto &index : indexes) {
-		if (index->IsBound()) {
-			auto index_storage_info = index->Cast<BoundIndex>().GetStorageInfo(options, false);
-			D_ASSERT(index_storage_info.IsValid() && !index_storage_info.name.empty());
-			index_storage_infos.push_back(index_storage_info);
-			continue;
-		}
-
-		auto index_storage_info = index->Cast<UnboundIndex>().GetStorageInfo();
-		D_ASSERT(index_storage_info.IsValid() && !index_storage_info.name.empty());
-		index_storage_infos.push_back(index_storage_info);
 	}
 
 	return index_storage_infos;

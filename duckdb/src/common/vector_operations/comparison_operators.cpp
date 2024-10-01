@@ -6,11 +6,10 @@
 
 #include "duckdb/common/operator/comparison_operators.hpp"
 
+#include "duckdb/common/likely.hpp"
 #include "duckdb/common/uhugeint.hpp"
 #include "duckdb/common/vector_operations/binary_executor.hpp"
 #include "duckdb/common/vector_operations/vector_operations.hpp"
-
-#include "duckdb/common/likely.hpp"
 
 namespace duckdb {
 
@@ -99,21 +98,21 @@ template <>
 inline idx_t ComparisonSelector::Select<duckdb::Equals>(Vector &left, Vector &right, const SelectionVector *sel,
                                                         idx_t count, SelectionVector *true_sel,
                                                         SelectionVector *false_sel, ValidityMask &null_mask) {
-	return VectorOperations::Equals(left, right, sel, count, true_sel, false_sel, &null_mask);
+	return 0;
 }
 
 template <>
 inline idx_t ComparisonSelector::Select<duckdb::NotEquals>(Vector &left, Vector &right, const SelectionVector *sel,
                                                            idx_t count, SelectionVector *true_sel,
                                                            SelectionVector *false_sel, ValidityMask &null_mask) {
-	return VectorOperations::NotEquals(left, right, sel, count, true_sel, false_sel, &null_mask);
+	return 0;
 }
 
 template <>
 inline idx_t ComparisonSelector::Select<duckdb::GreaterThan>(Vector &left, Vector &right, const SelectionVector *sel,
                                                              idx_t count, SelectionVector *true_sel,
                                                              SelectionVector *false_sel, ValidityMask &null_mask) {
-	return VectorOperations::GreaterThan(left, right, sel, count, true_sel, false_sel, &null_mask);
+	return 0;
 }
 
 template <>
@@ -121,21 +120,21 @@ inline idx_t
 ComparisonSelector::Select<duckdb::GreaterThanEquals>(Vector &left, Vector &right, const SelectionVector *sel,
                                                       idx_t count, SelectionVector *true_sel,
                                                       SelectionVector *false_sel, ValidityMask &null_mask) {
-	return VectorOperations::GreaterThanEquals(left, right, sel, count, true_sel, false_sel, &null_mask);
+	return 0;
 }
 
 template <>
 inline idx_t ComparisonSelector::Select<duckdb::LessThan>(Vector &left, Vector &right, const SelectionVector *sel,
                                                           idx_t count, SelectionVector *true_sel,
                                                           SelectionVector *false_sel, ValidityMask &null_mask) {
-	return VectorOperations::GreaterThan(right, left, sel, count, true_sel, false_sel, &null_mask);
+	return 0;
 }
 
 template <>
 inline idx_t ComparisonSelector::Select<duckdb::LessThanEquals>(Vector &left, Vector &right, const SelectionVector *sel,
                                                                 idx_t count, SelectionVector *true_sel,
                                                                 SelectionVector *false_sel, ValidityMask &null_mask) {
-	return VectorOperations::GreaterThanEquals(right, left, sel, count, true_sel, false_sel, &null_mask);
+	return 0;
 }
 
 static void ComparesNotNull(UnifiedVectorFormat &ldata, UnifiedVectorFormat &rdata, ValidityMask &vresult,

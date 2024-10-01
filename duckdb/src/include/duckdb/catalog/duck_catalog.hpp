@@ -25,15 +25,12 @@ public:
 		return "duckdb";
 	}
 
-	DependencyManager &GetDependencyManager() {
-		return *dependency_manager;
-	}
 	mutex &GetWriteLock() {
 		return write_lock;
 	}
 
 public:
-	DUCKDB_API optional_ptr<CatalogEntry> CreateSchema(CatalogTransaction transaction) override;
+	DUCKDB_API optional_ptr<CatalogEntry> CreateSchema(CatalogTransaction transaction);
 	DUCKDB_API void ScanSchemas(ClientContext &context, std::function<void(SchemaCatalogEntry &)> callback) override;
 	DUCKDB_API void ScanSchemas(std::function<void(SchemaCatalogEntry &)> callback);
 
@@ -56,12 +53,8 @@ private:
 	void Verify() override;
 
 private:
-	//! The DependencyManager manages dependencies between different catalog objects
-	unique_ptr<DependencyManager> dependency_manager;
 	//! Write lock for the catalog
 	mutex write_lock;
-	//! The catalog set holding the schemas
-	unique_ptr<CatalogSet> schemas;
 };
 
 } // namespace duckdb

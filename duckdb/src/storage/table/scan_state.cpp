@@ -42,11 +42,6 @@ ScanFilter::ScanFilter(idx_t index, const vector<column_t> &column_ids, TableFil
 void ScanFilterInfo::Initialize(TableFilterSet &filters, const vector<column_t> &column_ids) {
 	D_ASSERT(!filters.filters.empty());
 	table_filters = &filters;
-	adaptive_filter = make_uniq<AdaptiveFilter>(filters);
-	filter_list.reserve(filters.filters.size());
-	for (auto &entry : filters.filters) {
-		filter_list.emplace_back(entry.first, column_ids, *entry.second);
-	}
 	column_has_filter.reserve(column_ids.size());
 	for (idx_t col_idx = 0; col_idx < column_ids.size(); col_idx++) {
 		bool has_filter = table_filters->filters.find(col_idx) != table_filters->filters.end();
@@ -96,17 +91,13 @@ optional_ptr<AdaptiveFilter> ScanFilterInfo::GetAdaptiveFilter() {
 }
 
 AdaptiveFilterState ScanFilterInfo::BeginFilter() const {
-	if (!adaptive_filter) {
-		return AdaptiveFilterState();
-	}
-	return adaptive_filter->BeginFilter();
+	return AdaptiveFilterState();
 }
 
 void ScanFilterInfo::EndFilter(AdaptiveFilterState state) {
 	if (!adaptive_filter) {
 		return;
 	}
-	adaptive_filter->EndFilter(state);
 }
 
 void ColumnScanState::NextInternal(idx_t count) {

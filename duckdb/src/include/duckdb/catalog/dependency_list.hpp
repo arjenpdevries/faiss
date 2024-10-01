@@ -9,9 +9,9 @@
 #pragma once
 
 #include "duckdb/catalog/catalog_entry_map.hpp"
-#include "duckdb/common/types/hash.hpp"
-#include "duckdb/common/enums/catalog_type.hpp"
 #include "duckdb/catalog/dependency.hpp"
+#include "duckdb/common/enums/catalog_type.hpp"
+#include "duckdb/common/types/hash.hpp"
 
 namespace duckdb {
 class Catalog;
@@ -52,8 +52,6 @@ class LogicalDependencyList {
 	    unordered_set<LogicalDependency, LogicalDependencyHashFunction, LogicalDependencyEquality>;
 
 public:
-	DUCKDB_API void AddDependency(CatalogEntry &entry);
-	DUCKDB_API void AddDependency(const LogicalDependency &entry);
 	DUCKDB_API bool Contains(CatalogEntry &entry);
 
 public:

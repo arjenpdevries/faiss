@@ -27,19 +27,6 @@ struct SortedAggregateBindData : public FunctionData {
 			arg_funcs.emplace_back(funcs);
 		}
 		auto &order_bys = *expr.order_bys;
-		sort_types.reserve(order_bys.orders.size());
-		sort_funcs.reserve(order_bys.orders.size());
-		for (auto &order : order_bys.orders) {
-			orders.emplace_back(order.Copy());
-			sort_types.emplace_back(order.expression->return_type);
-			ListSegmentFunctions funcs;
-			GetSegmentDataFunctions(funcs, sort_types.back());
-			sort_funcs.emplace_back(funcs);
-		}
-		sorted_on_args = (children.size() == order_bys.orders.size());
-		for (size_t i = 0; sorted_on_args && i < children.size(); ++i) {
-			sorted_on_args = children[i]->Equals(*order_bys.orders[i].expression);
-		}
 	}
 
 	SortedAggregateBindData(const SortedAggregateBindData &other)
@@ -48,9 +35,6 @@ struct SortedAggregateBindData : public FunctionData {
 	      sorted_on_args(other.sorted_on_args), threshold(other.threshold), external(other.external) {
 		if (other.bind_info) {
 			bind_info = other.bind_info->Copy();
-		}
-		for (auto &order : other.orders) {
-			orders.emplace_back(order.Copy());
 		}
 	}
 
@@ -70,14 +54,6 @@ struct SortedAggregateBindData : public FunctionData {
 		if (function != other.function) {
 			return false;
 		}
-		if (orders.size() != other.orders.size()) {
-			return false;
-		}
-		for (size_t i = 0; i < orders.size(); ++i) {
-			if (!orders[i].Equals(other.orders[i])) {
-				return false;
-			}
-		}
 		return true;
 	}
 
@@ -87,7 +63,6 @@ struct SortedAggregateBindData : public FunctionData {
 	unique_ptr<FunctionData> bind_info;
 	vector<ListSegmentFunctions> arg_funcs;
 
-	vector<BoundOrderByNode> orders;
 	vector<LogicalType> sort_types;
 	vector<ListSegmentFunctions> sort_funcs;
 	bool sorted_on_args;
@@ -581,145 +556,13 @@ struct SortedAggregateFunction {
 		for (idx_t i = 0; i < count; ++i) {
 			state_unprocessed[i] = sdata[i]->count;
 		}
-
-		// Sort the input payloads on (state_idx ASC, orders)
-		vector<BoundOrderByNode> orders;
-		for (const auto &order : order_bind.orders) {
-			orders.emplace_back(order.Copy());
-		}
-
-		auto global_sort = make_uniq<GlobalSortState>(buffer_manager, orders, payload_layout);
-		global_sort->external = order_bind.external;
-		auto local_sort = make_uniq<LocalSortState>();
-		local_sort->Initialize(*global_sort, global_sort->buffer_manager);
-
-		DataChunk prefixed;
-		prefixed.Initialize(Allocator::DefaultAllocator(), global_sort->sort_layout.logical_types);
-
-		//	Go through the states accumulating values to sort until we hit the sort threshold
-		idx_t unsorted_count = 0;
-		idx_t sorted = 0;
-		for (idx_t finalized = 0; finalized < count;) {
-			if (unsorted_count < order_bind.threshold) {
-				auto state = sdata[finalized];
-				prefixed.Reset();
-				prefixed.data[0].Reference(Value::USMALLINT(UnsafeNumericCast<uint16_t>(finalized)));
-				state->Finalize(order_bind, prefixed, *local_sort);
-				unsorted_count += state_unprocessed[finalized];
-
-				// Go to the next aggregate unless this is the last one
-				if (++finalized < count) {
-					continue;
-				}
-			}
-
-			//	If they were all empty (filtering) flush them
-			//	(This can only happen on the last range)
-			if (!unsorted_count) {
-				break;
-			}
-
-			//	Sort all the data
-			global_sort->AddLocalState(*local_sort);
-			global_sort->PrepareMergePhase();
-			while (global_sort->sorted_blocks.size() > 1) {
-				global_sort->InitializeMergeRound();
-				MergeSorter merge_sorter(*global_sort, global_sort->buffer_manager);
-				merge_sorter.PerformInMergeRound();
-				global_sort->CompleteMergeRound(false);
-			}
-
-			auto scanner = make_uniq<PayloadScanner>(*global_sort);
-			initialize(aggr, agg_state.data());
-			while (scanner->Remaining()) {
-				chunk.Reset();
-				scanner->Scan(chunk);
-				idx_t consumed = 0;
-
-				// Distribute the scanned chunk to the aggregates
-				while (consumed < chunk.size()) {
-					//	Find the next aggregate that needs data
-					for (; !state_unprocessed[sorted]; ++sorted) {
-						// Finalize a single value at the next offset
-						agg_state_vec.SetVectorType(states.GetVectorType());
-						finalize(agg_state_vec, aggr_bind_info, result, 1, sorted + offset);
-						if (destructor) {
-							destructor(agg_state_vec, aggr_bind_info, 1);
-						}
-
-						initialize(aggr, agg_state.data());
-					}
-					const auto input_count = MinValue(state_unprocessed[sorted], chunk.size() - consumed);
-					for (column_t col_idx = 0; col_idx < chunk.ColumnCount(); ++col_idx) {
-						sliced.data[col_idx].Slice(chunk.data[col_idx], consumed, consumed + input_count);
-					}
-					sliced.SetCardinality(input_count);
-
-					// These are all simple updates, so use it if available
-					if (simple_update) {
-						simple_update(sliced.data.data(), aggr_bind_info, sliced.data.size(), agg_state.data(),
-						              sliced.size());
-					} else {
-						// We are only updating a constant state
-						agg_state_vec.SetVectorType(VectorType::CONSTANT_VECTOR);
-						update(sliced.data.data(), aggr_bind_info, sliced.data.size(), agg_state_vec, sliced.size());
-					}
-
-					consumed += input_count;
-					state_unprocessed[sorted] -= input_count;
-				}
-			}
-
-			//	Finalize the last state for this sort
-			agg_state_vec.SetVectorType(states.GetVectorType());
-			finalize(agg_state_vec, aggr_bind_info, result, 1, sorted + offset);
-			if (destructor) {
-				destructor(agg_state_vec, aggr_bind_info, 1);
-			}
-			++sorted;
-
-			//	Stop if we are done
-			if (finalized >= count) {
-				break;
-			}
-
-			//	Create a new sort
-			scanner.reset();
-			global_sort = make_uniq<GlobalSortState>(buffer_manager, orders, payload_layout);
-			global_sort->external = order_bind.external;
-			local_sort = make_uniq<LocalSortState>();
-			local_sort->Initialize(*global_sort, global_sort->buffer_manager);
-			unsorted_count = 0;
-		}
-
-		for (; sorted < count; ++sorted) {
-			initialize(aggr, agg_state.data());
-
-			// Finalize a single value at the next offset
-			agg_state_vec.SetVectorType(states.GetVectorType());
-			finalize(agg_state_vec, aggr_bind_info, result, 1, sorted + offset);
-
-			if (destructor) {
-				destructor(agg_state_vec, aggr_bind_info, 1);
-			}
-		}
-
-		result.Verify(count);
 	}
 };
 
 void FunctionBinder::BindSortedAggregate(ClientContext &context, BoundAggregateExpression &expr,
                                          const vector<unique_ptr<Expression>> &groups) {
-	if (!expr.order_bys || expr.order_bys->orders.empty() || expr.children.empty()) {
-		// not a sorted aggregate: return
-		return;
-	}
 	// Remove unnecessary ORDER BY clauses and return if nothing remains
 	if (context.config.enable_optimizer) {
-		if (expr.order_bys->Simplify(groups)) {
-			expr.order_bys.reset();
-			return;
-		}
 	}
 	auto &bound_function = expr.function;
 	auto &children = expr.children;
@@ -728,9 +571,6 @@ void FunctionBinder::BindSortedAggregate(ClientContext &context, BoundAggregateE
 
 	if (!sorted_bind->sorted_on_args) {
 		// The arguments are the children plus the sort columns.
-		for (auto &order : order_bys.orders) {
-			children.emplace_back(std::move(order.expression));
-		}
 	}
 
 	vector<LogicalType> arguments;

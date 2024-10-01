@@ -214,7 +214,6 @@ unique_ptr<RowGroup> RowGroup::AlterType(RowGroupCollection &new_collection, con
 		}
 		// execute the expression
 		append_chunk.Reset();
-		executor.ExecuteExpression(scan_chunk, append_vector);
 		column_data->Append(append_state, append_vector, scan_chunk.size());
 	}
 
@@ -250,7 +249,6 @@ unique_ptr<RowGroup> RowGroup::AddColumn(RowGroupCollection &new_collection, Col
 		for (idx_t i = 0; i < rows_to_write; i += STANDARD_VECTOR_SIZE) {
 			idx_t rows_in_this_vector = MinValue<idx_t>(rows_to_write - i, STANDARD_VECTOR_SIZE);
 			dummy_chunk.SetCardinality(rows_in_this_vector);
-			executor.ExecuteExpression(dummy_chunk, result);
 			added_column->Append(state, result, rows_in_this_vector);
 		}
 	}
@@ -475,29 +473,8 @@ void RowGroup::TemplatedScan(TransactionData transaction, CollectionScanState &s
 			}
 			//! first, we scan the columns with filters, fetch their data and generate a selection vector.
 			//! get runtime statistics
-			auto adaptive_filter = filter_info.GetAdaptiveFilter();
-			auto filter_state = filter_info.BeginFilter();
 			if (has_filters) {
 				D_ASSERT(ALLOW_UPDATES);
-				auto &filter_list = filter_info.GetFilterList();
-				for (idx_t i = 0; i < filter_list.size(); i++) {
-					auto filter_idx = adaptive_filter->permutation[i];
-					auto &filter = filter_list[filter_idx];
-					if (filter.IsAlwaysTrue()) {
-						// this filter is always true - skip it
-						continue;
-					}
-					auto scan_idx = filter.scan_column_index;
-					auto &col_data = GetColumn(filter.table_column_index);
-					col_data.Select(transaction, state.vector_index, state.column_scans[scan_idx],
-					                result.data[scan_idx], sel, approved_tuple_count, filter.filter);
-				}
-				for (auto &table_filter : filter_list) {
-					if (table_filter.IsAlwaysTrue()) {
-						continue;
-					}
-					result.data[table_filter.scan_column_index].Slice(sel, approved_tuple_count);
-				}
 			}
 			if (approved_tuple_count == 0) {
 				// all rows were filtered out by the table filters
@@ -509,9 +486,6 @@ void RowGroup::TemplatedScan(TransactionData transaction, CollectionScanState &s
 					if (col_idx == COLUMN_IDENTIFIER_ROW_ID) {
 						continue;
 					}
-					if (has_filters && filter_info.ColumnHasFilters(i)) {
-						continue;
-					}
 					auto &col_data = GetColumn(col_idx);
 					col_data.Skip(state.column_scans[i]);
 				}
@@ -520,10 +494,6 @@ void RowGroup::TemplatedScan(TransactionData transaction, CollectionScanState &s
 			}
 			//! Now we use the selection vector to fetch data for the other columns.
 			for (idx_t i = 0; i < column_ids.size(); i++) {
-				if (has_filters && filter_info.ColumnHasFilters(i)) {
-					// column has already been scanned as part of the filtering process
-					continue;
-				}
 				auto column = column_ids[i];
 				if (column == COLUMN_IDENTIFIER_ROW_ID) {
 					D_ASSERT(result.data[i].GetType().InternalType() == PhysicalType::INT64);
@@ -544,7 +514,6 @@ void RowGroup::TemplatedScan(TransactionData transaction, CollectionScanState &s
 					}
 				}
 			}
-			filter_info.EndFilter(filter_state);
 
 			D_ASSERT(approved_tuple_count > 0);
 			count = approved_tuple_count;

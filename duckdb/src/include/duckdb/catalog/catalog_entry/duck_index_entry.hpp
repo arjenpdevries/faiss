@@ -33,7 +33,7 @@ public:
 	DuckIndexEntry(Catalog &catalog, SchemaCatalogEntry &schema, CreateIndexInfo &create_info,
 	               shared_ptr<IndexDataTableInfo> storage_info);
 
-	unique_ptr<CatalogEntry> Copy(ClientContext &context) const override;
+	unique_ptr<CatalogEntry> Copy(ClientContext &context) const;
 
 	//! The indexed table information
 	shared_ptr<IndexDataTableInfo> info;
@@ -44,8 +44,6 @@ public:
 public:
 	string GetSchemaName() const override;
 	string GetTableName() const override;
-
-	DataTableInfo &GetDataTableInfo() const;
 
 	//! Drops in-memory index data and marks all blocks on disk as free blocks, allowing to reclaim them
 	void CommitDrop();

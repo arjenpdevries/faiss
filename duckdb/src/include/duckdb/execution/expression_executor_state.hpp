@@ -67,7 +67,6 @@ struct ExpressionExecutorState {
 	ExpressionExecutorState();
 
 	unique_ptr<ExpressionState> root_state;
-	ExpressionExecutor *executor = nullptr;
 
 	void Verify();
 };

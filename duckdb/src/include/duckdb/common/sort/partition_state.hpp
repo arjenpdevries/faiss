@@ -120,7 +120,6 @@ public:
 	Allocator &allocator;
 
 	//	Shared expression evaluation
-	ExpressionExecutor executor;
 	DataChunk group_chunk;
 	DataChunk payload_chunk;
 	size_t sort_cols;
@@ -206,7 +205,6 @@ public:
 	atomic<bool> finished;
 
 	//	Sorting buffers
-	ExpressionExecutor executor;
 	DataChunk sort_chunk;
 	DataChunk payload_chunk;
 };

@@ -5,14 +5,14 @@
 #include "duckdb/catalog/catalog_entry/list.hpp"
 #include "duckdb/common/exception.hpp"
 #include "duckdb/common/pair.hpp"
+#include "duckdb/execution/index/bound_index.hpp"
 #include "duckdb/storage/data_table.hpp"
 #include "duckdb/storage/write_ahead_log.hpp"
 #include "duckdb/transaction/cleanup_state.hpp"
 #include "duckdb/transaction/commit_state.hpp"
-#include "duckdb/transaction/rollback_state.hpp"
-#include "duckdb/execution/index/bound_index.hpp"
-#include "duckdb/transaction/wal_write_state.hpp"
 #include "duckdb/transaction/delete_info.hpp"
+#include "duckdb/transaction/rollback_state.hpp"
+#include "duckdb/transaction/wal_write_state.hpp"
 
 namespace duckdb {
 constexpr uint32_t UNDO_ENTRY_HEADER_SIZE = sizeof(UndoFlags) + sizeof(uint32_t);
@@ -133,22 +133,6 @@ UndoBufferProperties UndoBuffer::GetProperties() {
 			break;
 		}
 		case UndoFlags::CATALOG_ENTRY: {
-			properties.has_catalog_changes = true;
-
-			auto catalog_entry = Load<CatalogEntry *>(data);
-			auto &parent = catalog_entry->Parent();
-			switch (parent.type) {
-			case CatalogType::DELETED_ENTRY:
-				properties.has_dropped_entries = true;
-				break;
-			case CatalogType::INDEX_ENTRY: {
-				auto &index = parent.Cast<DuckIndexEntry>();
-				properties.estimated_size += index.initial_index_size;
-				break;
-			}
-			default:
-				break;
-			}
 			break;
 		}
 		default:

@@ -1,7 +1,7 @@
 #include "duckdb/common/bswap.hpp"
-#include "duckdb/function/scalar/compressed_materialization_functions.hpp"
-#include "duckdb/common/serializer/serializer.hpp"
 #include "duckdb/common/serializer/deserializer.hpp"
+#include "duckdb/common/serializer/serializer.hpp"
+#include "duckdb/function/scalar/compressed_materialization_functions.hpp"
 
 namespace duckdb {
 
@@ -104,7 +104,7 @@ public:
 
 	static unique_ptr<FunctionLocalState> Init(ExpressionState &state, const BoundFunctionExpression &expr,
 	                                           FunctionData *bind_data) {
-		return make_uniq<StringDecompressLocalState>(state.GetContext());
+		return nullptr;
 	}
 
 public:

@@ -56,7 +56,6 @@ public:
 	unique_ptr<Expression> expression;
 
 public:
-	BoundOrderByNode Copy() const;
 	bool Equals(const BoundOrderByNode &other) const;
 	string ToString() const;
 };
@@ -139,7 +138,6 @@ public:
 	BoundOrderModifier();
 
 	//! List of order nodes
-	vector<BoundOrderByNode> orders;
 
 	unique_ptr<BoundOrderModifier> Copy() const;
 	static bool Equals(const BoundOrderModifier &left, const BoundOrderModifier &right);

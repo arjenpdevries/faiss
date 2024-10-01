@@ -1,9 +1,9 @@
 #include "duckdb/parser/expression/conjunction_expression.hpp"
-#include "duckdb/common/exception.hpp"
-#include "duckdb/parser/expression_util.hpp"
 
-#include "duckdb/common/serializer/serializer.hpp"
+#include "duckdb/common/exception.hpp"
 #include "duckdb/common/serializer/deserializer.hpp"
+#include "duckdb/common/serializer/serializer.hpp"
+#include "duckdb/parser/expression_util.hpp"
 
 namespace duckdb {
 
@@ -14,15 +14,12 @@ ConjunctionExpression::ConjunctionExpression(ExpressionType type)
 ConjunctionExpression::ConjunctionExpression(ExpressionType type, vector<unique_ptr<ParsedExpression>> children)
     : ParsedExpression(type, ExpressionClass::CONJUNCTION) {
 	for (auto &child : children) {
-		AddExpression(std::move(child));
 	}
 }
 
 ConjunctionExpression::ConjunctionExpression(ExpressionType type, unique_ptr<ParsedExpression> left,
                                              unique_ptr<ParsedExpression> right)
     : ParsedExpression(type, ExpressionClass::CONJUNCTION) {
-	AddExpression(std::move(left));
-	AddExpression(std::move(right));
 }
 
 void ConjunctionExpression::AddExpression(unique_ptr<ParsedExpression> expr) {

@@ -10,20 +10,17 @@
 
 namespace duckdb {
 
-TableDataWriter::TableDataWriter(TableCatalogEntry &table_p) : table(table_p.Cast<DuckTableEntry>()) {
-	D_ASSERT(table_p.IsDuckTable());
+TableDataWriter::TableDataWriter() {
 }
 
 TableDataWriter::~TableDataWriter() {
 }
 
 void TableDataWriter::WriteTableData(Serializer &metadata_serializer) {
-	// start scanning the table and append the data to the uncompressed segments
-	table.GetStorage().Checkpoint(*this, metadata_serializer);
 }
 
 CompressionType TableDataWriter::GetColumnCompressionType(idx_t i) {
-	return table.GetColumn(LogicalIndex(i)).CompressionType();
+	throw InternalException("LocalStorage::FetchChunk - local storage not found");
 }
 
 void TableDataWriter::AddRowGroup(RowGroupPointer &&row_group_pointer, unique_ptr<RowGroupWriter> writer) {
@@ -35,17 +32,16 @@ TaskScheduler &TableDataWriter::GetScheduler() {
 }
 
 DatabaseInstance &TableDataWriter::GetDatabase() {
-	return table.ParentCatalog().GetDatabase();
+	throw InternalException("LocalStorage::FetchChunk - local storage not found");
 }
 
 SingleFileTableDataWriter::SingleFileTableDataWriter(SingleFileCheckpointWriter &checkpoint_manager,
                                                      TableCatalogEntry &table, MetadataWriter &table_data_writer)
-    : TableDataWriter(table), checkpoint_manager(checkpoint_manager), table_data_writer(table_data_writer) {
+    : TableDataWriter(), checkpoint_manager(checkpoint_manager), table_data_writer(table_data_writer) {
 }
 
 unique_ptr<RowGroupWriter> SingleFileTableDataWriter::GetRowGroupWriter(RowGroup &row_group) {
-	return make_uniq<SingleFileRowGroupWriter>(table, checkpoint_manager.partial_block_manager, *this,
-	                                           table_data_writer);
+	return nullptr;
 }
 
 CheckpointType SingleFileTableDataWriter::GetCheckpointType() const {

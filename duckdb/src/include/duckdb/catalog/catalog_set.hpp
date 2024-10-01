@@ -9,16 +9,17 @@
 #pragma once
 
 #include "duckdb/catalog/catalog_entry.hpp"
+#include "duckdb/catalog/catalog_transaction.hpp"
 #include "duckdb/catalog/default/default_generator.hpp"
-#include "duckdb/common/common.hpp"
+#include "duckdb/catalog/similar_catalog_entry.hpp"
 #include "duckdb/common/case_insensitive_map.hpp"
+#include "duckdb/common/common.hpp"
+#include "duckdb/common/mutex.hpp"
 #include "duckdb/common/pair.hpp"
 #include "duckdb/common/unordered_set.hpp"
-#include "duckdb/common/mutex.hpp"
 #include "duckdb/parser/column_definition.hpp"
 #include "duckdb/transaction/transaction.hpp"
-#include "duckdb/catalog/catalog_transaction.hpp"
-#include "duckdb/catalog/similar_catalog_entry.hpp"
+
 #include <functional>
 #include <memory>
 
@@ -32,29 +33,11 @@ class DuckCatalog;
 class TableCatalogEntry;
 class SequenceCatalogEntry;
 
-class CatalogEntryMap {
-public:
-	CatalogEntryMap() {
-	}
-
-public:
-	void AddEntry(unique_ptr<CatalogEntry> entry);
-	void UpdateEntry(unique_ptr<CatalogEntry> entry);
-	void DropEntry(CatalogEntry &entry);
-	case_insensitive_tree_t<unique_ptr<CatalogEntry>> &Entries();
-	optional_ptr<CatalogEntry> GetEntry(const string &name);
-
-private:
-	//! Mapping of string to catalog entry
-	case_insensitive_tree_t<unique_ptr<CatalogEntry>> entries;
-};
-
 //! The Catalog Set stores (key, value) map of a set of CatalogEntries
 class CatalogSet {
 public:
 	struct EntryLookup {
 		enum class FailureReason { SUCCESS, DELETED, NOT_PRESENT };
-		optional_ptr<CatalogEntry> result;
 		FailureReason reason;
 	};
 
@@ -68,8 +51,6 @@ public:
 	                            const LogicalDependencyList &dependencies);
 	DUCKDB_API bool CreateEntry(ClientContext &context, const string &name, unique_ptr<CatalogEntry> value,
 	                            const LogicalDependencyList &dependencies);
-
-	DUCKDB_API bool AlterEntry(CatalogTransaction transaction, const string &name, AlterInfo &alter_info);
 
 	DUCKDB_API bool DropEntry(CatalogTransaction transaction, const string &name, bool cascade,
 	                          bool allow_drop_internal = false);
@@ -106,7 +87,6 @@ public:
 	template <class T>
 	vector<reference<T>> GetEntries(CatalogTransaction transaction) {
 		vector<reference<T>> result;
-		Scan(transaction, [&](CatalogEntry &entry) { result.push_back(entry.Cast<T>()); });
 		return result;
 	}
 
@@ -151,10 +131,8 @@ private:
 	                         AlterInfo &alter_info, unique_lock<mutex> &read_lock);
 
 private:
-	DuckCatalog &catalog;
 	//! The catalog lock is used to make changes to the data
 	mutex catalog_lock;
-	CatalogEntryMap map;
 	//! The generator used to generate default internal entries
 	unique_ptr<DefaultGenerator> defaults;
 };

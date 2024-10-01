@@ -1,15 +1,14 @@
 #include "duckdb/transaction/cleanup_state.hpp"
-#include "duckdb/transaction/delete_info.hpp"
-#include "duckdb/transaction/update_info.hpp"
-#include "duckdb/transaction/append_info.hpp"
-
-#include "duckdb/storage/data_table.hpp"
 
 #include "duckdb/catalog/catalog.hpp"
 #include "duckdb/catalog/dependency_manager.hpp"
+#include "duckdb/storage/data_table.hpp"
 #include "duckdb/storage/table/chunk_info.hpp"
-#include "duckdb/storage/table/update_segment.hpp"
 #include "duckdb/storage/table/row_version_manager.hpp"
+#include "duckdb/storage/table/update_segment.hpp"
+#include "duckdb/transaction/append_info.hpp"
+#include "duckdb/transaction/delete_info.hpp"
+#include "duckdb/transaction/update_info.hpp"
 
 namespace duckdb {
 
@@ -27,8 +26,6 @@ void CleanupState::CleanupEntry(UndoFlags type, data_ptr_t data) {
 		auto catalog_entry = Load<CatalogEntry *>(data);
 		D_ASSERT(catalog_entry);
 		auto &entry = *catalog_entry;
-		D_ASSERT(entry.set);
-		entry.set->CleanupEntry(entry);
 		break;
 	}
 	case UndoFlags::INSERT_TUPLE: {
@@ -93,7 +90,6 @@ void CleanupState::Flush() {
 		return;
 	}
 
-	// set up the row identifiers vector
 	Vector row_identifiers(LogicalType::ROW_TYPE, data_ptr_cast(row_numbers));
 
 	// delete the tuples from all the indexes

@@ -17,14 +17,6 @@
 
 namespace duckdb {
 
-struct ExportEntries {
-	vector<reference<CatalogEntry>> schemas;
-	vector<reference<CatalogEntry>> custom_types;
-	vector<reference<CatalogEntry>> sequences;
-	vector<reference<CatalogEntry>> tables;
-	vector<reference<CatalogEntry>> views;
-	vector<reference<CatalogEntry>> indexes;
-	vector<reference<CatalogEntry>> macros;
-};
+struct ExportEntries {};
 
 } // namespace duckdb

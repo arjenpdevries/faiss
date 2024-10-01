@@ -2,7 +2,7 @@
 
 namespace duckdb {
 
-TransactionManager::TransactionManager(AttachedDatabase &db) : db(db) {
+TransactionManager::TransactionManager(AttachedDatabase &db) {
 }
 
 TransactionManager::~TransactionManager() {

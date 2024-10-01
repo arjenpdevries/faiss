@@ -1770,41 +1770,26 @@ Value ProgressBarTimeSetting::GetSetting(const ClientContext &context) {
 // Schema
 //===--------------------------------------------------------------------===//
 void SchemaSetting::ResetLocal(ClientContext &context) {
-	// FIXME: catalog_search_path is controlled by both SchemaSetting and SearchPathSetting
-	auto &client_data = ClientData::Get(context);
-	client_data.catalog_search_path->Reset();
 }
 
 void SchemaSetting::SetLocal(ClientContext &context, const Value &input) {
-	auto parameter = input.ToString();
-	auto &client_data = ClientData::Get(context);
-	client_data.catalog_search_path->Set(CatalogSearchEntry::Parse(parameter), CatalogSetPathType::SET_SCHEMA);
 }
 
 Value SchemaSetting::GetSetting(const ClientContext &context) {
-	auto &client_data = ClientData::Get(context);
-	return client_data.catalog_search_path->GetDefault().schema;
+	return Value();
 }
 
 //===--------------------------------------------------------------------===//
 // Search Path
 //===--------------------------------------------------------------------===//
 void SearchPathSetting::ResetLocal(ClientContext &context) {
-	// FIXME: catalog_search_path is controlled by both SchemaSetting and SearchPathSetting
-	auto &client_data = ClientData::Get(context);
-	client_data.catalog_search_path->Reset();
 }
 
 void SearchPathSetting::SetLocal(ClientContext &context, const Value &input) {
-	auto parameter = input.ToString();
-	auto &client_data = ClientData::Get(context);
-	client_data.catalog_search_path->Set(CatalogSearchEntry::ParseList(parameter), CatalogSetPathType::SET_SCHEMAS);
 }
 
 Value SearchPathSetting::GetSetting(const ClientContext &context) {
-	auto &client_data = ClientData::Get(context);
-	auto &set_paths = client_data.catalog_search_path->GetSetPaths();
-	return Value(CatalogSearchEntry::ListToString(set_paths));
+	return Value("dx");
 }
 
 //===--------------------------------------------------------------------===//

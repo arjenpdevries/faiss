@@ -46,7 +46,7 @@ public:
 	SchemaCatalogEntry(Catalog &catalog);
 
 public:
-	unique_ptr<CreateInfo> GetInfo() const override;
+	unique_ptr<CreateInfo> GetInfo() const;
 
 	//! Scan the specified catalog set, invoking the callback method for every entry
 	virtual void Scan(ClientContext &context, CatalogType type,
@@ -54,7 +54,7 @@ public:
 	//! Scan the specified catalog set, invoking the callback method for every committed entry
 	virtual void Scan(CatalogType type, const std::function<void(CatalogEntry &)> &callback) = 0;
 
-	string ToSQL() const override;
+	string ToSQL() const;
 
 	//! Creates an index with the given name in the schema
 	virtual optional_ptr<CatalogEntry> CreateIndex(CatalogTransaction transaction, CreateIndexInfo &info,

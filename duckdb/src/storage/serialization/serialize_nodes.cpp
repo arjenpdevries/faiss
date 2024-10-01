@@ -114,20 +114,6 @@ BoundLimitNode BoundLimitNode::Deserialize(Deserializer &deserializer) {
 	return result;
 }
 
-void BoundOrderByNode::Serialize(Serializer &serializer) const {
-	serializer.WriteProperty<OrderType>(100, "type", type);
-	serializer.WriteProperty<OrderByNullType>(101, "null_order", null_order);
-	serializer.WritePropertyWithDefault<unique_ptr<Expression>>(102, "expression", expression);
-}
-
-BoundOrderByNode BoundOrderByNode::Deserialize(Deserializer &deserializer) {
-	auto type = deserializer.ReadProperty<OrderType>(100, "type");
-	auto null_order = deserializer.ReadProperty<OrderByNullType>(101, "null_order");
-	auto expression = deserializer.ReadPropertyWithDefault<unique_ptr<Expression>>(102, "expression");
-	BoundOrderByNode result(type, null_order, std::move(expression));
-	return result;
-}
-
 void BoundParameterData::Serialize(Serializer &serializer) const {
 	serializer.WriteProperty<Value>(100, "value", value);
 	serializer.WriteProperty<LogicalType>(101, "return_type", return_type);

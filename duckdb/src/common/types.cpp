@@ -585,11 +585,6 @@ LogicalType TransformStringToLogicalType(const string &str) {
 }
 
 LogicalType GetUserTypeRecursive(const LogicalType &type, ClientContext &context) {
-	if (type.id() == LogicalTypeId::USER && type.HasAlias()) {
-		auto &type_entry =
-		    Catalog::GetEntry<TypeCatalogEntry>(context, INVALID_CATALOG, INVALID_SCHEMA, type.GetAlias());
-		return type_entry.user_type;
-	}
 	// Look for LogicalTypeId::USER in nested types
 	if (type.id() == LogicalTypeId::STRUCT) {
 		child_list_t<LogicalType> children;

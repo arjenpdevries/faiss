@@ -23,7 +23,6 @@ public:
 	    : LogicalOperator(LogicalOperatorType::LOGICAL_TOP_N), orders(std::move(orders)), limit(limit), offset(offset) {
 	}
 
-	vector<BoundOrderByNode> orders;
 	//! The maximum amount of elements to emit
 	idx_t limit;
 	//! The offset from the start to begin emitting elements

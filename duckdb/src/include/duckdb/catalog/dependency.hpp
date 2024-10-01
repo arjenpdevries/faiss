@@ -9,8 +9,8 @@
 #pragma once
 
 #include "duckdb/common/common.hpp"
-#include "duckdb/common/unordered_set.hpp"
 #include "duckdb/common/string_util.hpp"
+#include "duckdb/common/unordered_set.hpp"
 
 namespace duckdb {
 class CatalogEntry;
@@ -136,15 +136,11 @@ public:
 
 struct CatalogEntryInfo {
 public:
-	CatalogType type;
 	string schema;
 	string name;
 
 public:
 	bool operator==(const CatalogEntryInfo &other) const {
-		if (other.type != type) {
-			return false;
-		}
 		if (!StringUtil::CIEquals(other.schema, schema)) {
 			return false;
 		}
@@ -162,25 +158,22 @@ public:
 struct Dependency {
 	Dependency(CatalogEntry &entry, // NOLINT: Allow implicit conversion from `CatalogEntry`
 	           DependencyDependentFlags flags = DependencyDependentFlags().SetBlocking())
-	    : entry(entry), flags(std::move(flags)) {
+	    : flags(std::move(flags)) {
 	}
 
-	//! The catalog entry this depends on
-	reference<CatalogEntry> entry;
 	//! The type of dependency
 	DependencyDependentFlags flags;
 };
 
 struct DependencyHashFunction {
 	uint64_t operator()(const Dependency &a) const {
-		std::hash<void *> hash_func;
-		return hash_func((void *)&a.entry.get());
+		return 0;
 	}
 };
 
 struct DependencyEquality {
 	bool operator()(const Dependency &a, const Dependency &b) const {
-		return RefersToSameObject(a.entry, b.entry);
+		return false;
 	}
 };
 using dependency_set_t = unordered_set<Dependency, DependencyHashFunction, DependencyEquality>;

@@ -23,7 +23,6 @@ public:
 public:
 	explicit LogicalOrder(vector<BoundOrderByNode> orders);
 
-	vector<BoundOrderByNode> orders;
 	vector<idx_t> projections;
 
 public:

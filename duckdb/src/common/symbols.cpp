@@ -112,7 +112,6 @@ template class unique_ptr<BoundSubqueryExpression>;
 template class unique_ptr<BoundWindowExpression>;
 template class unique_ptr<BoundBaseTableRef>;
 
-template class unique_ptr<CatalogEntry>;
 template class unique_ptr<BindContext>;
 template class unique_ptr<char[]>;
 template class unique_ptr<QueryResult>;
@@ -138,7 +137,6 @@ template class unique_ptr<LogicalJoin>;
 template class unique_ptr<LogicalComparisonJoin>;
 template class unique_ptr<FilterInfo>;
 template class unique_ptr<SingleJoinRelation>;
-template class unique_ptr<CatalogSet>;
 template class unique_ptr<Binder>;
 template class unique_ptr<PrivateAllocatorData>;
 
@@ -198,15 +196,6 @@ template struct std::atomic<uint64_t>;
 #endif
 
 template class std::bitset<STANDARD_VECTOR_SIZE>;
-
-/* -pedantic does not like this
-#define INSTANTIATE_UNORDERED_MAP(MAP_DEFINITION)                                                                      \
-    template MAP_DEFINITION::mapped_type &MAP_DEFINITION::operator[](MAP_DEFINITION::key_type &&k);                    \
-    template MAP_DEFINITION::mapped_type &MAP_DEFINITION::operator[](const MAP_DEFINITION::key_type &k);
-
-using catalog_map = std::unordered_map<string, unique_ptr<CatalogEntry>>;
-INSTANTIATE_UNORDERED_MAP(catalog_map)
-*/
 
 template class std::unordered_map<string, uint64_t>;
 template class std::unordered_map<string, vector<string>>;

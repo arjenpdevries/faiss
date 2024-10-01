@@ -9,9 +9,9 @@
 #pragma once
 
 #include "duckdb/catalog/standard_entry.hpp"
-#include "duckdb/parser/statement/select_statement.hpp"
 #include "duckdb/common/types.hpp"
 #include "duckdb/common/vector.hpp"
+#include "duckdb/parser/statement/select_statement.hpp"
 
 namespace duckdb {
 
@@ -42,13 +42,13 @@ public:
 	vector<Value> column_comments;
 
 public:
-	unique_ptr<CreateInfo> GetInfo() const override;
+	unique_ptr<CreateInfo> GetInfo() const;
 
-	unique_ptr<CatalogEntry> AlterEntry(ClientContext &context, AlterInfo &info) override;
+	unique_ptr<CatalogEntry> AlterEntry(ClientContext &context, AlterInfo &info);
 
-	unique_ptr<CatalogEntry> Copy(ClientContext &context) const override;
+	unique_ptr<CatalogEntry> Copy(ClientContext &context) const;
 
-	string ToSQL() const override;
+	string ToSQL() const;
 
 private:
 	void Initialize(CreateViewInfo &info);

@@ -57,28 +57,17 @@ public:
 	DUCKDB_API TableCatalogEntry(Catalog &catalog, SchemaCatalogEntry &schema, CreateTableInfo &info);
 
 public:
-	DUCKDB_API unique_ptr<CreateInfo> GetInfo() const override;
-
-	DUCKDB_API bool HasGeneratedColumns() const;
+	DUCKDB_API unique_ptr<CreateInfo> GetInfo() const;
 
 	//! Returns whether or not a column with the given name exists
 	DUCKDB_API bool ColumnExists(const string &name) const;
 	//! Returns a reference to the column of the specified name. Throws an
 	//! exception if the column does not exist.
-	DUCKDB_API const ColumnDefinition &GetColumn(const string &name) const;
-	//! Returns a reference to the column of the specified logical index. Throws an
-	//! exception if the column does not exist.
-	DUCKDB_API const ColumnDefinition &GetColumn(LogicalIndex idx) const;
 	//! Returns a list of types of the table, excluding generated columns
-	DUCKDB_API vector<LogicalType> GetTypes() const;
-	//! Returns a list of the columns of the table
-	DUCKDB_API const ColumnList &GetColumns() const;
-	//! Returns the underlying storage of the table
 	virtual DataTable &GetStorage();
 
 	//! Returns a list of the constraints of the table
-	DUCKDB_API const vector<unique_ptr<Constraint>> &GetConstraints() const;
-	DUCKDB_API string ToSQL() const override;
+	DUCKDB_API string ToSQL() const;
 
 	//! Returns the column index of the specified column name.
 	//! If the column does not exist:

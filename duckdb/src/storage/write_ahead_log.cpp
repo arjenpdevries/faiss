@@ -193,9 +193,6 @@ void SerializeIndexToWAL(WriteAheadLogSerializer &serializer, Index &index,
                          const case_insensitive_map_t<Value> &options) {
 
 	// We will never write an index to the WAL that is not bound
-	D_ASSERT(index.IsBound());
-	const auto index_storage_info = index.Cast<BoundIndex>().GetStorageInfo(options, true);
-	serializer.WriteProperty(102, "index_storage_info", index_storage_info);
 }
 
 void WriteAheadLog::WriteCreateIndex(const IndexCatalogEntry &entry) {
@@ -211,15 +208,6 @@ void WriteAheadLog::WriteCreateIndex(const IndexCatalogEntry &entry) {
 
 	// now serialize the index data to the persistent storage and write the index metadata
 	auto &duck_index_entry = entry.Cast<DuckIndexEntry>();
-	auto &table_idx_list = duck_index_entry.GetDataTableInfo().GetIndexes();
-
-	table_idx_list.Scan([&](Index &index) {
-		if (duck_index_entry.name == index.GetIndexName()) {
-			SerializeIndexToWAL(serializer, index, options);
-			return true;
-		}
-		return false;
-	});
 	serializer.End();
 }
 

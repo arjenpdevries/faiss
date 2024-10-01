@@ -30,15 +30,8 @@ bool CheckCatalogIdentity(ClientContext &context, const string &catalog_name,
 	if (!catalog_identity.catalog_version.IsValid()) {
 		return false;
 	}
-	auto database = DatabaseManager::Get(context).GetDatabase(context, catalog_name);
-	if (!database) {
-		throw BinderException("Prepared statement requires database %s but it was not attached", catalog_name);
-	}
-	Transaction::Get(context, *database);
-	auto current_catalog_oid = database->GetCatalog().GetOid();
-	auto current_catalog_version = database->GetCatalog().GetCatalogVersion(context);
 
-	return StatementProperties::CatalogIdentity {current_catalog_oid, current_catalog_version} == catalog_identity;
+	return false;
 }
 
 bool PreparedStatementData::RequireRebind(ClientContext &context,

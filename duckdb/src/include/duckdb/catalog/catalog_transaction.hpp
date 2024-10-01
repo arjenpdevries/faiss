@@ -31,9 +31,6 @@ struct CatalogTransaction {
 		return context;
 	}
 	ClientContext &GetContext();
-
-	static CatalogTransaction GetSystemCatalogTransaction(ClientContext &context);
-	static CatalogTransaction GetSystemTransaction(DatabaseInstance &db);
 };
 
 } // namespace duckdb

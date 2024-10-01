@@ -8,10 +8,10 @@
 
 #pragma once
 
+#include "duckdb/common/vector_operations/vector_operations.hpp"
 #include "duckdb/execution/expression_executor.hpp"
 #include "duckdb/execution/window_segment_tree.hpp"
 #include "duckdb/planner/expression/bound_window_expression.hpp"
-#include "duckdb/common/vector_operations/vector_operations.hpp"
 
 namespace duckdb {
 
@@ -94,7 +94,6 @@ struct WindowInputExpression {
 	optional_ptr<Expression> expr;
 	PhysicalType ptype;
 	bool scalar;
-	ExpressionExecutor executor;
 	DataChunk chunk;
 };
 
@@ -173,11 +172,9 @@ public:
 	void Sink(WindowExecutorGlobalState &gstate, DataChunk &input_chunk, idx_t input_idx);
 
 	// Argument evaluation
-	ExpressionExecutor payload_executor;
 	DataChunk payload_chunk;
 
 	//! Range evaluation
-	ExpressionExecutor range_executor;
 	DataChunk range_chunk;
 };
 

@@ -8,11 +8,11 @@
 
 #pragma once
 
+#include "duckdb/common/reference_map.hpp"
+#include "duckdb/storage/optimistic_data_writer.hpp"
 #include "duckdb/storage/table/row_group_collection.hpp"
 #include "duckdb/storage/table/table_index_list.hpp"
 #include "duckdb/storage/table/table_statistics.hpp"
-#include "duckdb/storage/optimistic_data_writer.hpp"
-#include "duckdb/common/reference_map.hpp"
 
 namespace duckdb {
 class AttachedDatabase;
@@ -40,7 +40,6 @@ public:
 
 	reference<DataTable> table_ref;
 
-	Allocator &allocator;
 	//! The main chunk collection holding the data
 	shared_ptr<RowGroupCollection> row_groups;
 	//! The set of unique indexes

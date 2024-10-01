@@ -8,9 +8,9 @@
 
 #pragma once
 
+#include "duckdb/catalog/catalog_entry/macro_catalog_entry.hpp"
 #include "duckdb/catalog/catalog_set.hpp"
 #include "duckdb/parser/parsed_data/create_macro_info.hpp"
-#include "duckdb/catalog/catalog_entry/macro_catalog_entry.hpp"
 
 namespace duckdb {
 
@@ -23,7 +23,7 @@ public:
 public:
 	TableMacroCatalogEntry(Catalog &catalog, SchemaCatalogEntry &schema, CreateMacroInfo &info);
 
-	unique_ptr<CatalogEntry> Copy(ClientContext &context) const override;
+	unique_ptr<CatalogEntry> Copy(ClientContext &context) const;
 };
 
 } // namespace duckdb

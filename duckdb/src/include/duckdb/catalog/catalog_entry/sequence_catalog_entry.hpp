@@ -10,8 +10,8 @@
 
 #include "duckdb/catalog/standard_entry.hpp"
 #include "duckdb/common/mutex.hpp"
-#include "duckdb/parser/parsed_data/create_sequence_info.hpp"
 #include "duckdb/parser/parsed_data/alter_table_info.hpp"
+#include "duckdb/parser/parsed_data/create_sequence_info.hpp"
 
 namespace duckdb {
 class DuckTransaction;
@@ -55,15 +55,15 @@ public:
 	SequenceCatalogEntry(Catalog &catalog, SchemaCatalogEntry &schema, CreateSequenceInfo &info);
 
 public:
-	unique_ptr<CatalogEntry> Copy(ClientContext &context) const override;
-	unique_ptr<CreateInfo> GetInfo() const override;
+	unique_ptr<CatalogEntry> Copy(ClientContext &context) const;
+	unique_ptr<CreateInfo> GetInfo() const;
 
 	SequenceData GetData() const;
 	int64_t CurrentValue();
 	int64_t NextValue(DuckTransaction &transaction);
 	void ReplayValue(uint64_t usage_count, int64_t counter);
 
-	string ToSQL() const override;
+	string ToSQL() const;
 
 private:
 	//! Lock for getting a value on the sequence

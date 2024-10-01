@@ -33,8 +33,6 @@ public:
 	//! The set of expressions to partition by
 	vector<unique_ptr<Expression>> partitions;
 	//! Statistics belonging to the partitions expressions
-	//! The set of ordering clauses
-	vector<BoundOrderByNode> orders;
 	//! Expression representing a filter, only used for aggregates
 	unique_ptr<Expression> filter_expr;
 	//! True to ignore NULL values

@@ -78,8 +78,6 @@ public:
 	}
 
 private:
-	//! The ART.
-	ART &art;
 	//! Stack of nodes from the root to the currently active node.
 	stack<IteratorEntry> nodes;
 	//! Last visited leaf node.

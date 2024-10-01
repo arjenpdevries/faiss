@@ -37,16 +37,6 @@ public:
 
 	hash_t Hash() const override;
 
-	bool Equals(const BaseExpression &other) const override {
-		if (!BaseExpression::Equals(other)) {
-			return false;
-		}
-		return return_type == reinterpret_cast<const Expression &>(other).return_type;
-	}
-	static bool Equals(const Expression &left, const Expression &right) {
-		return left.Equals(right);
-	}
-	static bool Equals(const unique_ptr<Expression> &left, const unique_ptr<Expression> &right);
 	static bool ListEquals(const vector<unique_ptr<Expression>> &left, const vector<unique_ptr<Expression>> &right);
 	//! Create a copy of this expression
 	virtual unique_ptr<Expression> Copy() const = 0;

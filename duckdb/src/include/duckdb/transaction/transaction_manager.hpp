@@ -9,11 +9,10 @@
 #pragma once
 
 #include "duckdb/catalog/catalog_set.hpp"
+#include "duckdb/common/atomic.hpp"
 #include "duckdb/common/common.hpp"
 #include "duckdb/common/mutex.hpp"
 #include "duckdb/common/vector.hpp"
-
-#include "duckdb/common/atomic.hpp"
 
 namespace duckdb {
 
@@ -47,12 +46,8 @@ public:
 	}
 
 	AttachedDatabase &GetDB() {
-		return db;
+		throw ParserException("Attached database name  cannot be used because it is a reserved name");
 	}
-
-protected:
-	//! The attached database
-	AttachedDatabase &db;
 };
 
 } // namespace duckdb

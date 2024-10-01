@@ -8,8 +8,8 @@
 
 #pragma once
 
-#include "duckdb/function/function.hpp"
 #include "duckdb/catalog/catalog_transaction.hpp"
+#include "duckdb/function/function.hpp"
 
 namespace duckdb {
 
@@ -38,7 +38,6 @@ public:
 
 private:
 	CatalogTransaction transaction;
-	Catalog &catalog;
 
 private:
 	template <class T>

@@ -9,13 +9,13 @@
 #pragma once
 
 #include "duckdb/common/common.hpp"
-#include "duckdb/storage/block_manager.hpp"
-#include "duckdb/storage/block.hpp"
 #include "duckdb/common/file_system.hpp"
-#include "duckdb/common/unordered_set.hpp"
 #include "duckdb/common/set.hpp"
+#include "duckdb/common/unordered_set.hpp"
 #include "duckdb/common/vector.hpp"
 #include "duckdb/main/config.hpp"
+#include "duckdb/storage/block.hpp"
+#include "duckdb/storage/block_manager.hpp"
 
 namespace duckdb {
 
@@ -108,7 +108,6 @@ private:
 	void VerifyBlocks(const unordered_map<block_id_t, idx_t> &block_usage_count) override;
 
 private:
-	AttachedDatabase &db;
 	//! The active DatabaseHeader, either 0 (h1) or 1 (h2)
 	uint8_t active_header;
 	//! The path where the file is stored

@@ -1,20 +1,21 @@
 #include "duckdb/catalog/dependency_manager.hpp"
-#include "duckdb/catalog/catalog_entry/type_catalog_entry.hpp"
-#include "duckdb/catalog/duck_catalog.hpp"
+
 #include "duckdb/catalog/catalog_entry.hpp"
-#include "duckdb/main/client_context.hpp"
-#include "duckdb/main/database.hpp"
-#include "duckdb/parser/expression/constant_expression.hpp"
-#include "duckdb/catalog/dependency_list.hpp"
-#include "duckdb/common/enums/catalog_type.hpp"
+#include "duckdb/catalog/catalog_entry/dependency/dependency_dependent_entry.hpp"
 #include "duckdb/catalog/catalog_entry/dependency/dependency_entry.hpp"
 #include "duckdb/catalog/catalog_entry/dependency/dependency_subject_entry.hpp"
-#include "duckdb/catalog/catalog_entry/dependency/dependency_dependent_entry.hpp"
 #include "duckdb/catalog/catalog_entry/duck_schema_entry.hpp"
-#include "duckdb/common/queue.hpp"
 #include "duckdb/catalog/catalog_entry/table_catalog_entry.hpp"
-#include "duckdb/parser/constraints/foreign_key_constraint.hpp"
+#include "duckdb/catalog/catalog_entry/type_catalog_entry.hpp"
 #include "duckdb/catalog/dependency_catalog_set.hpp"
+#include "duckdb/catalog/dependency_list.hpp"
+#include "duckdb/catalog/duck_catalog.hpp"
+#include "duckdb/common/enums/catalog_type.hpp"
+#include "duckdb/common/queue.hpp"
+#include "duckdb/main/client_context.hpp"
+#include "duckdb/main/database.hpp"
+#include "duckdb/parser/constraints/foreign_key_constraint.hpp"
+#include "duckdb/parser/expression/constant_expression.hpp"
 
 namespace duckdb {
 
@@ -46,10 +47,7 @@ DependencyManager::DependencyManager(DuckCatalog &catalog) : catalog(catalog), s
 }
 
 string DependencyManager::GetSchema(const CatalogEntry &entry) {
-	if (entry.type == CatalogType::SCHEMA_ENTRY) {
-		return entry.name;
-	}
-	return entry.ParentSchema().name;
+	return entry.name;
 }
 
 MangledEntryName DependencyManager::MangleName(const CatalogEntryInfo &info) {

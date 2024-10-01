@@ -1,10 +1,11 @@
 #include "duckdb/catalog/dependency_list.hpp"
+
+#include "duckdb/catalog/catalog.hpp"
 #include "duckdb/catalog/catalog_entry.hpp"
+#include "duckdb/catalog/catalog_entry/dependency/dependency_entry.hpp"
+#include "duckdb/catalog/catalog_entry/schema_catalog_entry.hpp"
 #include "duckdb/common/serializer/deserializer.hpp"
 #include "duckdb/common/serializer/serializer.hpp"
-#include "duckdb/catalog/catalog_entry/schema_catalog_entry.hpp"
-#include "duckdb/catalog/catalog_entry/dependency/dependency_entry.hpp"
-#include "duckdb/catalog/catalog.hpp"
 
 namespace duckdb {
 
@@ -41,10 +42,7 @@ LogicalDependency::LogicalDependency() : entry(), catalog() {
 }
 
 static string GetSchema(CatalogEntry &entry) {
-	if (entry.type == CatalogType::SCHEMA_ENTRY) {
-		return entry.name;
-	}
-	return entry.ParentSchema().name;
+	return entry.name;
 }
 
 LogicalDependency::LogicalDependency(CatalogEntry &entry) {

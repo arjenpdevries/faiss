@@ -54,10 +54,7 @@ AttachOptions::AttachOptions(const unique_ptr<AttachInfo> &info, const AccessMod
 // Attached Database
 //===--------------------------------------------------------------------===//
 
-AttachedDatabase::AttachedDatabase(DatabaseInstance &db, AttachedDatabaseType type)
-    : CatalogEntry(CatalogType::DATABASE_ENTRY,
-                   type == AttachedDatabaseType::SYSTEM_DATABASE ? SYSTEM_CATALOG : TEMP_CATALOG, 0),
-      db(db), type(type) {
+AttachedDatabase::AttachedDatabase(DatabaseInstance &db, AttachedDatabaseType type) : db(db), type(type) {
 
 	// This database does not have storage, or uses temporary_objects for in-memory storage.
 	D_ASSERT(type == AttachedDatabaseType::TEMP_DATABASE || type == AttachedDatabaseType::SYSTEM_DATABASE);
@@ -65,14 +62,12 @@ AttachedDatabase::AttachedDatabase(DatabaseInstance &db, AttachedDatabaseType ty
 		storage = make_uniq<SingleFileStorageManager>(*this, string(IN_MEMORY_PATH), false);
 	}
 
-	catalog = make_uniq<DuckCatalog>(*this);
 	transaction_manager = make_uniq<DuckTransactionManager>(*this);
-	internal = true;
 }
 
 AttachedDatabase::AttachedDatabase(DatabaseInstance &db, Catalog &catalog_p, string name_p, string file_path_p,
                                    const AttachOptions &options)
-    : CatalogEntry(CatalogType::DATABASE_ENTRY, catalog_p, std::move(name_p)), db(db), parent_catalog(&catalog_p) {
+    : db(db), parent_catalog(&catalog_p) {
 
 	if (options.access_mode == AccessMode::READ_ONLY) {
 		type = AttachedDatabaseType::READ_ONLY_DATABASE;
@@ -80,19 +75,15 @@ AttachedDatabase::AttachedDatabase(DatabaseInstance &db, Catalog &catalog_p, str
 		type = AttachedDatabaseType::READ_WRITE_DATABASE;
 	}
 
-	// We create the storage after the catalog to guarantee we allow extensions to instantiate the DuckCatalog.
-	catalog = make_uniq<DuckCatalog>(*this);
 	auto read_only = options.access_mode == AccessMode::READ_ONLY;
 	storage = make_uniq<SingleFileStorageManager>(*this, std::move(file_path_p), read_only);
 	transaction_manager = make_uniq<DuckTransactionManager>(*this);
-	internal = true;
 }
 
 AttachedDatabase::AttachedDatabase(DatabaseInstance &db, Catalog &catalog_p, StorageExtension &storage_extension_p,
                                    ClientContext &context, string name_p, const AttachInfo &info,
                                    const AttachOptions &options)
-    : CatalogEntry(CatalogType::DATABASE_ENTRY, catalog_p, std::move(name_p)), db(db), parent_catalog(&catalog_p),
-      storage_extension(&storage_extension_p) {
+    : db(db), parent_catalog(&catalog_p) {
 
 	if (options.access_mode == AccessMode::READ_ONLY) {
 		type = AttachedDatabaseType::READ_ONLY_DATABASE;
@@ -100,8 +91,6 @@ AttachedDatabase::AttachedDatabase(DatabaseInstance &db, Catalog &catalog_p, Sto
 		type = AttachedDatabaseType::READ_WRITE_DATABASE;
 	}
 
-	StorageExtensionInfo *storage_info = storage_extension->storage_info.get();
-	catalog = storage_extension->attach(storage_info, context, *this, name, *info.Copy(), options.access_mode);
 	if (!catalog) {
 		throw InternalException("AttachedDatabase - attach function did not return a catalog");
 	}
@@ -110,12 +99,10 @@ AttachedDatabase::AttachedDatabase(DatabaseInstance &db, Catalog &catalog_p, Sto
 		auto read_only = options.access_mode == AccessMode::READ_ONLY;
 		storage = make_uniq<SingleFileStorageManager>(*this, info.path, read_only);
 	}
-	transaction_manager = storage_extension->create_transaction_manager(storage_info, *this, *catalog);
 	if (!transaction_manager) {
 		throw InternalException(
 		    "AttachedDatabase - create_transaction_manager function did not return a transaction manager");
 	}
-	internal = true;
 }
 
 AttachedDatabase::~AttachedDatabase() {

@@ -20,7 +20,7 @@ public:
 	StandardEntry(CatalogType type, SchemaCatalogEntry &schema, Catalog &catalog, string name)
 	    : InCatalogEntry(type, catalog, std::move(name)), schema(schema) {
 	}
-	~StandardEntry() override {
+	~StandardEntry() {
 	}
 
 	//! The schema the entry belongs to
@@ -29,10 +29,10 @@ public:
 	LogicalDependencyList dependencies;
 
 public:
-	SchemaCatalogEntry &ParentSchema() override {
+	SchemaCatalogEntry &ParentSchema() {
 		return schema;
 	}
-	const SchemaCatalogEntry &ParentSchema() const override {
+	const SchemaCatalogEntry &ParentSchema() const {
 		return schema;
 	}
 };

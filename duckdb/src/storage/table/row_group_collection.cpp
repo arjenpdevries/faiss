@@ -604,18 +604,6 @@ void RowGroupCollection::RemoveFromIndexes(TableIndexList &indexes, Vector &row_
 		D_ASSERT(sel_count > 0);
 		// slice the vector with all rows that are present in this vector and erase from the index
 		result.Slice(sel, sel_count);
-
-		indexes.Scan([&](Index &index) {
-			if (index.IsBound()) {
-				index.Cast<BoundIndex>().Delete(result, row_identifiers);
-			} else {
-				throw MissingExtensionException(
-				    "Cannot delete from index '%s', unknown index type '%s'. You need to load the "
-				    "extension that provides this index type before table '%s' can be modified.",
-				    index.GetIndexName(), index.GetIndexType(), info->GetTableName());
-			}
-			return false;
-		});
 	}
 }
 
@@ -773,7 +761,6 @@ public:
 				}
 			}
 			// drop the row group after merging
-			current_row_group.CommitDrop();
 			checkpoint_state.segments[c_idx].node.reset();
 		}
 		idx_t total_append_count = 0;
@@ -818,8 +805,6 @@ void RowGroupCollection::InitializeVacuumState(CollectionCheckpointState &checkp
 		auto row_group_count = row_group.GetCommittedRowCount();
 		if (row_group_count == 0) {
 			// empty row group - we can drop it entirely
-			row_group.CommitDrop();
-			entry.node.reset();
 		}
 		state.row_group_counts.push_back(row_group_count);
 	}
@@ -912,9 +897,6 @@ void RowGroupCollection::CommitDropColumn(idx_t index) {
 }
 
 void RowGroupCollection::CommitDropTable() {
-	for (auto &row_group : row_groups->Segments()) {
-		row_group.CommitDrop();
-	}
 }
 
 //===--------------------------------------------------------------------===//
@@ -987,9 +969,6 @@ shared_ptr<RowGroupCollection> RowGroupCollection::AlterType(ClientContext &cont
 	}
 	DataChunk scan_chunk;
 	scan_chunk.Initialize(GetAllocator(), scan_types);
-
-	ExpressionExecutor executor(context);
-	executor.AddExpression(cast_expr);
 
 	TableScanState scan_state;
 	scan_state.Initialize(bound_columns);

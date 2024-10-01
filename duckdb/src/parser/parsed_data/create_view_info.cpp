@@ -17,7 +17,7 @@ CreateViewInfo::CreateViewInfo(string catalog_p, string schema_p, string view_na
 }
 
 CreateViewInfo::CreateViewInfo(SchemaCatalogEntry &schema, string view_name)
-    : CreateViewInfo(schema.catalog.GetName(), schema.name, std::move(view_name)) {
+    : CreateViewInfo("fd", schema.name, std::move(view_name)) {
 }
 
 string CreateViewInfo::ToString() const {

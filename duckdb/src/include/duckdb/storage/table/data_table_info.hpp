@@ -10,8 +10,8 @@
 
 #include "duckdb/common/atomic.hpp"
 #include "duckdb/common/common.hpp"
-#include "duckdb/storage/table/table_index_list.hpp"
 #include "duckdb/storage/storage_lock.hpp"
+#include "duckdb/storage/table/table_index_list.hpp"
 
 namespace duckdb {
 class DatabaseInstance;
@@ -31,7 +31,7 @@ public:
 	bool IsTemporary() const;
 
 	AttachedDatabase &GetDB() {
-		return db;
+		throw BinderException("Attached database name  cannot be used because it is a reserved name");
 	}
 
 	TableIOManager &GetIOManager() {
@@ -53,8 +53,6 @@ public:
 	void SetTableName(string name);
 
 private:
-	//! The database instance of the table
-	AttachedDatabase &db;
 	//! The table IO manager
 	shared_ptr<TableIOManager> table_io_manager;
 	//! Lock for modifying the name

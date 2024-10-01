@@ -119,8 +119,6 @@ protected:
 	//! Returns the CatalogTransaction in `transaction` if not set, return the System transaction
 	CatalogTransaction GetTransactionOrDefault(optional_ptr<CatalogTransaction> transaction);
 
-	//! CatalogSet containing the secrets
-	unique_ptr<CatalogSet> secrets;
 	//! DB instance for accessing the system catalog transaction
 	DatabaseInstance &db;
 };
@@ -128,7 +126,6 @@ protected:
 class TemporarySecretStorage : public CatalogSetSecretStorage {
 public:
 	TemporarySecretStorage(const string &name_p, DatabaseInstance &db_p) : CatalogSetSecretStorage(db_p, name_p) {
-		secrets = make_uniq<CatalogSet>(Catalog::GetSystemCatalog(db));
 		persistent = false;
 	}
 

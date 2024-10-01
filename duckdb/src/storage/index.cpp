@@ -1,4 +1,5 @@
 #include "duckdb/storage/index.hpp"
+
 #include "duckdb/common/radix.hpp"
 #include "duckdb/common/serializer/serializer.hpp"
 
@@ -6,7 +7,7 @@ namespace duckdb {
 
 Index::Index(const vector<column_t> &column_ids, TableIOManager &table_io_manager, AttachedDatabase &db)
 
-    : column_ids(column_ids), table_io_manager(table_io_manager), db(db) {
+    : column_ids(column_ids), table_io_manager(table_io_manager) {
 
 	if (!Radix::IsLittleEndian()) {
 		throw NotImplementedException("indexes are not supported on big endian architectures");

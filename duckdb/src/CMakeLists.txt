@@ -80,20 +80,14 @@ else()
 
   add_definitions(-DDUCKDB_MAIN_LIBRARY)
 
-  add_subdirectory(planner)
   add_subdirectory(parser)
-  if(${BUILD_CORE_FUNCTIONS_EXTENSION})
-    add_subdirectory(core_functions)
-  endif()
   add_subdirectory(function)
   add_subdirectory(catalog)
   add_subdirectory(common)
-  add_subdirectory(execution)
   add_subdirectory(main)
   add_subdirectory(parallel)
   add_subdirectory(storage)
   add_subdirectory(transaction)
-  add_subdirectory(verification)
 
   set(DUCKDB_LINK_LIBS
       ${DUCKDB_SYSTEM_LIBS}

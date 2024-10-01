@@ -1,4 +1,5 @@
 #include "duckdb/parser/parsed_data/comment_on_column_info.hpp"
+
 #include "duckdb/catalog/catalog.hpp"
 #include "duckdb/catalog/catalog_entry_retriever.hpp"
 
@@ -35,13 +36,6 @@ string SetColumnCommentInfo::ToString() const {
 }
 
 optional_ptr<CatalogEntry> SetColumnCommentInfo::TryResolveCatalogEntry(CatalogEntryRetriever &retriever) {
-	auto entry = retriever.GetEntry(CatalogType::TABLE_ENTRY, catalog, schema, name, if_not_found);
-
-	if (entry) {
-		catalog_entry_type = entry->type;
-		return entry;
-	}
-
 	return nullptr;
 }
 

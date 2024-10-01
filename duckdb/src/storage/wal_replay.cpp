@@ -34,12 +34,11 @@ namespace duckdb {
 
 class ReplayState {
 public:
-	ReplayState(AttachedDatabase &db, ClientContext &context) : db(db), context(context), catalog(db.GetCatalog()) {
+	ReplayState(AttachedDatabase &db, ClientContext &context) : db(db), context(context) {
 	}
 
 	AttachedDatabase &db;
 	ClientContext &context;
-	Catalog &catalog;
 	optional_ptr<TableCatalogEntry> current_table;
 	MetaBlockPointer checkpoint_id;
 	idx_t wal_version = 1;
@@ -48,12 +47,11 @@ public:
 class WriteAheadLogDeserializer {
 public:
 	WriteAheadLogDeserializer(ReplayState &state_p, BufferedFileReader &stream_p, bool deserialize_only = false)
-	    : state(state_p), db(state.db), context(state.context), catalog(state.catalog), data(nullptr),
-	      deserialize_only(deserialize_only) {
+	    : state(state_p), db(state.db), context(state.context), data(nullptr), deserialize_only(deserialize_only) {
 	}
 	WriteAheadLogDeserializer(ReplayState &state_p, unique_ptr<data_t[]> data_p, idx_t size,
 	                          bool deserialize_only = false)
-	    : state(state_p), db(state.db), context(state.context), catalog(state.catalog), data(std::move(data_p)),
+	    : state(state_p), db(state.db), context(state.context), data(std::move(data_p)),
 	      deserialize_only(deserialize_only) {
 	}
 
@@ -144,7 +142,6 @@ private:
 	ReplayState &state;
 	AttachedDatabase &db;
 	ClientContext &context;
-	Catalog &catalog;
 	unique_ptr<data_t[]> data;
 	bool deserialize_only;
 };
@@ -317,8 +314,6 @@ void WriteAheadLogDeserializer::ReplayDropTable() {
 	if (DeserializeOnly()) {
 		return;
 	}
-
-	catalog.DropEntry(context, info);
 }
 
 void WriteAheadLogDeserializer::ReplayAlter() {
@@ -355,8 +350,6 @@ void WriteAheadLogDeserializer::ReplayDropType() {
 	if (DeserializeOnly()) {
 		return;
 	}
-
-	catalog.DropEntry(context, info);
 }
 
 //===--------------------------------------------------------------------===//
@@ -396,9 +389,6 @@ void WriteAheadLogDeserializer::ReplayCreateIndex() {
 }
 
 void WriteAheadLogDeserializer::ReplayDropIndex() {
-	DropInfo info;
-
-	catalog.DropEntry(context, info);
 }
 
 //===--------------------------------------------------------------------===//

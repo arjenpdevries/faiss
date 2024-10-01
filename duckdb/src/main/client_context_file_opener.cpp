@@ -25,14 +25,8 @@ unique_ptr<CatalogTransaction> FileOpener::TryGetCatalogTransaction(optional_ptr
 		return nullptr;
 	}
 	auto context = opener->TryGetClientContext();
-	if (context) {
-		return make_uniq<CatalogTransaction>(CatalogTransaction::GetSystemCatalogTransaction(*context));
-	}
 
 	auto db = opener->TryGetDatabase();
-	if (db) {
-		return make_uniq<CatalogTransaction>(CatalogTransaction::GetSystemTransaction(*db));
-	}
 	return nullptr;
 }
 

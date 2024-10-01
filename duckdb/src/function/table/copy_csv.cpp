@@ -346,8 +346,6 @@ public:
 	}
 
 public:
-	//! Used to execute the expressions that transform input -> string
-	ExpressionExecutor executor;
 	//! A chunk with VARCHAR columns to cast intermediates into
 	DataChunk cast_chunk;
 	//! If we've written any rows yet, allows us to prevent a trailing comma when writing JSON ARRAY
@@ -545,13 +543,11 @@ unique_ptr<PreparedBatchData> WriteCSVPrepareBatch(ClientContext &context, Funct
 
 	auto &original_types = collection->Types();
 	auto expressions = CreateCastExpressions(csv_data, context, csv_data.options.name_list, original_types);
-	ExpressionExecutor executor(context, expressions);
 
 	// write CSV chunks to the batch data
 	bool written_anything = false;
 	auto batch = make_uniq<WriteCSVBatchData>();
 	for (auto &chunk : collection->Chunks()) {
-		WriteCSVChunkInternal(context, bind_data, cast_chunk, batch->stream, chunk, written_anything, executor);
 	}
 	return std::move(batch);
 }

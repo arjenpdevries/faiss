@@ -42,9 +42,9 @@ public:
 
 public:
 	//! Returns the CreateIndexInfo
-	unique_ptr<CreateInfo> GetInfo() const override;
+	unique_ptr<CreateInfo> GetInfo() const;
 	//! Returns the original CREATE INDEX SQL
-	string ToSQL() const override;
+	string ToSQL() const;
 
 	virtual string GetSchemaName() const = 0;
 	virtual string GetTableName() const = 0;

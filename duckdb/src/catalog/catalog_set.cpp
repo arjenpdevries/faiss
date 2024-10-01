@@ -200,8 +200,6 @@ bool CatalogSet::CreateEntry(CatalogTransaction transaction, const string &name,
 	// Set the timestamp to the timestamp of the current transaction
 	value->timestamp = transaction.transaction_id;
 	value->set = this;
-	// now add the dependency set of this object to the dependency manager
-	catalog.GetDependencyManager().AddObject(transaction, *value, dependencies);
 
 	// lock the catalog for writing
 	lock_guard<mutex> write_lock(catalog.GetWriteLock());
@@ -262,7 +260,6 @@ bool CatalogSet::AlterOwnership(CatalogTransaction transaction, ChangeOwnershipI
 		throw CatalogException("CatalogElement \"%s.%s\" does not exist!", info.owner_schema, info.owner_name);
 	}
 	write_lock.unlock();
-	catalog.GetDependencyManager().AddOwnership(transaction, *owner_entry, *entry);
 	return true;
 }
 
@@ -362,7 +359,6 @@ bool CatalogSet::AlterEntry(CatalogTransaction transaction, const string &name, 
 	write_lock.unlock();
 
 	// Check the dependency manager to verify that there are no conflicting dependencies with this alter
-	catalog.GetDependencyManager().AlterObject(transaction, *entry, *new_entry, alter_info);
 
 	return true;
 }
@@ -379,7 +375,6 @@ bool CatalogSet::DropDependencies(CatalogTransaction transaction, const string &
 	// check any dependencies of this object
 	D_ASSERT(entry->ParentCatalog().IsDuckCatalog());
 	auto &duck_catalog = entry->ParentCatalog().Cast<DuckCatalog>();
-	duck_catalog.GetDependencyManager().DropObject(transaction, *entry, cascade);
 	return true;
 }
 
@@ -583,10 +578,6 @@ void CatalogSet::Undo(CatalogEntry &entry) {
 	auto &to_be_removed_node = entry.Parent();
 
 	D_ASSERT(StringUtil::CIEquals(entry.name, to_be_removed_node.name));
-	if (!to_be_removed_node.HasParent()) {
-		to_be_removed_node.Child().SetAsRoot();
-	}
-	map.DropEntry(to_be_removed_node);
 
 	if (entry.type == CatalogType::INVALID) {
 		// This was the root of the entry chain

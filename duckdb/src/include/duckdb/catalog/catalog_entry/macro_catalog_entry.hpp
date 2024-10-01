@@ -8,11 +8,11 @@
 
 #pragma once
 
-#include "duckdb/catalog/catalog_set.hpp"
 #include "duckdb/catalog/catalog_entry/function_entry.hpp"
+#include "duckdb/catalog/catalog_set.hpp"
+#include "duckdb/function/function_set.hpp"
 #include "duckdb/function/macro_function.hpp"
 #include "duckdb/parser/parsed_data/create_macro_info.hpp"
-#include "duckdb/function/function_set.hpp"
 
 namespace duckdb {
 
@@ -25,9 +25,9 @@ public:
 	vector<unique_ptr<MacroFunction>> macros;
 
 public:
-	unique_ptr<CreateInfo> GetInfo() const override;
+	unique_ptr<CreateInfo> GetInfo() const;
 
-	string ToSQL() const override;
+	string ToSQL() const;
 };
 
 } // namespace duckdb

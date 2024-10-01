@@ -90,10 +90,6 @@ public:
 	//! Get the specific Catalog from the AttachedDatabase
 	DUCKDB_API static Catalog &GetCatalog(AttachedDatabase &db);
 
-	DUCKDB_API AttachedDatabase &GetAttached();
-	DUCKDB_API const AttachedDatabase &GetAttached() const;
-	DUCKDB_API DatabaseInstance &GetDatabase();
-
 	virtual bool IsDuckCatalog() {
 		return false;
 	}
@@ -111,81 +107,11 @@ public:
 	}
 
 	//! Returns the catalog name - based on how the catalog was attached
-	DUCKDB_API const string &GetName() const;
-	DUCKDB_API idx_t GetOid();
 	DUCKDB_API virtual string GetCatalogType() = 0;
 
 	DUCKDB_API CatalogTransaction GetCatalogTransaction(ClientContext &context);
 
 	//! Creates a schema in the catalog.
-	DUCKDB_API virtual optional_ptr<CatalogEntry> CreateSchema(CatalogTransaction transaction) = 0;
-	DUCKDB_API optional_ptr<CatalogEntry> CreateSchema(ClientContext &context);
-	//! Creates a table in the catalog.
-	DUCKDB_API optional_ptr<CatalogEntry> CreateTable(CatalogTransaction transaction, BoundCreateTableInfo &info);
-	DUCKDB_API optional_ptr<CatalogEntry> CreateTable(ClientContext &context, BoundCreateTableInfo &info);
-	//! Creates a table in the catalog.
-	DUCKDB_API optional_ptr<CatalogEntry> CreateTable(ClientContext &context, unique_ptr<CreateTableInfo> info);
-	//! Create a table function in the catalog
-	DUCKDB_API optional_ptr<CatalogEntry> CreateTableFunction(CatalogTransaction transaction,
-	                                                          CreateTableFunctionInfo &info);
-	DUCKDB_API optional_ptr<CatalogEntry> CreateTableFunction(ClientContext &context, CreateTableFunctionInfo &info);
-	// Kept for backwards compatibility
-	DUCKDB_API optional_ptr<CatalogEntry> CreateTableFunction(ClientContext &context,
-	                                                          optional_ptr<CreateTableFunctionInfo> info);
-	//! Create a copy function in the catalog
-	DUCKDB_API optional_ptr<CatalogEntry> CreateCopyFunction(CatalogTransaction transaction,
-	                                                         CreateCopyFunctionInfo &info);
-	DUCKDB_API optional_ptr<CatalogEntry> CreateCopyFunction(ClientContext &context, CreateCopyFunctionInfo &info);
-	//! Create a pragma function in the catalog
-	DUCKDB_API optional_ptr<CatalogEntry> CreatePragmaFunction(CatalogTransaction transaction,
-	                                                           CreatePragmaFunctionInfo &info);
-	DUCKDB_API optional_ptr<CatalogEntry> CreatePragmaFunction(ClientContext &context, CreatePragmaFunctionInfo &info);
-	//! Create a scalar or aggregate function in the catalog
-	DUCKDB_API optional_ptr<CatalogEntry> CreateFunction(CatalogTransaction transaction, CreateFunctionInfo &info);
-	DUCKDB_API optional_ptr<CatalogEntry> CreateFunction(ClientContext &context, CreateFunctionInfo &info);
-	//! Creates a table in the catalog.
-	DUCKDB_API optional_ptr<CatalogEntry> CreateView(CatalogTransaction transaction, CreateViewInfo &info);
-	DUCKDB_API optional_ptr<CatalogEntry> CreateView(ClientContext &context, CreateViewInfo &info);
-	//! Creates a sequence in the catalog.
-	DUCKDB_API optional_ptr<CatalogEntry> CreateSequence(CatalogTransaction transaction, CreateSequenceInfo &info);
-	DUCKDB_API optional_ptr<CatalogEntry> CreateSequence(ClientContext &context, CreateSequenceInfo &info);
-	//! Creates a Enum in the catalog.
-	DUCKDB_API optional_ptr<CatalogEntry> CreateType(CatalogTransaction transaction, CreateTypeInfo &info);
-	DUCKDB_API optional_ptr<CatalogEntry> CreateType(ClientContext &context, CreateTypeInfo &info);
-	//! Creates a collation in the catalog
-	DUCKDB_API optional_ptr<CatalogEntry> CreateCollation(CatalogTransaction transaction, CreateCollationInfo &info);
-	DUCKDB_API optional_ptr<CatalogEntry> CreateCollation(ClientContext &context, CreateCollationInfo &info);
-	//! Creates an index in the catalog
-	DUCKDB_API optional_ptr<CatalogEntry> CreateIndex(CatalogTransaction transaction, CreateIndexInfo &info);
-	DUCKDB_API optional_ptr<CatalogEntry> CreateIndex(ClientContext &context, CreateIndexInfo &info);
-
-	//! Creates a table in the catalog.
-	DUCKDB_API optional_ptr<CatalogEntry> CreateTable(CatalogTransaction transaction, SchemaCatalogEntry &schema,
-	                                                  BoundCreateTableInfo &info);
-	//! Create a table function in the catalog
-	DUCKDB_API optional_ptr<CatalogEntry>
-	CreateTableFunction(CatalogTransaction transaction, SchemaCatalogEntry &schema, CreateTableFunctionInfo &info);
-	//! Create a copy function in the catalog
-	DUCKDB_API optional_ptr<CatalogEntry> CreateCopyFunction(CatalogTransaction transaction, SchemaCatalogEntry &schema,
-	                                                         CreateCopyFunctionInfo &info);
-	//! Create a pragma function in the catalog
-	DUCKDB_API optional_ptr<CatalogEntry>
-	CreatePragmaFunction(CatalogTransaction transaction, SchemaCatalogEntry &schema, CreatePragmaFunctionInfo &info);
-	//! Create a scalar or aggregate function in the catalog
-	DUCKDB_API optional_ptr<CatalogEntry> CreateFunction(CatalogTransaction transaction, SchemaCatalogEntry &schema,
-	                                                     CreateFunctionInfo &info);
-	//! Creates a view in the catalog
-	DUCKDB_API optional_ptr<CatalogEntry> CreateView(CatalogTransaction transaction, SchemaCatalogEntry &schema,
-	                                                 CreateViewInfo &info);
-	//! Creates a table in the catalog.
-	DUCKDB_API optional_ptr<CatalogEntry> CreateSequence(CatalogTransaction transaction, SchemaCatalogEntry &schema,
-	                                                     CreateSequenceInfo &info);
-	//! Creates a enum in the catalog.
-	DUCKDB_API optional_ptr<CatalogEntry> CreateType(CatalogTransaction transaction, SchemaCatalogEntry &schema,
-	                                                 CreateTypeInfo &info);
-	//! Creates a collation in the catalog
-	DUCKDB_API optional_ptr<CatalogEntry> CreateCollation(CatalogTransaction transaction, SchemaCatalogEntry &schema,
-	                                                      CreateCollationInfo &info);
 
 	//! Drops an entry from the catalog
 	DUCKDB_API void DropEntry(ClientContext &context, DropInfo &info);
@@ -215,44 +141,6 @@ public:
 	//! Scans all the schemas in the system one-by-one, invoking the callback for each entry
 	DUCKDB_API virtual void ScanSchemas(ClientContext &context, std::function<void(SchemaCatalogEntry &)> callback) = 0;
 
-	//! Gets the "schema.name" entry of the specified type, if entry does not exist behavior depends on OnEntryNotFound
-	DUCKDB_API optional_ptr<CatalogEntry> GetEntry(ClientContext &context, CatalogType type, const string &schema,
-	                                               const string &name, OnEntryNotFound if_not_found,
-	                                               QueryErrorContext error_context = QueryErrorContext());
-	DUCKDB_API CatalogEntry &GetEntry(ClientContext &context, CatalogType type, const string &schema,
-	                                  const string &name, QueryErrorContext error_context = QueryErrorContext());
-	//! Gets the "catalog.schema.name" entry of the specified type, if entry does not exist behavior depends on
-	//! OnEntryNotFound
-	DUCKDB_API static optional_ptr<CatalogEntry> GetEntry(ClientContext &context, CatalogType type,
-	                                                      const string &catalog, const string &schema,
-	                                                      const string &name, OnEntryNotFound if_not_found,
-	                                                      QueryErrorContext error_context = QueryErrorContext());
-	DUCKDB_API static CatalogEntry &GetEntry(ClientContext &context, CatalogType type, const string &catalog,
-	                                         const string &schema, const string &name,
-	                                         QueryErrorContext error_context = QueryErrorContext());
-
-	template <class T>
-	optional_ptr<T> GetEntry(ClientContext &context, const string &schema_name, const string &name,
-	                         OnEntryNotFound if_not_found, QueryErrorContext error_context = QueryErrorContext()) {
-		auto entry = GetEntry(context, T::Type, schema_name, name, if_not_found, error_context);
-		if (!entry) {
-			return nullptr;
-		}
-		if (entry->type != T::Type) {
-			throw CatalogException(error_context, "%s is not an %s", name, T::Name);
-		}
-		return &entry->template Cast<T>();
-	}
-	template <class T>
-	T &GetEntry(ClientContext &context, const string &schema_name, const string &name,
-	            QueryErrorContext error_context = QueryErrorContext()) {
-		auto entry = GetEntry<T>(context, schema_name, name, OnEntryNotFound::THROW_EXCEPTION, error_context);
-		return *entry;
-	}
-
-	//! Append a scalar or aggregate function to the catalog
-	DUCKDB_API optional_ptr<CatalogEntry> AddFunction(ClientContext &context, CreateFunctionInfo &info);
-
 	//! Alter an existing entry in the catalog.
 	DUCKDB_API void Alter(CatalogTransaction transaction, AlterInfo &info);
 	DUCKDB_API void Alter(ClientContext &context, AlterInfo &info);
@@ -266,28 +154,6 @@ public:
 	//! Whether or not this catalog should search a specific type with the standard priority
 	DUCKDB_API virtual CatalogLookupBehavior CatalogTypeLookupRule(CatalogType type) const {
 		return CatalogLookupBehavior::STANDARD;
-	}
-
-public:
-	template <class T>
-	static optional_ptr<T> GetEntry(ClientContext &context, const string &catalog_name, const string &schema_name,
-	                                const string &name, OnEntryNotFound if_not_found,
-	                                QueryErrorContext error_context = QueryErrorContext()) {
-		auto entry = GetEntry(context, T::Type, catalog_name, schema_name, name, if_not_found, error_context);
-		if (!entry) {
-			return nullptr;
-		}
-		if (entry->type != T::Type) {
-			throw CatalogException(error_context, "%s is not an %s", name, T::Name);
-		}
-		return &entry->template Cast<T>();
-	}
-	template <class T>
-	static T &GetEntry(ClientContext &context, const string &catalog_name, const string &schema_name,
-	                   const string &name, QueryErrorContext error_context = QueryErrorContext()) {
-		auto entry =
-		    GetEntry<T>(context, catalog_name, schema_name, name, OnEntryNotFound::THROW_EXCEPTION, error_context);
-		return *entry;
 	}
 
 	DUCKDB_API vector<reference<SchemaCatalogEntry>> GetSchemas(ClientContext &context);
@@ -304,10 +170,6 @@ public:
 	//! Autoload the extension required for `function_name` or throw a CatalogException
 	static bool AutoLoadExtensionByCatalogEntry(DatabaseInstance &db, CatalogType type, const string &entry_name);
 	DUCKDB_API static bool TryAutoLoad(ClientContext &context, const string &extension_name) noexcept;
-
-protected:
-	//! Reference to the database
-	AttachedDatabase &db;
 
 public:
 private:

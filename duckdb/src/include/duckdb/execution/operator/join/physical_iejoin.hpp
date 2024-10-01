@@ -24,8 +24,6 @@ public:
 	               vector<JoinCondition> cond, JoinType join_type, idx_t estimated_cardinality);
 
 	vector<LogicalType> join_key_types;
-	vector<BoundOrderByNode> lhs_orders;
-	vector<BoundOrderByNode> rhs_orders;
 
 public:
 	// CachingOperator Interface

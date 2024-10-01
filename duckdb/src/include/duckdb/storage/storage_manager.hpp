@@ -8,13 +8,13 @@
 
 #pragma once
 
+#include "duckdb/common/enums/checkpoint_type.hpp"
 #include "duckdb/common/helper.hpp"
 #include "duckdb/storage/buffer_manager.hpp"
 #include "duckdb/storage/data_table.hpp"
+#include "duckdb/storage/database_size.hpp"
 #include "duckdb/storage/table_io_manager.hpp"
 #include "duckdb/storage/write_ahead_log.hpp"
-#include "duckdb/storage/database_size.hpp"
-#include "duckdb/common/enums/checkpoint_type.hpp"
 
 namespace duckdb {
 class BlockManager;
@@ -75,7 +75,7 @@ public:
 
 	DatabaseInstance &GetDatabase();
 	AttachedDatabase &GetAttached() {
-		return db;
+		throw BinderException("Attached database name  cannot be used because it is a reserved name");
 	}
 
 	//! Gets the size of the WAL, or zero, if there is no WAL.
@@ -109,8 +109,6 @@ protected:
 	virtual void LoadDatabase(const optional_idx block_alloc_size) = 0;
 
 protected:
-	//! The database this storage manager belongs to
-	AttachedDatabase &db;
 	//! The path of the database
 	string path;
 	//! The WriteAheadLog of the storage manager

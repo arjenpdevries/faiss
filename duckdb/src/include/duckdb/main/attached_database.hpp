@@ -8,11 +8,11 @@
 
 #pragma once
 
-#include "duckdb/common/common.hpp"
+#include "duckdb/catalog/catalog_entry.hpp"
 #include "duckdb/common/case_insensitive_map.hpp"
+#include "duckdb/common/common.hpp"
 #include "duckdb/common/mutex.hpp"
 #include "duckdb/main/config.hpp"
-#include "duckdb/catalog/catalog_entry.hpp"
 
 namespace duckdb {
 class Catalog;
@@ -48,7 +48,7 @@ struct AttachOptions {
 };
 
 //! The AttachedDatabase represents an attached database instance.
-class AttachedDatabase : public CatalogEntry {
+class AttachedDatabase {
 public:
 	//! Create the built-in system database (without storage).
 	explicit AttachedDatabase(DatabaseInstance &db, AttachedDatabaseType type = AttachedDatabaseType::SYSTEM_DATABASE);
@@ -58,14 +58,14 @@ public:
 	//! Create an attached database instance with the specified storage extension.
 	AttachedDatabase(DatabaseInstance &db, Catalog &catalog, StorageExtension &ext, ClientContext &context, string name,
 	                 const AttachInfo &info, const AttachOptions &options);
-	~AttachedDatabase() override;
+	~AttachedDatabase();
 
 	//! Initializes the catalog and storage of the attached database.
 	void Initialize(const optional_idx block_alloc_size = optional_idx());
 	void Close();
 
-	Catalog &ParentCatalog() override;
-	const Catalog &ParentCatalog() const override;
+	Catalog &ParentCatalog();
+	const Catalog &ParentCatalog() const;
 	StorageManager &GetStorageManager();
 	Catalog &GetCatalog();
 	TransactionManager &GetTransactionManager();
@@ -74,11 +74,11 @@ public:
 	}
 
 	optional_ptr<StorageExtension> GetStorageExtension() {
-		return storage_extension;
+		return nullptr;
 	}
 
 	const string &GetName() const {
-		return name;
+		return "name";
 	}
 	bool IsSystem() const;
 	bool IsTemporary() const;
@@ -97,7 +97,6 @@ private:
 	unique_ptr<TransactionManager> transaction_manager;
 	AttachedDatabaseType type;
 	optional_ptr<Catalog> parent_catalog;
-	optional_ptr<StorageExtension> storage_extension;
 	bool is_initial_database = false;
 	bool is_closed = false;
 };

@@ -322,34 +322,9 @@ ClientContext::CreatePreparedStatementInternal(ClientContextLock &lock, const st
 	StatementType statement_type = statement->type;
 	auto result = make_shared_ptr<PreparedStatementData>(statement_type);
 
-	Planner planner(*this);
-	if (values) {
-		auto &parameter_values = *values;
-		for (auto &value : parameter_values) {
-			planner.parameter_data.emplace(value.first, BoundParameterData(value.second));
-		}
-	}
-
-	D_ASSERT(planner.plan || !planner.properties.bound_all_parameters);
-
-	auto plan = std::move(planner.plan);
-	// extract the result column names from the plan
-	result->properties = planner.properties;
-	result->names = planner.names;
-	result->types = planner.types;
-	result->value_map = std::move(planner.value_map);
-	if (!planner.properties.bound_all_parameters) {
-		return result;
-	}
 #ifdef DEBUG
 	plan->Verify(*this);
 #endif
-	if (config.enable_optimizer && plan->RequireOptimizer()) {
-
-#ifdef DEBUG
-		plan->Verify(*this);
-#endif
-	}
 
 	return nullptr;
 }
@@ -576,17 +551,11 @@ vector<unique_ptr<SQLStatement>> ClientContext::ParseStatementsInternal(ClientCo
 	Parser parser(GetParserOptions());
 	parser.ParseQuery(query);
 
-	PragmaHandler handler(*this);
-	handler.HandlePragmaStatements(lock, parser.statements);
-
 	return std::move(parser.statements);
 }
 
 void ClientContext::HandlePragmaStatements(vector<unique_ptr<SQLStatement>> &statements) {
 	auto lock = LockContext();
-
-	PragmaHandler handler(*this);
-	handler.HandlePragmaStatements(*lock, statements);
 }
 
 unique_ptr<LogicalOperator> ClientContext::ExtractPlan(const string &query) {
@@ -598,18 +567,6 @@ unique_ptr<LogicalOperator> ClientContext::ExtractPlan(const string &query) {
 	}
 
 	unique_ptr<LogicalOperator> plan;
-	RunFunctionInTransactionInternal(*lock, [&]() {
-		Planner planner(*this);
-		D_ASSERT(planner.plan);
-
-		plan = std::move(planner.plan);
-
-		ColumnBindingResolver resolver;
-		resolver.Verify(*plan);
-		resolver.VisitOperator(*plan);
-
-		plan->ResolveOperatorTypes();
-	});
 	return plan;
 }
 
@@ -992,20 +949,6 @@ void ClientContext::DisableProfiling() {
 }
 
 void ClientContext::RegisterFunction(CreateFunctionInfo &info) {
-	RunFunctionInTransaction([&]() {
-		auto existing_function = Catalog::GetEntry<ScalarFunctionCatalogEntry>(*this, INVALID_CATALOG, info.schema,
-		                                                                       info.name, OnEntryNotFound::RETURN_NULL);
-		if (existing_function) {
-			auto &new_info = info.Cast<CreateScalarFunctionInfo>();
-			if (new_info.functions.MergeFunctionSet(existing_function->functions)) {
-				// function info was updated from catalog entry, rewrite is needed
-				info.on_conflict = OnCreateConflict::REPLACE_ON_CONFLICT;
-			}
-		}
-		// create function
-		auto &catalog = Catalog::GetSystemCatalog(*this);
-		catalog.CreateFunction(*this, info);
-	});
 }
 
 void ClientContext::RunFunctionInTransactionInternal(ClientContextLock &lock, const std::function<void(void)> &fun,
@@ -1051,38 +994,10 @@ void ClientContext::RunFunctionInTransaction(const std::function<void(void)> &fu
 
 unique_ptr<TableDescription> ClientContext::TableInfo(const string &schema_name, const string &table_name) {
 	unique_ptr<TableDescription> result;
-	RunFunctionInTransaction([&]() {
-		// obtain the table info
-		auto table = Catalog::GetEntry<TableCatalogEntry>(*this, INVALID_CATALOG, schema_name, table_name,
-		                                                  OnEntryNotFound::RETURN_NULL);
-		if (!table) {
-			return;
-		}
-		// write the table info to the result
-		result = make_uniq<TableDescription>();
-		result->schema = schema_name;
-		result->table = table_name;
-		for (auto &column : table->GetColumns().Logical()) {
-			result->columns.emplace_back(column.Copy());
-		}
-	});
 	return result;
 }
 
 void ClientContext::Append(TableDescription &description, ColumnDataCollection &collection) {
-	RunFunctionInTransaction([&]() {
-		auto &table_entry =
-		    Catalog::GetEntry<TableCatalogEntry>(*this, INVALID_CATALOG, description.schema, description.table);
-		// verify that the table columns and types match up
-		if (description.columns.size() != table_entry.GetColumns().PhysicalColumnCount()) {
-			throw InvalidInputException("Failed to append: table entry has different number of columns!");
-		}
-		for (idx_t i = 0; i < description.columns.size(); i++) {
-			if (description.columns[i].Type() != table_entry.GetColumns().GetColumn(PhysicalIndex(i)).Type()) {
-				throw InvalidInputException("Failed to append: table entry has different number of columns!");
-			}
-		}
-	});
 }
 
 unordered_set<string> ClientContext::GetTableNames(const string &query) {
