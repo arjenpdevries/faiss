@@ -41,7 +41,6 @@ struct ExtraTypeInfo {
 public:
 	bool Equals(ExtraTypeInfo *other_p) const;
 
-	virtual void Serialize(Serializer &serializer) const;
 	static shared_ptr<ExtraTypeInfo> Deserialize(Deserializer &source);
 	virtual shared_ptr<ExtraTypeInfo> Copy() const;
 
@@ -67,7 +66,6 @@ struct DecimalTypeInfo : public ExtraTypeInfo {
 	uint8_t scale;
 
 public:
-	void Serialize(Serializer &serializer) const override;
 	static shared_ptr<ExtraTypeInfo> Deserialize(Deserializer &source);
 	shared_ptr<ExtraTypeInfo> Copy() const override;
 
@@ -84,7 +82,6 @@ struct StringTypeInfo : public ExtraTypeInfo {
 	string collation;
 
 public:
-	void Serialize(Serializer &serializer) const override;
 	static shared_ptr<ExtraTypeInfo> Deserialize(Deserializer &source);
 	shared_ptr<ExtraTypeInfo> Copy() const override;
 
@@ -101,7 +98,6 @@ struct ListTypeInfo : public ExtraTypeInfo {
 	LogicalType child_type;
 
 public:
-	void Serialize(Serializer &serializer) const override;
 	static shared_ptr<ExtraTypeInfo> Deserialize(Deserializer &source);
 	shared_ptr<ExtraTypeInfo> Copy() const override;
 
@@ -118,7 +114,6 @@ struct StructTypeInfo : public ExtraTypeInfo {
 	child_list_t<LogicalType> child_types;
 
 public:
-	void Serialize(Serializer &serializer) const override;
 	static shared_ptr<ExtraTypeInfo> Deserialize(Deserializer &deserializer);
 	shared_ptr<ExtraTypeInfo> Copy() const override;
 
@@ -135,7 +130,6 @@ struct AggregateStateTypeInfo : public ExtraTypeInfo {
 	aggregate_state_t state_type;
 
 public:
-	void Serialize(Serializer &serializer) const override;
 	static shared_ptr<ExtraTypeInfo> Deserialize(Deserializer &source);
 	shared_ptr<ExtraTypeInfo> Copy() const override;
 
@@ -157,7 +151,6 @@ struct UserTypeInfo : public ExtraTypeInfo {
 	vector<Value> user_type_modifiers;
 
 public:
-	void Serialize(Serializer &serializer) const override;
 	static shared_ptr<ExtraTypeInfo> Deserialize(Deserializer &source);
 	shared_ptr<ExtraTypeInfo> Copy() const override;
 
@@ -184,7 +177,6 @@ public:
 
 	static LogicalType CreateType(Vector &ordered_data, idx_t size);
 
-	void Serialize(Serializer &serializer) const override;
 	static shared_ptr<ExtraTypeInfo> Deserialize(Deserializer &source);
 	shared_ptr<ExtraTypeInfo> Copy() const override;
 
@@ -205,7 +197,6 @@ struct ArrayTypeInfo : public ExtraTypeInfo {
 	explicit ArrayTypeInfo(LogicalType child_type_p, uint32_t size_p);
 
 public:
-	void Serialize(Serializer &serializer) const override;
 	static shared_ptr<ExtraTypeInfo> Deserialize(Deserializer &reader);
 	shared_ptr<ExtraTypeInfo> Copy() const override;
 
@@ -220,7 +211,6 @@ struct AnyTypeInfo : public ExtraTypeInfo {
 	idx_t cast_score;
 
 public:
-	void Serialize(Serializer &serializer) const override;
 	static shared_ptr<ExtraTypeInfo> Deserialize(Deserializer &source);
 	shared_ptr<ExtraTypeInfo> Copy() const override;
 
@@ -237,7 +227,6 @@ struct IntegerLiteralTypeInfo : public ExtraTypeInfo {
 	Value constant_value;
 
 public:
-	void Serialize(Serializer &serializer) const override;
 	static shared_ptr<ExtraTypeInfo> Deserialize(Deserializer &source);
 	shared_ptr<ExtraTypeInfo> Copy() const override;
 

@@ -31,7 +31,6 @@ public:
 	unique_ptr<ParsedExpression> Copy() const override;
 	hash_t Hash() const override;
 
-	void Serialize(Serializer &serializer) const override;
 	static unique_ptr<ParsedExpression> Deserialize(Deserializer &deserializer);
 
 private:

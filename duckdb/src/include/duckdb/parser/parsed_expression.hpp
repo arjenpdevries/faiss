@@ -8,11 +8,11 @@
 
 #pragma once
 
-#include "duckdb/parser/base_expression.hpp"
-#include "duckdb/common/vector.hpp"
 #include "duckdb/common/string_util.hpp"
-#include "duckdb/parser/qualified_name.hpp"
+#include "duckdb/common/vector.hpp"
+#include "duckdb/parser/base_expression.hpp"
 #include "duckdb/parser/expression_util.hpp"
+#include "duckdb/parser/qualified_name.hpp"
 
 namespace duckdb {
 class Deserializer;
@@ -46,7 +46,6 @@ public:
 	//! Create a copy of this expression
 	virtual unique_ptr<ParsedExpression> Copy() const = 0;
 
-	virtual void Serialize(Serializer &serializer) const;
 	static unique_ptr<ParsedExpression> Deserialize(Deserializer &deserializer);
 
 	static bool Equals(const unique_ptr<ParsedExpression> &left, const unique_ptr<ParsedExpression> &right);

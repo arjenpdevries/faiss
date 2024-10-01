@@ -8,13 +8,13 @@
 
 #pragma once
 
-#include "duckdb/function/macro_function.hpp"
-#include "duckdb/parser/query_node.hpp"
 #include "duckdb/function/function.hpp"
+#include "duckdb/function/macro_function.hpp"
 #include "duckdb/main/client_context.hpp"
+#include "duckdb/parser/expression/constant_expression.hpp"
+#include "duckdb/parser/query_node.hpp"
 #include "duckdb/planner/binder.hpp"
 #include "duckdb/planner/expression_binder.hpp"
-#include "duckdb/parser/expression/constant_expression.hpp"
 
 namespace duckdb {
 
@@ -34,7 +34,6 @@ public:
 
 	string ToSQL() const override;
 
-	void Serialize(Serializer &serializer) const override;
 	static unique_ptr<MacroFunction> Deserialize(Deserializer &deserializer);
 };
 

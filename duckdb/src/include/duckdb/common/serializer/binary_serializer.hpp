@@ -18,8 +18,7 @@ namespace duckdb {
 
 class BinarySerializer : public Serializer {
 public:
-	explicit BinarySerializer(WriteStream &stream, SerializationOptions options_p = SerializationOptions())
-	    : stream(stream) {
+	explicit BinarySerializer(WriteStream &stream, SerializationOptions options_p) : stream(stream) {
 		options = std::move(options_p);
 		// Override the value set by the passed in SerializationOptions
 		options.serialize_enum_as_string = false;

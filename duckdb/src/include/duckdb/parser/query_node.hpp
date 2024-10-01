@@ -71,7 +71,6 @@ public:
 	//! Adds a distinct modifier to the query node
 	void AddDistinct();
 
-	virtual void Serialize(Serializer &serializer) const;
 	static unique_ptr<QueryNode> Deserialize(Deserializer &deserializer);
 
 protected:

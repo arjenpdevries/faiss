@@ -937,11 +937,6 @@ unordered_set<string> ClientContext::GetTableNames(const string &query) {
 SettingLookupResult ClientContext::TryGetCurrentSetting(const std::string &key, Value &result) const {
 	// first check the built-in settings
 	auto &db_config = DBConfig::GetConfig(*this);
-	auto option = db_config.GetOptionByName(key);
-	if (option) {
-		result = option->get_setting(*this);
-		return SettingLookupResult(SettingScope::LOCAL);
-	}
 
 	// check the client session values
 	const auto &session_config_map = config.set_variables;

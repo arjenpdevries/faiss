@@ -51,7 +51,6 @@ public:
 	//! Copy the properties of this table ref to the target
 	void CopyProperties(TableRef &target) const;
 
-	virtual void Serialize(Serializer &serializer) const;
 	static unique_ptr<TableRef> Deserialize(Deserializer &deserializer);
 
 public:

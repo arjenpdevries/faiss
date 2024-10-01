@@ -51,7 +51,6 @@ template class unique_ptr<CreateStatement>;
 template class unique_ptr<DeleteStatement>;
 template class unique_ptr<DropStatement>;
 template class unique_ptr<InsertStatement>;
-template class unique_ptr<SelectStatement>;
 template class unique_ptr<TransactionStatement>;
 template class unique_ptr<UpdateStatement>;
 template class unique_ptr<PrepareStatement>;
@@ -196,7 +195,6 @@ template class std::unordered_map<string, uint64_t>;
 template class std::unordered_map<string, vector<string>>;
 template class std::unordered_map<string, std::pair<uint64_t, Expression *>>;
 // template class std::unordered_map<string, TableBinding>;
-template class std::unordered_map<string, SelectStatement *>;
 template class std::unordered_map<uint64_t, uint64_t>;
 
 #endif

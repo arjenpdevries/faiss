@@ -99,7 +99,7 @@ static string StringDecompressFunctionName() {
 
 struct StringDecompressLocalState : public FunctionLocalState {
 public:
-	explicit StringDecompressLocalState(ClientContext &context) : allocator(Allocator::Get(context)) {
+	explicit StringDecompressLocalState(ClientContext &context) {
 	}
 
 	static unique_ptr<FunctionLocalState> Init(ExpressionState &state, const BoundFunctionExpression &expr,
@@ -124,9 +124,6 @@ static inline string_t StringDecompress(const INPUT_TYPE &input, ArenaAllocator 
 		const auto result_ptr = data_ptr_cast(result.GetPrefixWriteable());
 		TemplatedReverseMemCpy<string_t::INLINE_LENGTH>(result_ptr, input_ptr + REMAINDER);
 	} else {
-		result.SetPointer(char_ptr_cast(allocator.Allocate(sizeof(INPUT_TYPE))));
-		TemplatedReverseMemCpy<sizeof(INPUT_TYPE)>(data_ptr_cast(result.GetPointer()), input_ptr);
-		memcpy(result.GetPrefixWriteable(), result.GetPointer(), string_t::PREFIX_LENGTH);
 	}
 	return result;
 }
@@ -144,10 +141,6 @@ static inline string_t MiniStringDecompress(const INPUT_TYPE &input, ArenaAlloca
 		memset(result.GetPrefixWriteable(), '\0', string_t::INLINE_BYTES);
 		*data_ptr_cast(result.GetPrefixWriteable()) = input - 1;
 	} else {
-		result.SetPointer(char_ptr_cast(allocator.Allocate(1)));
-		*data_ptr_cast(result.GetPointer()) = input - 1;
-		memset(result.GetPrefixWriteable(), '\0', string_t::PREFIX_LENGTH);
-		*result.GetPrefixWriteable() = *result.GetPointer();
 	}
 	return result;
 }
@@ -160,7 +153,6 @@ inline string_t StringDecompress(const uint8_t &input, ArenaAllocator &allocator
 template <class INPUT_TYPE>
 static void StringDecompressFunction(DataChunk &args, ExpressionState &state, Vector &result) {
 	auto &allocator = ExecuteFunctionState::GetFunctionState(state)->Cast<StringDecompressLocalState>().allocator;
-	allocator.Reset();
 	UnaryExecutor::Execute<INPUT_TYPE, string_t>(args.data[0], result, args.size(), [&](const INPUT_TYPE &input) {
 		return StringDecompress<INPUT_TYPE>(input, allocator);
 	});

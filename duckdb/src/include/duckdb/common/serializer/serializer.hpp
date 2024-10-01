@@ -29,7 +29,7 @@ class SerializationOptions {
 public:
 	bool serialize_enum_as_string = false;
 	bool serialize_default_values = false;
-	SerializationCompatibility serialization_compatibility = SerializationCompatibility::Default();
+	SerializationCompatibility serialization_compatibility;
 };
 
 class Serializer {
@@ -42,7 +42,7 @@ public:
 	}
 
 	bool ShouldSerialize(idx_t version_added) {
-		return options.serialization_compatibility.Compare(version_added);
+		return false;
 	}
 
 	class List {

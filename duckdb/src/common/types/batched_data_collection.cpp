@@ -26,13 +26,6 @@ void BatchedDataCollection::Append(DataChunk &input, idx_t batch_index) {
 		// new collection: check if there is already an entry
 		D_ASSERT(data.find(batch_index) == data.end());
 		unique_ptr<ColumnDataCollection> new_collection;
-		if (last_collection.collection) {
-			new_collection = make_uniq<ColumnDataCollection>(*last_collection.collection);
-		} else if (buffer_managed) {
-			new_collection = make_uniq<ColumnDataCollection>(BufferManager::GetBufferManager(context), types);
-		} else {
-			new_collection = make_uniq<ColumnDataCollection>(Allocator::DefaultAllocator(), types);
-		}
 		last_collection.collection = new_collection.get();
 		last_collection.batch_index = batch_index;
 		new_collection->InitializeAppend(last_collection.append_state);

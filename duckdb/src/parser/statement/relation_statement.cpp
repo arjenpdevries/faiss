@@ -1,1 +1,0 @@
-namespace duckdb {} // namespace duckdb

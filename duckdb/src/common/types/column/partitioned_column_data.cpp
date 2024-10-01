@@ -29,9 +29,6 @@ PartitionedColumnData::~PartitionedColumnData() {
 }
 
 void PartitionedColumnData::InitializeAppendState(PartitionedColumnDataAppendState &state) const {
-	state.partition_sel.Initialize();
-	state.slice_chunk.Initialize(BufferAllocator::Get(context), types);
-	InitializeAppendStateInternal(state);
 }
 
 bool PartitionedColumnData::UseFixedSizeMap() const {
@@ -39,9 +36,7 @@ bool PartitionedColumnData::UseFixedSizeMap() const {
 }
 
 unique_ptr<DataChunk> PartitionedColumnData::CreatePartitionBuffer() const {
-	auto result = make_uniq<DataChunk>();
-	result->Initialize(BufferAllocator::Get(context), types, BufferSize());
-	return result;
+	return nullptr;
 }
 
 void PartitionedColumnData::Append(PartitionedColumnDataAppendState &state, DataChunk &input) {
@@ -222,8 +217,6 @@ vector<unique_ptr<ColumnDataCollection>> &PartitionedColumnData::GetPartitions()
 }
 
 void PartitionedColumnData::CreateAllocator() {
-	allocators->allocators.emplace_back(make_shared_ptr<ColumnDataAllocator>(BufferManager::GetBufferManager(context)));
-	allocators->allocators.back()->MakeShared();
 }
 
 } // namespace duckdb

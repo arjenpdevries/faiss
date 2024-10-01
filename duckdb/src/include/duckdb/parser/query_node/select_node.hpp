@@ -8,24 +8,22 @@
 
 #pragma once
 
+#include "duckdb/common/enums/aggregate_handling.hpp"
+#include "duckdb/parser/group_by_node.hpp"
+#include "duckdb/parser/parsed_data/sample_options.hpp"
 #include "duckdb/parser/parsed_expression.hpp"
 #include "duckdb/parser/query_node.hpp"
 #include "duckdb/parser/sql_statement.hpp"
 #include "duckdb/parser/tableref.hpp"
-#include "duckdb/parser/parsed_data/sample_options.hpp"
-#include "duckdb/parser/group_by_node.hpp"
-#include "duckdb/common/enums/aggregate_handling.hpp"
 
 namespace duckdb {
 
 //! SelectNode represents a standard SELECT statement
-class SelectNode : public QueryNode {
+class SelectNode {
 public:
 	static constexpr const QueryNodeType TYPE = QueryNodeType::SELECT_NODE;
 
 public:
-	DUCKDB_API SelectNode();
-
 	//! The projection list
 	vector<unique_ptr<ParsedExpression>> select_list;
 	//! The FROM clause
@@ -43,24 +41,24 @@ public:
 	//! The SAMPLE clause
 	unique_ptr<SampleOptions> sample;
 
-	const vector<unique_ptr<ParsedExpression>> &GetSelectList() const override {
+	const vector<unique_ptr<ParsedExpression>> &GetSelectList() const {
 		return select_list;
 	}
 
 public:
 	//! Convert the query node to a string
-	string ToString() const override;
+	string ToString() const;
 
-	bool Equals(const QueryNode *other) const override;
+	bool Equals(const QueryNode *other) const;
 
 	//! Create a copy of this SelectNode
-	unique_ptr<QueryNode> Copy() const override;
+	unique_ptr<QueryNode> Copy() const;
 
 	//! Serializes a QueryNode to a stand-alone binary blob
 
 	//! Deserializes a blob back into a QueryNode
 
-	void Serialize(Serializer &serializer) const override;
+	void Serialize(Serializer &serializer) const;
 	static unique_ptr<QueryNode> Deserialize(Deserializer &deserializer);
 };
 

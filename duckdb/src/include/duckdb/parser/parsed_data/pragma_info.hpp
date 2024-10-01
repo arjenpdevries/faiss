@@ -8,9 +8,9 @@
 
 #pragma once
 
-#include "duckdb/parser/parsed_data/parse_info.hpp"
-#include "duckdb/common/types/value.hpp"
 #include "duckdb/common/named_parameter_map.hpp"
+#include "duckdb/common/types/value.hpp"
+#include "duckdb/parser/parsed_data/parse_info.hpp"
 #include "duckdb/parser/parsed_expression.hpp"
 
 namespace duckdb {
@@ -36,7 +36,6 @@ public:
 	unique_ptr<PragmaInfo> Copy() const;
 	string ToString() const;
 
-	void Serialize(Serializer &serializer) const override;
 	static unique_ptr<ParseInfo> Deserialize(Deserializer &deserializer);
 };
 

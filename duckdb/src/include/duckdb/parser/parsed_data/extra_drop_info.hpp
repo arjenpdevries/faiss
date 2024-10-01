@@ -8,10 +8,10 @@
 
 #pragma once
 
-#include "duckdb/main/secret/secret.hpp"
 #include "duckdb/common/enums/catalog_type.hpp"
-#include "duckdb/parser/parsed_data/parse_info.hpp"
 #include "duckdb/common/enums/on_entry_not_found.hpp"
+#include "duckdb/main/secret/secret.hpp"
+#include "duckdb/parser/parsed_data/parse_info.hpp"
 
 namespace duckdb {
 
@@ -43,7 +43,6 @@ public:
 	}
 	virtual unique_ptr<ExtraDropInfo> Copy() const = 0;
 
-	virtual void Serialize(Serializer &serializer) const;
 	static unique_ptr<ExtraDropInfo> Deserialize(Deserializer &deserializer);
 };
 
@@ -59,7 +58,6 @@ struct ExtraDropSecretInfo : public ExtraDropInfo {
 public:
 	unique_ptr<ExtraDropInfo> Copy() const override;
 
-	void Serialize(Serializer &serializer) const override;
 	static unique_ptr<ExtraDropInfo> Deserialize(Deserializer &deserializer);
 };
 

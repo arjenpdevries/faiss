@@ -102,7 +102,6 @@ public:
 	//! Prints the secret as a string
 	virtual string ToString(SecretDisplayType mode = SecretDisplayType::REDACTED) const;
 	//! Serialize this secret
-	virtual void Serialize(Serializer &serializer) const;
 
 	virtual unique_ptr<const BaseSecret> Clone() const {
 		D_ASSERT(typeid(BaseSecret) == typeid(*this));
@@ -172,7 +171,6 @@ public:
 
 	//! Print the secret as a key value map in the format 'key1=value;key2=value2'
 	string ToString(SecretDisplayType mode = SecretDisplayType::REDACTED) const override;
-	void Serialize(Serializer &serializer) const override;
 
 	//! Tries to get the value at key <key>, depending on error_on_missing will throw or return Value()
 	Value TryGetValue(const string &key, bool error_on_missing = false) const;

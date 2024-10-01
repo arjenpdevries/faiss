@@ -23,10 +23,10 @@ buffer_ptr<VectorBuffer> VectorBuffer::CreateStandardVector(const LogicalType &t
 	return VectorBuffer::CreateStandardVector(type.InternalType(), capacity);
 }
 
-VectorStringBuffer::VectorStringBuffer() : VectorBuffer(VectorBufferType::STRING_BUFFER) {
+VectorStringBuffer::VectorStringBuffer() {
 }
 
-VectorStringBuffer::VectorStringBuffer(VectorBufferType type) : VectorBuffer(type) {
+VectorStringBuffer::VectorStringBuffer(VectorBufferType type) {
 }
 
 VectorFSSTStringBuffer::VectorFSSTStringBuffer() : VectorStringBuffer(VectorBufferType::FSST_BUFFER) {

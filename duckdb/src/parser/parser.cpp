@@ -268,19 +268,6 @@ void Parser::ParseQuery(const string &query) {
 					D_ASSERT(!parsed_single_statement);
 					D_ASSERT(ext.parse_function);
 					auto result = ext.parse_function(ext.parser_info.get(), query_statement);
-					if (result.type == ParserExtensionResultType::PARSE_SUCCESSFUL) {
-						auto statement = make_uniq<ExtensionStatement>(ext, std::move(result.parse_data));
-						statement->stmt_length = query_statement.size() - 1;
-						statement->stmt_location = stmt_loc;
-						stmt_loc += query_statement.size();
-						statements.push_back(std::move(statement));
-						parsed_single_statement = true;
-						break;
-					} else if (result.type == ParserExtensionResultType::DISPLAY_EXTENSION_ERROR) {
-						throw ParserException::SyntaxError(query, result.error, result.error_location);
-					} else {
-						// We move to the next one!
-					}
 				}
 				if (!parsed_single_statement) {
 					throw ParserException::SyntaxError(query, parser_error, parser_error_location);
@@ -402,24 +389,7 @@ GroupByNode Parser::ParseGroupByList(const string &group_by, ParserOptions optio
 }
 
 vector<OrderByNode> Parser::ParseOrderList(const string &select_list, ParserOptions options) {
-	// construct a mock query
-	string mock_query = "SELECT * FROM tbl ORDER BY " + select_list;
-	// parse the query
-	Parser parser(options);
-	parser.ParseQuery(mock_query);
-	// check the statements
-	if (parser.statements.size() != 1 || parser.statements[0]->type != StatementType::SELECT_STATEMENT) {
-		throw ParserException("Expected a single SELECT statement");
-	}
-	auto &select = parser.statements[0]->Cast<SelectStatement>();
-	D_ASSERT(select.node->type == QueryNodeType::SELECT_NODE);
-	auto &select_node = select.node->Cast<SelectNode>();
-	if (select_node.modifiers.empty() || select_node.modifiers[0]->type != ResultModifierType::ORDER_MODIFIER ||
-	    select_node.modifiers.size() != 1) {
-		throw ParserException("Expected a single ORDER clause");
-	}
-	auto &order = select_node.modifiers[0]->Cast<OrderModifier>();
-	return std::move(order.orders);
+	throw ParserException("Expected a single SELECT statement");
 }
 
 void Parser::ParseUpdateList(const string &update_list, vector<string> &update_columns,

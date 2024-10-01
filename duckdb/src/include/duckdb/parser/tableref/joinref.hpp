@@ -51,7 +51,7 @@ public:
 	unique_ptr<TableRef> Copy() override;
 
 	//! Deserializes a blob back into a JoinRef
-	void Serialize(Serializer &serializer) const override;
+
 	static unique_ptr<TableRef> Deserialize(Deserializer &source);
 };
 } // namespace duckdb

@@ -44,7 +44,6 @@ DBConfig::DBConfig(bool read_only) : DBConfig::DBConfig() {
 }
 
 DBConfig::DBConfig(const case_insensitive_map_t<Value> &config_dict, bool read_only) : DBConfig::DBConfig(read_only) {
-	SetOptionsByName(config_dict);
 }
 
 DBConfig::~DBConfig() {
@@ -230,11 +229,6 @@ void DatabaseInstance::Initialize(const char *database_path, DBConfig *user_conf
 
 	db_file_system = make_uniq<DatabaseFileSystem>(*this);
 	db_manager = make_uniq<DatabaseManager>(*this);
-	if (config.buffer_manager) {
-		buffer_manager = config.buffer_manager;
-	} else {
-		buffer_manager = make_uniq<StandardBufferManager>(*this, config.options.temporary_directory);
-	}
 	scheduler = make_uniq<TaskScheduler>(*this);
 	object_cache = make_uniq<ObjectCache>();
 	connection_manager = make_uniq<ConnectionManager>();
@@ -331,18 +325,10 @@ Allocator &Allocator::Get(AttachedDatabase &db) {
 void DatabaseInstance::Configure(DBConfig &new_config, const char *database_path) {
 	config.options = new_config.options;
 
-	if (config.options.duckdb_api.empty()) {
-		config.SetOptionByName("duckdb_api", "cpp");
-	}
-
 	if (database_path) {
 		config.options.database_path = database_path;
 	} else {
 		config.options.database_path.clear();
-	}
-
-	if (new_config.options.temporary_directory.empty()) {
-		config.SetDefaultTempDirectory();
 	}
 
 	if (config.options.access_mode == AccessMode::UNDEFINED) {
@@ -353,12 +339,6 @@ void DatabaseInstance::Configure(DBConfig &new_config, const char *database_path
 		config.file_system = std::move(new_config.file_system);
 	} else {
 		config.file_system = make_uniq<VirtualFileSystem>();
-	}
-	if (config.options.maximum_memory == DConstants::INVALID_INDEX) {
-		config.SetDefaultMaxMemory();
-	}
-	if (new_config.options.maximum_threads == DConstants::INVALID_INDEX) {
-		config.options.maximum_threads = config.GetSystemMaxThreads(*config.file_system);
 	}
 	config.allocator = std::move(new_config.allocator);
 	if (!config.allocator) {
@@ -372,12 +352,6 @@ void DatabaseInstance::Configure(DBConfig &new_config, const char *database_path
 	}
 	if (!config.default_allocator) {
 		config.default_allocator = Allocator::DefaultAllocatorReference();
-	}
-	if (new_config.buffer_pool) {
-		config.buffer_pool = std::move(new_config.buffer_pool);
-	} else {
-		config.buffer_pool = make_shared_ptr<BufferPool>(config.options.maximum_memory,
-		                                                 config.options.buffer_manager_track_eviction_timestamps);
 	}
 }
 

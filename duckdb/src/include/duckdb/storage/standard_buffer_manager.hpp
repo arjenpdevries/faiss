@@ -35,7 +35,6 @@ class StandardBufferManager : public BufferManager {
 	friend class BlockManager;
 
 public:
-	StandardBufferManager(DatabaseInstance &db, string temp_directory);
 	~StandardBufferManager() override;
 
 public:

@@ -1,9 +1,9 @@
 #include "duckdb/main/stream_query_result.hpp"
 
-#include "duckdb/main/client_context.hpp"
-#include "duckdb/main/materialized_query_result.hpp"
 #include "duckdb/common/box_renderer.hpp"
+#include "duckdb/main/client_context.hpp"
 #include "duckdb/main/database.hpp"
+#include "duckdb/main/materialized_query_result.hpp"
 
 namespace duckdb {
 
@@ -74,10 +74,6 @@ unique_ptr<DataChunk> StreamQueryResult::FetchInternal(ClientContextLock &lock) 
 	unique_ptr<DataChunk> chunk;
 	try {
 		// fetch the chunk and return it
-		auto stream_execution_result = buffered_data->ReplenishBuffer(*this, lock);
-		if (ExecutionErrorOccurred(stream_execution_result)) {
-			return chunk;
-		}
 		chunk = buffered_data->Scan();
 		if (!chunk || chunk->ColumnCount() == 0 || chunk->size() == 0) {
 			context->CleanupInternal(lock, this);

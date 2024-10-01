@@ -8,13 +8,13 @@
 
 #pragma once
 
-#include "duckdb/storage/buffer_manager.hpp"
-#include "duckdb/storage/buffer/buffer_handle.hpp"
-#include "duckdb/storage/block_manager.hpp"
-#include "duckdb/common/file_system.hpp"
 #include "duckdb/common/enums/memory_tag.hpp"
-#include "duckdb/storage/buffer/temporary_file_information.hpp"
+#include "duckdb/common/file_system.hpp"
 #include "duckdb/main/config.hpp"
+#include "duckdb/storage/block_manager.hpp"
+#include "duckdb/storage/buffer/buffer_handle.hpp"
+#include "duckdb/storage/buffer/temporary_file_information.hpp"
+#include "duckdb/storage/buffer_manager.hpp"
 
 namespace duckdb {
 
@@ -85,8 +85,6 @@ public:
 	// Static methods
 	DUCKDB_API static BufferManager &GetBufferManager(DatabaseInstance &db);
 	DUCKDB_API static const BufferManager &GetBufferManager(const DatabaseInstance &db);
-	DUCKDB_API static BufferManager &GetBufferManager(ClientContext &context);
-	DUCKDB_API static const BufferManager &GetBufferManager(const ClientContext &context);
 	DUCKDB_API static BufferManager &GetBufferManager(AttachedDatabase &db);
 
 	static idx_t GetAllocSize(const idx_t block_size) {

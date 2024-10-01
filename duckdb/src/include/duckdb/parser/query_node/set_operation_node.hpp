@@ -15,12 +15,12 @@
 
 namespace duckdb {
 
-class SetOperationNode : public QueryNode {
+class SetOperationNode {
 public:
 	static constexpr const QueryNodeType TYPE = QueryNodeType::SET_OPERATION_NODE;
 
 public:
-	SetOperationNode() : QueryNode(QueryNodeType::SET_OPERATION_NODE) {
+	SetOperationNode() {
 	}
 
 	//! The type of set operation
@@ -32,22 +32,22 @@ public:
 	//! The right side of the set operation
 	unique_ptr<QueryNode> right;
 
-	const vector<unique_ptr<ParsedExpression>> &GetSelectList() const override {
+	const vector<unique_ptr<ParsedExpression>> &GetSelectList() const {
 		return left->GetSelectList();
 	}
 
 public:
 	//! Convert the query node to a string
-	string ToString() const override;
+	string ToString() const;
 
-	bool Equals(const QueryNode *other) const override;
+	bool Equals(const QueryNode *other) const;
 	//! Create a copy of this SelectNode
-	unique_ptr<QueryNode> Copy() const override;
+	unique_ptr<QueryNode> Copy() const;
 
 	//! Serializes a QueryNode to a stand-alone binary blob
 	//! Deserializes a blob back into a QueryNode
 
-	void Serialize(Serializer &serializer) const override;
+	void Serialize(Serializer &serializer) const;
 	static unique_ptr<QueryNode> Deserialize(Deserializer &source);
 };
 

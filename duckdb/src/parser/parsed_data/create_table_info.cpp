@@ -24,9 +24,6 @@ unique_ptr<CreateInfo> CreateTableInfo::Copy() const {
 	for (auto &constraint : constraints) {
 		result->constraints.push_back(constraint->Copy());
 	}
-	if (query) {
-		result->query = unique_ptr_cast<SQLStatement, SelectStatement>(query->Copy());
-	}
 	return std::move(result);
 }
 
@@ -48,7 +45,6 @@ string CreateTableInfo::ToString() const {
 	ret += QualifierToString(temporary ? "" : catalog, schema, table);
 
 	if (query != nullptr) {
-		ret += " AS " + query->ToString();
 	} else {
 	}
 	return ret;

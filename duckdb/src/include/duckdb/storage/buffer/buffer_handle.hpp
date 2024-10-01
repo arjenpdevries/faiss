@@ -8,8 +8,8 @@
 
 #pragma once
 
-#include "duckdb/storage/storage_info.hpp"
 #include "duckdb/common/file_buffer.hpp"
+#include "duckdb/storage/storage_info.hpp"
 
 namespace duckdb {
 class BlockHandle;
@@ -17,15 +17,8 @@ class FileBuffer;
 
 class BufferHandle {
 public:
-	DUCKDB_API BufferHandle();
-	DUCKDB_API BufferHandle(shared_ptr<BlockHandle> handle, FileBuffer *node);
-	DUCKDB_API ~BufferHandle();
 	// disable copy constructors
-	BufferHandle(const BufferHandle &other) = delete;
-	BufferHandle &operator=(const BufferHandle &) = delete;
 	//! enable move constructors
-	DUCKDB_API BufferHandle(BufferHandle &&other) noexcept;
-	DUCKDB_API BufferHandle &operator=(BufferHandle &&) noexcept;
 
 public:
 	//! Returns whether or not the BufferHandle is valid.

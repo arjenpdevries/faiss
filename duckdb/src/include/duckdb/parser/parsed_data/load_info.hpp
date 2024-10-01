@@ -32,7 +32,6 @@ public:
 	unique_ptr<LoadInfo> Copy() const;
 	string ToString() const;
 
-	void Serialize(Serializer &serializer) const override;
 	static unique_ptr<ParseInfo> Deserialize(Deserializer &deserializer);
 };
 

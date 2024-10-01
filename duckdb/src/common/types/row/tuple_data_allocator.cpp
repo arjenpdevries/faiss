@@ -448,9 +448,6 @@ void TupleDataAllocator::ReleaseOrStoreHandlesInternal(
 			case TupleDataPinProperties::KEEP_EVERYTHING_PINNED: {
 				lock_guard<mutex> guard(segment.pinned_handles_lock);
 				const auto block_count = block_id + 1;
-				if (block_count > pinned_handles.size()) {
-					pinned_handles.resize(block_count);
-				}
 				pinned_handles[block_id] = std::move(it->second);
 				break;
 			}

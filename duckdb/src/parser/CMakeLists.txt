@@ -2,8 +2,6 @@ include_directories(../../third_party/libpg_query/include)
 include_directories(../../third_party/libpg_query)
 
 add_subdirectory(parsed_data)
-add_subdirectory(query_node)
-add_subdirectory(statement)
 
 add_library_unity(
   duckdb_parser

@@ -9,9 +9,9 @@
 #pragma once
 
 #include "duckdb/common/enums/catalog_type.hpp"
+#include "duckdb/common/enums/on_entry_not_found.hpp"
 #include "duckdb/parser/column_definition.hpp"
 #include "duckdb/parser/parsed_data/parse_info.hpp"
-#include "duckdb/common/enums/on_entry_not_found.hpp"
 
 namespace duckdb {
 
@@ -66,7 +66,6 @@ public:
 	virtual unique_ptr<AlterInfo> Copy() const = 0;
 	virtual string ToString() const = 0;
 
-	void Serialize(Serializer &serializer) const override;
 	static unique_ptr<ParseInfo> Deserialize(Deserializer &deserializer);
 
 	virtual string GetColumnName() const {

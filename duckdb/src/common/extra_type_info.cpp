@@ -1,9 +1,10 @@
 #include "duckdb/common/extra_type_info.hpp"
-#include "duckdb/common/serializer/deserializer.hpp"
+
+#include "duckdb/catalog/catalog_entry/schema_catalog_entry.hpp"
 #include "duckdb/common/enum_util.hpp"
 #include "duckdb/common/numeric_utils.hpp"
+#include "duckdb/common/serializer/deserializer.hpp"
 #include "duckdb/common/serializer/serializer.hpp"
-#include "duckdb/catalog/catalog_entry/schema_catalog_entry.hpp"
 #include "duckdb/common/string_map_set.hpp"
 
 namespace duckdb {
@@ -366,16 +367,6 @@ bool EnumTypeInfo::EqualsInternal(ExtraTypeInfo *other_p) const {
 		}
 	}
 	return true;
-}
-
-void EnumTypeInfo::Serialize(Serializer &serializer) const {
-	ExtraTypeInfo::Serialize(serializer);
-
-	// Enums are special in that we serialize their values as a list instead of dumping the whole vector
-	auto strings = FlatVector::GetData<string_t>(values_insert_order);
-	serializer.WriteProperty(200, "values_count", dict_size);
-	serializer.WriteList(201, "values", dict_size,
-	                     [&](Serializer::List &list, idx_t i) { list.WriteElement(strings[i]); });
 }
 
 shared_ptr<ExtraTypeInfo> EnumTypeInfo::Copy() const {

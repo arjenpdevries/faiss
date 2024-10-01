@@ -171,16 +171,16 @@ public:
 
 public:
 	string_t AddString(const char *data, idx_t len) {
-		return heap.AddString(data, len);
+		return "";
 	}
 	string_t AddString(string_t data) {
-		return heap.AddString(data);
+		return data;
 	}
 	string_t AddBlob(string_t data) {
-		return heap.AddBlob(data.GetData(), data.GetSize());
+		return data;
 	}
 	string_t EmptyString(idx_t len) {
-		return heap.EmptyString(len);
+		return "";
 	}
 
 	void AddHeapReference(buffer_ptr<VectorBuffer> heap) {
@@ -188,8 +188,6 @@ public:
 	}
 
 private:
-	//! The string heap of this buffer
-	StringHeap heap;
 	// References to additional vector buffers referenced by this string buffer
 	vector<buffer_ptr<VectorBuffer>> references;
 };

@@ -55,7 +55,6 @@ public:
 
 	virtual string ToSQL() const;
 
-	virtual void Serialize(Serializer &serializer) const;
 	static unique_ptr<MacroFunction> Deserialize(Deserializer &deserializer);
 
 public:

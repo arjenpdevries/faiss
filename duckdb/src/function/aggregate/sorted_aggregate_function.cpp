@@ -14,8 +14,8 @@ namespace duckdb {
 
 struct SortedAggregateBindData : public FunctionData {
 	SortedAggregateBindData(ClientContext &context, BoundAggregateExpression &expr)
-	    : buffer_manager(BufferManager::GetBufferManager(context)), function(expr.function),
-	      bind_info(std::move(expr.bind_info)), threshold(ClientConfig::GetConfig(context).ordered_aggregate_threshold),
+	    : function(expr.function), bind_info(std::move(expr.bind_info)),
+	      threshold(ClientConfig::GetConfig(context).ordered_aggregate_threshold),
 	      external(ClientConfig::GetConfig(context).force_external) {
 		auto &children = expr.children;
 		arg_types.reserve(children.size());
@@ -30,9 +30,9 @@ struct SortedAggregateBindData : public FunctionData {
 	}
 
 	SortedAggregateBindData(const SortedAggregateBindData &other)
-	    : buffer_manager(other.buffer_manager), function(other.function), arg_types(other.arg_types),
-	      arg_funcs(other.arg_funcs), sort_types(other.sort_types), sort_funcs(other.sort_funcs),
-	      sorted_on_args(other.sorted_on_args), threshold(other.threshold), external(other.external) {
+	    : function(other.function), arg_types(other.arg_types), arg_funcs(other.arg_funcs),
+	      sort_types(other.sort_types), sort_funcs(other.sort_funcs), sorted_on_args(other.sorted_on_args),
+	      threshold(other.threshold), external(other.external) {
 		if (other.bind_info) {
 			bind_info = other.bind_info->Copy();
 		}
@@ -57,7 +57,6 @@ struct SortedAggregateBindData : public FunctionData {
 		return true;
 	}
 
-	BufferManager &buffer_manager;
 	AggregateFunction function;
 	vector<LogicalType> arg_types;
 	unique_ptr<FunctionData> bind_info;
@@ -129,15 +128,6 @@ struct SortedAggregateState {
 	}
 
 	void InitializeCollections(const SortedAggregateBindData &order_bind) {
-		ordering = make_uniq<ColumnDataCollection>(order_bind.buffer_manager, order_bind.sort_types);
-		ordering_append = make_uniq<ColumnDataAppendState>();
-		ordering->InitializeAppend(*ordering_append);
-
-		if (!order_bind.sorted_on_args) {
-			arguments = make_uniq<ColumnDataCollection>(order_bind.buffer_manager, order_bind.arg_types);
-			arguments_append = make_uniq<ColumnDataAppendState>();
-			arguments->InitializeAppend(*arguments_append);
-		}
 	}
 
 	void FlushChunks(const SortedAggregateBindData &order_bind) {
@@ -525,37 +515,6 @@ struct SortedAggregateFunction {
 
 	static void Finalize(Vector &states, AggregateInputData &aggr_input_data, Vector &result, idx_t count,
 	                     const idx_t offset) {
-		auto &order_bind = aggr_input_data.bind_data->Cast<SortedAggregateBindData>();
-		auto &buffer_manager = order_bind.buffer_manager;
-		RowLayout payload_layout;
-		payload_layout.Initialize(order_bind.arg_types);
-		DataChunk chunk;
-		chunk.Initialize(Allocator::DefaultAllocator(), order_bind.arg_types);
-		DataChunk sliced;
-		sliced.Initialize(Allocator::DefaultAllocator(), order_bind.arg_types);
-
-		//	 Reusable inner state
-		auto &aggr = order_bind.function;
-		vector<data_t> agg_state(aggr.state_size(aggr));
-		Vector agg_state_vec(Value::POINTER(CastPointerToValue(agg_state.data())));
-
-		// State variables
-		auto bind_info = order_bind.bind_info.get();
-		AggregateInputData aggr_bind_info(bind_info, aggr_input_data.allocator);
-
-		// Inner aggregate APIs
-		auto initialize = aggr.initialize;
-		auto destructor = aggr.destructor;
-		auto simple_update = aggr.simple_update;
-		auto update = aggr.update;
-		auto finalize = aggr.finalize;
-
-		auto sdata = FlatVector::GetData<SortedAggregateState *>(states);
-
-		vector<idx_t> state_unprocessed(count, 0);
-		for (idx_t i = 0; i < count; ++i) {
-			state_unprocessed[i] = sdata[i]->count;
-		}
 	}
 };
 

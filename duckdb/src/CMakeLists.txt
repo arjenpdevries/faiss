@@ -85,7 +85,7 @@ else()
   add_subdirectory(common)
   add_subdirectory(main)
   add_subdirectory(parallel)
-  add_subdirectory(storage)
+  # add_subdirectory(storage)
 
   set(DUCKDB_LINK_LIBS
       ${DUCKDB_SYSTEM_LIBS}

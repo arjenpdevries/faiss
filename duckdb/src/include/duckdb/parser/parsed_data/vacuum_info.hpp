@@ -43,7 +43,6 @@ public:
 	unique_ptr<VacuumInfo> Copy();
 	string ToString() const;
 
-	void Serialize(Serializer &serializer) const override;
 	static unique_ptr<ParseInfo> Deserialize(Deserializer &deserializer);
 };
 

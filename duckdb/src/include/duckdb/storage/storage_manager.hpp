@@ -68,11 +68,6 @@ public:
 	static StorageManager &Get(AttachedDatabase &db);
 	static StorageManager &Get(Catalog &catalog);
 
-	//! Initialize a database or load an existing database from the database file path. The block_alloc_size is
-	//! either set, or invalid. If invalid, then DuckDB defaults to the default_block_alloc_size (DBConfig),
-	//! or the file's block allocation size, if it is an existing database.
-	void Initialize(const optional_idx block_alloc_size);
-
 	DatabaseInstance &GetDatabase();
 	AttachedDatabase &GetAttached() {
 		throw BinderException("Attached database name  cannot be used because it is a reserved name");
@@ -94,7 +89,6 @@ public:
 	}
 	//! The path to the WAL, derived from the database file path
 	string GetWALPath();
-	bool InMemory();
 
 	virtual bool AutomaticCheckpoint(idx_t estimated_wal_bytes) = 0;
 	virtual unique_ptr<StorageCommitState> GenStorageCommitState(WriteAheadLog &wal) = 0;
@@ -136,7 +130,6 @@ public:
 class SingleFileStorageManager : public StorageManager {
 public:
 	SingleFileStorageManager() = delete;
-	SingleFileStorageManager(AttachedDatabase &db, string path, bool read_only);
 
 	//! The BlockManager to read/store meta information and data in blocks
 	unique_ptr<BlockManager> block_manager;

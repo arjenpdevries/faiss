@@ -37,7 +37,7 @@ public:
 	unique_ptr<AlterInfo> Copy() const override;
 	string ToString() const override;
 
-	void Serialize(Serializer &serializer) const override;
+	
 	static unique_ptr<AlterInfo> Deserialize(Deserializer &deserializer);
 
 	explicit ChangeOwnershipInfo();
@@ -58,7 +58,7 @@ public:
 	unique_ptr<AlterInfo> Copy() const override;
 	string ToString() const override;
 
-	void Serialize(Serializer &serializer) const override;
+	
 	static unique_ptr<AlterInfo> Deserialize(Deserializer &deserializer);
 
 	explicit SetCommentInfo();
@@ -90,7 +90,7 @@ struct AlterTableInfo : public AlterInfo {
 public:
 	CatalogType GetCatalogType() const override;
 
-	void Serialize(Serializer &serializer) const override;
+	
 	static unique_ptr<AlterInfo> Deserialize(Deserializer &deserializer);
 
 protected:
@@ -113,7 +113,7 @@ public:
 	unique_ptr<AlterInfo> Copy() const override;
 	string ToString() const override;
 
-	void Serialize(Serializer &serializer) const override;
+	
 	static unique_ptr<AlterTableInfo> Deserialize(Deserializer &deserializer);
 
 private:
@@ -134,7 +134,7 @@ public:
 	unique_ptr<AlterInfo> Copy() const override;
 	string ToString() const override;
 
-	void Serialize(Serializer &serializer) const override;
+	
 	static unique_ptr<AlterTableInfo> Deserialize(Deserializer &deserializer);
 
 private:
@@ -157,7 +157,7 @@ public:
 	unique_ptr<AlterInfo> Copy() const override;
 	string ToString() const override;
 
-	void Serialize(Serializer &serializer) const override;
+	
 	static unique_ptr<AlterTableInfo> Deserialize(Deserializer &deserializer);
 
 private:
@@ -181,7 +181,7 @@ struct RemoveColumnInfo : public AlterTableInfo {
 public:
 	unique_ptr<AlterInfo> Copy() const override;
 	string ToString() const override;
-	void Serialize(Serializer &serializer) const override;
+	
 	static unique_ptr<AlterTableInfo> Deserialize(Deserializer &deserializer);
 	string GetColumnName() const override {
 		return removed_column;
@@ -209,7 +209,7 @@ struct ChangeColumnTypeInfo : public AlterTableInfo {
 public:
 	unique_ptr<AlterInfo> Copy() const override;
 	string ToString() const override;
-	void Serialize(Serializer &serializer) const override;
+	
 	static unique_ptr<AlterTableInfo> Deserialize(Deserializer &deserializer);
 	string GetColumnName() const override {
 		return column_name;
@@ -234,7 +234,7 @@ struct SetDefaultInfo : public AlterTableInfo {
 public:
 	unique_ptr<AlterInfo> Copy() const override;
 	string ToString() const override;
-	void Serialize(Serializer &serializer) const override;
+	
 	static unique_ptr<AlterTableInfo> Deserialize(Deserializer &deserializer);
 
 private:
@@ -259,7 +259,7 @@ struct AlterForeignKeyInfo : public AlterTableInfo {
 public:
 	unique_ptr<AlterInfo> Copy() const override;
 	string ToString() const override;
-	void Serialize(Serializer &serializer) const override;
+	
 	static unique_ptr<AlterTableInfo> Deserialize(Deserializer &deserializer);
 
 private:
@@ -279,7 +279,7 @@ struct SetNotNullInfo : public AlterTableInfo {
 public:
 	unique_ptr<AlterInfo> Copy() const override;
 	string ToString() const override;
-	void Serialize(Serializer &serializer) const override;
+	
 	static unique_ptr<AlterTableInfo> Deserialize(Deserializer &deserializer);
 
 private:
@@ -299,7 +299,7 @@ struct DropNotNullInfo : public AlterTableInfo {
 public:
 	unique_ptr<AlterInfo> Copy() const override;
 	string ToString() const override;
-	void Serialize(Serializer &serializer) const override;
+	
 	static unique_ptr<AlterTableInfo> Deserialize(Deserializer &deserializer);
 
 private:
@@ -319,7 +319,7 @@ struct AlterViewInfo : public AlterInfo {
 
 public:
 	CatalogType GetCatalogType() const override;
-	void Serialize(Serializer &serializer) const override;
+	
 	static unique_ptr<AlterInfo> Deserialize(Deserializer &deserializer);
 
 protected:
@@ -339,7 +339,7 @@ struct RenameViewInfo : public AlterViewInfo {
 public:
 	unique_ptr<AlterInfo> Copy() const override;
 	string ToString() const override;
-	void Serialize(Serializer &serializer) const override;
+	
 	static unique_ptr<AlterViewInfo> Deserialize(Deserializer &deserializer);
 
 private:

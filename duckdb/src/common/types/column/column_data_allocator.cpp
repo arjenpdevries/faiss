@@ -20,8 +20,6 @@ ColumnDataAllocator::ColumnDataAllocator(ClientContext &context, ColumnDataAlloc
 	switch (type) {
 	case ColumnDataAllocatorType::BUFFER_MANAGER_ALLOCATOR:
 	case ColumnDataAllocatorType::HYBRID:
-		alloc.buffer_manager = &BufferManager::GetBufferManager(context);
-		break;
 	case ColumnDataAllocatorType::IN_MEMORY_ALLOCATOR:
 		alloc.allocator = &Allocator::Get(context);
 		break;
@@ -61,13 +59,12 @@ BufferHandle ColumnDataAllocator::Pin(uint32_t block_id) {
 
 BufferHandle ColumnDataAllocator::AllocateBlock(idx_t size) {
 	D_ASSERT(type == ColumnDataAllocatorType::BUFFER_MANAGER_ALLOCATOR || type == ColumnDataAllocatorType::HYBRID);
-	auto max_size = MaxValue<idx_t>(size, GetBufferManager().GetBlockSize());
 	BlockMetaData data;
 	data.size = 0;
-	data.capacity = NumericCast<uint32_t>(max_size);
-	auto pin = alloc.buffer_manager->Allocate(MemoryTag::COLUMN_DATA, max_size, false, &data.handle);
+	data.capacity = NumericCast<uint32_t>(5);
+	auto pin = alloc.buffer_manager->Allocate(MemoryTag::COLUMN_DATA, 5, false, &data.handle);
 	blocks.push_back(std::move(data));
-	allocated_size += max_size;
+	allocated_size += 5;
 	return pin;
 }
 
@@ -107,7 +104,6 @@ void ColumnDataAllocator::AllocateBuffer(idx_t size, uint32_t &block_id, uint32_
 		if (chunk_state) {
 			D_ASSERT(!blocks.empty());
 			auto new_block_id = blocks.size() - 1;
-			chunk_state->handles[new_block_id] = std::move(pinned_block);
 		}
 	}
 	auto &block = blocks.back();
@@ -115,7 +111,6 @@ void ColumnDataAllocator::AllocateBuffer(idx_t size, uint32_t &block_id, uint32_
 	block_id = NumericCast<uint32_t>(blocks.size() - 1);
 	if (chunk_state && chunk_state->handles.find(block_id) == chunk_state->handles.end()) {
 		// not guaranteed to be pinned already by this thread (if shared allocator)
-		chunk_state->handles[block_id] = alloc.buffer_manager->Pin(blocks[block_id].handle);
 	}
 	offset = block.size;
 	block.size += size;
@@ -239,7 +234,6 @@ void ColumnDataAllocator::InitializeChunkState(ChunkManagementState &state, Chun
 			// already pinned: don't need to do anything
 			continue;
 		}
-		state.handles[block_id] = Pin(block_id);
 	}
 }
 

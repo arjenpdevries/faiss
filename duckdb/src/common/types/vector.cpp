@@ -1201,13 +1201,6 @@ void Vector::Serialize(Serializer &serializer, idx_t count) {
 			break;
 		}
 		case PhysicalType::STRUCT: {
-			auto &entries = StructVector::GetEntries(*this);
-
-			// Serialize entries as a list
-			serializer.WriteList(103, "children", entries.size(), [&](Serializer::List &list, idx_t i) {
-				list.WriteObject([&](Serializer &object) { entries[i]->Serialize(object, count); });
-			});
-			break;
 		}
 		case PhysicalType::LIST: {
 			auto &child = ListVector::GetEntry(*this);
@@ -1234,7 +1227,6 @@ void Vector::Serialize(Serializer &serializer, idx_t count) {
 					object.WriteProperty(101, "length", entries[i].length);
 				});
 			});
-			serializer.WriteObject(106, "child", [&](Serializer &object) { child.Serialize(object, list_size); });
 			break;
 		}
 		case PhysicalType::ARRAY: {
@@ -1245,7 +1237,6 @@ void Vector::Serialize(Serializer &serializer, idx_t count) {
 			auto array_size = ArrayType::GetSize(serialized_vector.GetType());
 			auto child_size = array_size * count;
 			serializer.WriteProperty<uint64_t>(103, "array_size", array_size);
-			serializer.WriteObject(104, "child", [&](Serializer &object) { child.Serialize(object, child_size); });
 			break;
 		}
 		default:

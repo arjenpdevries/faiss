@@ -8,11 +8,11 @@
 
 #pragma once
 
-#include "duckdb/parser/parsed_data/parse_info.hpp"
-#include "duckdb/common/vector.hpp"
-#include "duckdb/common/unordered_map.hpp"
-#include "duckdb/common/types/value.hpp"
 #include "duckdb/common/case_insensitive_map.hpp"
+#include "duckdb/common/types/value.hpp"
+#include "duckdb/common/unordered_map.hpp"
+#include "duckdb/common/vector.hpp"
+#include "duckdb/parser/parsed_data/parse_info.hpp"
 
 namespace duckdb {
 
@@ -53,7 +53,6 @@ public:
 	string ToString() const;
 	string TablePartToString() const;
 
-	void Serialize(Serializer &serializer) const override;
 	static unique_ptr<ParseInfo> Deserialize(Deserializer &deserializer);
 };
 

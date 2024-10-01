@@ -44,7 +44,6 @@ public:
 	//! Create a copy of this ResultModifier
 	virtual unique_ptr<ResultModifier> Copy() const = 0;
 
-	virtual void Serialize(Serializer &serializer) const;
 	static unique_ptr<ResultModifier> Deserialize(Deserializer &deserializer);
 
 public:
@@ -99,7 +98,6 @@ public:
 	bool Equals(const ResultModifier &other) const override;
 	unique_ptr<ResultModifier> Copy() const override;
 
-	void Serialize(Serializer &serializer) const override;
 	static unique_ptr<ResultModifier> Deserialize(Deserializer &deserializer);
 };
 
@@ -118,7 +116,6 @@ public:
 	bool Equals(const ResultModifier &other) const override;
 	unique_ptr<ResultModifier> Copy() const override;
 
-	void Serialize(Serializer &serializer) const override;
 	static unique_ptr<ResultModifier> Deserialize(Deserializer &deserializer);
 
 	static bool Equals(const unique_ptr<OrderModifier> &left, const unique_ptr<OrderModifier> &right);
@@ -139,7 +136,6 @@ public:
 	bool Equals(const ResultModifier &other) const override;
 	unique_ptr<ResultModifier> Copy() const override;
 
-	void Serialize(Serializer &serializer) const override;
 	static unique_ptr<ResultModifier> Deserialize(Deserializer &deserializer);
 };
 
@@ -160,7 +156,6 @@ public:
 	bool Equals(const ResultModifier &other) const override;
 	unique_ptr<ResultModifier> Copy() const override;
 
-	void Serialize(Serializer &serializer) const override;
 	static unique_ptr<ResultModifier> Deserialize(Deserializer &deserializer);
 };
 

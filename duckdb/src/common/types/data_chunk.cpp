@@ -236,28 +236,6 @@ string DataChunk::ToString() const {
 }
 
 void DataChunk::Serialize(Serializer &serializer) const {
-
-	// write the count
-	auto row_count = size();
-	serializer.WriteProperty<sel_t>(100, "rows", NumericCast<sel_t>(row_count));
-
-	// we should never try to serialize empty data chunks
-	auto column_count = ColumnCount();
-	D_ASSERT(column_count);
-
-	// write the types
-	serializer.WriteList(101, "types", column_count,
-	                     [&](Serializer::List &list, idx_t i) { list.WriteElement(data[i].GetType()); });
-
-	// write the data
-	serializer.WriteList(102, "columns", column_count, [&](Serializer::List &list, idx_t i) {
-		list.WriteObject([&](Serializer &object) {
-			// Reference the vector to avoid potentially mutating it during serialization
-			Vector serialized_vector(data[i].GetType());
-			serialized_vector.Reference(data[i]);
-			serialized_vector.Serialize(object, row_count);
-		});
-	});
 }
 
 void DataChunk::Deserialize(Deserializer &deserializer) {
@@ -346,7 +324,6 @@ void DataChunk::Verify() {
 	}
 
 	serializer.Begin();
-	Serialize(serializer);
 	serializer.End();
 
 	mem_stream.Rewind();

@@ -97,11 +97,7 @@ struct ExtensionOption {
 class SerializationCompatibility {
 public:
 	static SerializationCompatibility FromString(const string &input);
-	static SerializationCompatibility Default();
 	static SerializationCompatibility Latest();
-
-public:
-	bool Compare(idx_t property_version) const;
 
 public:
 	//! The user provided version
@@ -111,7 +107,6 @@ public:
 	//! Whether this was set by a manual SET/PRAGMA or default
 	bool manually_set;
 
-protected:
 	SerializationCompatibility() = default;
 };
 
@@ -187,7 +182,7 @@ struct DBConfigOptions {
 	//! Run a checkpoint on successful shutdown and delete the WAL, to leave only a single database file behind
 	bool checkpoint_on_shutdown = true;
 	//! Serialize the metadata on checkpoint with compatibility for a given DuckDB version.
-	SerializationCompatibility serialization_compatibility = SerializationCompatibility::Default();
+	SerializationCompatibility serialization_compatibility;
 	//! Debug flag that decides when a checkpoing should be aborted. Only used for testing purposes.
 	CheckpointAbort checkpoint_abort = CheckpointAbort::NO_ABORT;
 	//! Initialize the database with the standard set of DuckDB functions
@@ -354,9 +349,6 @@ public:
 	//! Returns the compression function matching the compression and physical type.
 	DUCKDB_API optional_ptr<CompressionFunction> GetCompressionFunction(CompressionType type,
 	                                                                    const PhysicalType physical_type);
-
-	bool operator==(const DBConfig &other);
-	bool operator!=(const DBConfig &other);
 
 	DUCKDB_API CastFunctionSet &GetCastFunctions();
 	DUCKDB_API CollationBinding &GetCollationBinding();

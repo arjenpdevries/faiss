@@ -8,8 +8,8 @@
 
 #pragma once
 
-#include "duckdb/parser/parsed_expression.hpp"
 #include "duckdb/common/types.hpp"
+#include "duckdb/parser/parsed_expression.hpp"
 
 namespace duckdb {
 
@@ -35,7 +35,6 @@ public:
 
 	unique_ptr<ParsedExpression> Copy() const override;
 
-	void Serialize(Serializer &serializer) const override;
 	static unique_ptr<ParsedExpression> Deserialize(Deserializer &deserializer);
 
 public:

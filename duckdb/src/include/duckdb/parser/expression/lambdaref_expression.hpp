@@ -8,8 +8,8 @@
 
 #pragma once
 
-#include "duckdb/parser/parsed_expression.hpp"
 #include "duckdb/common/optional_ptr.hpp"
+#include "duckdb/parser/parsed_expression.hpp"
 
 namespace duckdb {
 
@@ -41,7 +41,6 @@ public:
 	static unique_ptr<ParsedExpression> FindMatchingBinding(optional_ptr<vector<DummyBinding>> &lambda_bindings,
 	                                                        const string &parameter_name);
 
-	void Serialize(Serializer &serializer) const override;
 	static unique_ptr<ParsedExpression> Deserialize(Deserializer &deserializer);
 };
 } // namespace duckdb

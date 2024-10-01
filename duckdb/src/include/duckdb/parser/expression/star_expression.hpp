@@ -8,8 +8,8 @@
 
 #pragma once
 
-#include "duckdb/parser/parsed_expression.hpp"
 #include "duckdb/common/case_insensitive_map.hpp"
+#include "duckdb/parser/parsed_expression.hpp"
 
 namespace duckdb {
 
@@ -44,7 +44,6 @@ public:
 
 	unique_ptr<ParsedExpression> Copy() const override;
 
-	void Serialize(Serializer &serializer) const override;
 	static unique_ptr<ParsedExpression> Deserialize(Deserializer &deserializer);
 };
 } // namespace duckdb

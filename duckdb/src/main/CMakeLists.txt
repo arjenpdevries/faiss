@@ -1,13 +1,6 @@
-# add_subdirectory(secret)
-add_subdirectory(settings)
-add_subdirectory(buffered_data)
-add_subdirectory(chunk_scan_state)
-
-
 add_library_unity(
   duckdb_main
   OBJECT
-  # appender.cpp
   attached_database.cpp
   client_config.cpp
   client_context_file_opener.cpp
@@ -17,7 +10,6 @@ add_library_unity(
   client_verify.cpp
   connection_manager.cpp
   chunk_scan_state.cpp
-  config.cpp
   connection.cpp
   database.cpp
   database_path_and_type.cpp
@@ -31,8 +23,6 @@ add_library_unity(
   prepared_statement.cpp
   prepared_statement_data.cpp
   profiling_info.cpp
-  # relation.cpp
-  # query_profiler.cpp
   query_result.cpp
   stream_query_result.cpp
   valid_checker.cpp)

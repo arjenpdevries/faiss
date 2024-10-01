@@ -8,8 +8,8 @@
 
 #pragma once
 
-#include "duckdb/parser/parsed_data/parse_info.hpp"
 #include "duckdb/common/enums/on_entry_not_found.hpp"
+#include "duckdb/parser/parsed_data/parse_info.hpp"
 
 namespace duckdb {
 
@@ -29,7 +29,6 @@ public:
 	unique_ptr<DetachInfo> Copy() const;
 	string ToString() const;
 
-	void Serialize(Serializer &serializer) const override;
 	static unique_ptr<ParseInfo> Deserialize(Deserializer &deserializer);
 };
 } // namespace duckdb

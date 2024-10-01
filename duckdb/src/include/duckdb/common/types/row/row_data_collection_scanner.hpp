@@ -24,7 +24,7 @@ public:
 	using Types = vector<LogicalType>;
 
 	struct ScanState {
-		explicit ScanState(const RowDataCollectionScanner &scanner_p) : scanner(scanner_p), block_idx(0), entry_idx(0) {
+		explicit ScanState(const RowDataCollectionScanner &scanner_p) : scanner(scanner_p), block_idx(0), entry_idx() {
 		}
 
 		void PinData();
@@ -34,9 +34,6 @@ public:
 
 		idx_t block_idx;
 		idx_t entry_idx;
-
-		BufferHandle data_handle;
-		BufferHandle heap_handle;
 
 		// We must pin ALL blocks we are going to gather from
 		vector<BufferHandle> pinned_blocks;

@@ -58,9 +58,6 @@ AttachedDatabase::AttachedDatabase(DatabaseInstance &db, AttachedDatabaseType ty
 
 	// This database does not have storage, or uses temporary_objects for in-memory storage.
 	D_ASSERT(type == AttachedDatabaseType::TEMP_DATABASE || type == AttachedDatabaseType::SYSTEM_DATABASE);
-	if (type == AttachedDatabaseType::TEMP_DATABASE) {
-		storage = make_uniq<SingleFileStorageManager>(*this, string(IN_MEMORY_PATH), false);
-	}
 }
 
 AttachedDatabase::AttachedDatabase(DatabaseInstance &db, Catalog &catalog_p, string name_p, string file_path_p,
@@ -72,9 +69,6 @@ AttachedDatabase::AttachedDatabase(DatabaseInstance &db, Catalog &catalog_p, str
 	} else {
 		type = AttachedDatabaseType::READ_WRITE_DATABASE;
 	}
-
-	auto read_only = options.access_mode == AccessMode::READ_ONLY;
-	storage = make_uniq<SingleFileStorageManager>(*this, std::move(file_path_p), read_only);
 }
 
 AttachedDatabase::AttachedDatabase(DatabaseInstance &db, Catalog &catalog_p, StorageExtension &storage_extension_p,
@@ -90,11 +84,6 @@ AttachedDatabase::AttachedDatabase(DatabaseInstance &db, Catalog &catalog_p, Sto
 
 	if (!catalog) {
 		throw InternalException("AttachedDatabase - attach function did not return a catalog");
-	}
-	if (catalog->IsDuckCatalog()) {
-		// The attached database uses the DuckCatalog.
-		auto read_only = options.access_mode == AccessMode::READ_ONLY;
-		storage = make_uniq<SingleFileStorageManager>(*this, info.path, read_only);
 	}
 	if (!transaction_manager) {
 		throw InternalException(
@@ -134,14 +123,6 @@ string AttachedDatabase::ExtractDatabaseName(const string &dbpath, FileSystem &f
 }
 
 void AttachedDatabase::Initialize(const optional_idx block_alloc_size) {
-	if (IsSystem()) {
-		catalog->Initialize(true);
-	} else {
-		catalog->Initialize(false);
-	}
-	if (storage) {
-		storage->Initialize(block_alloc_size);
-	}
 }
 
 StorageManager &AttachedDatabase::GetStorageManager() {
@@ -186,10 +167,6 @@ void AttachedDatabase::Close() {
 	}
 	is_closed = true;
 
-	if (!IsSystem() && !catalog->InMemory()) {
-		db.GetDatabaseManager().EraseDatabasePath(catalog->GetDBPath());
-	}
-
 	if (Exception::UncaughtException()) {
 		return;
 	}
@@ -199,18 +176,6 @@ void AttachedDatabase::Close() {
 
 	// shutting down: attempt to checkpoint the database
 	// but only if we are not cleaning up as part of an exception unwind
-	try {
-		if (!storage->InMemory()) {
-			auto &config = DBConfig::GetConfig(db);
-			if (!config.options.checkpoint_on_shutdown) {
-				return;
-			}
-			CheckpointOptions options;
-			options.wal_action = CheckpointWALAction::DELETE_WAL;
-			storage->CreateCheckpoint(options);
-		}
-	} catch (...) { // NOLINT
-	}
 
 	if (Allocator::SupportsFlush()) {
 		Allocator::FlushAll();

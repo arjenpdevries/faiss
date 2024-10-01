@@ -8,11 +8,11 @@
 
 #pragma once
 
+#include "duckdb/catalog/catalog_entry_retriever.hpp"
 #include "duckdb/common/enums/catalog_type.hpp"
 #include "duckdb/common/types/value.hpp"
 #include "duckdb/parser/parsed_data/alter_info.hpp"
 #include "duckdb/parser/qualified_name.hpp"
-#include "duckdb/catalog/catalog_entry_retriever.hpp"
 
 namespace duckdb {
 class ClientContext;
@@ -41,7 +41,6 @@ public:
 	CatalogType GetCatalogType() const override;
 	string ToString() const override;
 
-	void Serialize(Serializer &serializer) const override;
 	static unique_ptr<AlterInfo> Deserialize(Deserializer &deserializer);
 };
 

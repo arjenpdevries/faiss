@@ -8,11 +8,11 @@
 
 #pragma once
 
-#include "duckdb/parser/parsed_expression.hpp"
-#include "duckdb/common/vector.hpp"
 #include "duckdb/common/string_util.hpp"
-#include "duckdb/parser/qualified_name.hpp"
+#include "duckdb/common/vector.hpp"
 #include "duckdb/parser/expression/constant_expression.hpp"
+#include "duckdb/parser/parsed_expression.hpp"
+#include "duckdb/parser/qualified_name.hpp"
 
 namespace duckdb {
 //! Represents a built-in operator expression
@@ -34,7 +34,6 @@ public:
 
 	unique_ptr<ParsedExpression> Copy() const override;
 
-	void Serialize(Serializer &serializer) const override;
 	static unique_ptr<ParsedExpression> Deserialize(Deserializer &deserializer);
 
 public:

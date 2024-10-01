@@ -35,8 +35,6 @@ public:
 	hash_t Hash() const override;
 
 	unique_ptr<ParsedExpression> Copy() const override;
-
-	void Serialize(Serializer &serializer) const override;
 };
 
 } // namespace duckdb

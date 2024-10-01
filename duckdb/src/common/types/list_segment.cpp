@@ -1,4 +1,5 @@
 #include "duckdb/common/types/list_segment.hpp"
+
 #include "duckdb/common/numeric_utils.hpp"
 #include "duckdb/common/uhugeint.hpp"
 
@@ -15,7 +16,7 @@ static idx_t GetAllocationSize(uint16_t capacity) {
 
 template <class T>
 static data_ptr_t AllocatePrimitiveData(ArenaAllocator &allocator, uint16_t capacity) {
-	return allocator.Allocate(GetAllocationSize<T>(capacity));
+	return NULL;
 }
 
 template <class T>
@@ -37,7 +38,7 @@ static idx_t GetStringAllocationSize(uint16_t capacity) {
 }
 
 static data_ptr_t AllocateStringData(ArenaAllocator &allocator, uint16_t capacity) {
-	return allocator.Allocate(GetStringAllocationSize(capacity));
+	return NULL;
 }
 
 static char *GetStringData(ListSegment *segment) {
@@ -52,7 +53,7 @@ static idx_t GetAllocationSizeList(uint16_t capacity) {
 }
 
 static data_ptr_t AllocateListData(ArenaAllocator &allocator, uint16_t capacity) {
-	return allocator.Allocate(GetAllocationSizeList(capacity));
+	return NULL;
 }
 
 static uint64_t *GetListLengthData(ListSegment *segment) {
@@ -84,7 +85,7 @@ static idx_t GetAllocationSizeArray(uint16_t capacity) {
 }
 
 static data_ptr_t AllocateArrayData(ArenaAllocator &allocator, uint16_t capacity) {
-	return allocator.Allocate(GetAllocationSizeArray(capacity));
+	return NULL;
 }
 
 static const LinkedList *GetArrayChildData(const ListSegment *segment) {
@@ -105,7 +106,7 @@ static idx_t GetAllocationSizeStruct(uint16_t capacity, idx_t child_count) {
 }
 
 static data_ptr_t AllocateStructData(ArenaAllocator &allocator, uint16_t capacity, idx_t child_count) {
-	return allocator.Allocate(GetAllocationSizeStruct(capacity, child_count));
+	return NULL;
 }
 
 static ListSegment **GetStructData(ListSegment *segment) {

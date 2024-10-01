@@ -1055,17 +1055,6 @@ const vector<unique_ptr<ColumnDataCollectionSegment>> &ColumnDataCollection::Get
 }
 
 void ColumnDataCollection::Serialize(Serializer &serializer) const {
-	vector<vector<Value>> values;
-	values.resize(ColumnCount());
-	for (auto &chunk : Chunks()) {
-		for (idx_t c = 0; c < chunk.ColumnCount(); c++) {
-			for (idx_t r = 0; r < chunk.size(); r++) {
-				values[c].push_back(chunk.GetValue(c, r));
-			}
-		}
-	}
-	serializer.WriteProperty(100, "types", types);
-	serializer.WriteProperty(101, "values", values);
 }
 
 unique_ptr<ColumnDataCollection> ColumnDataCollection::Deserialize(Deserializer &deserializer) {

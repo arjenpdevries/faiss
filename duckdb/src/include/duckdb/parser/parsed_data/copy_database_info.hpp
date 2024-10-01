@@ -33,7 +33,6 @@ public:
 	vector<unique_ptr<CreateInfo>> entries;
 
 public:
-	void Serialize(Serializer &serializer) const override;
 	static unique_ptr<ParseInfo> Deserialize(Deserializer &deserializer);
 };
 

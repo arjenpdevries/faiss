@@ -1,12 +1,12 @@
 #include "duckdb/parser/query_node.hpp"
 
+#include "duckdb/common/limits.hpp"
+#include "duckdb/common/serializer/deserializer.hpp"
+#include "duckdb/common/serializer/serializer.hpp"
+#include "duckdb/parser/query_node/cte_node.hpp"
+#include "duckdb/parser/query_node/recursive_cte_node.hpp"
 #include "duckdb/parser/query_node/select_node.hpp"
 #include "duckdb/parser/query_node/set_operation_node.hpp"
-#include "duckdb/parser/query_node/recursive_cte_node.hpp"
-#include "duckdb/parser/query_node/cte_node.hpp"
-#include "duckdb/common/limits.hpp"
-#include "duckdb/common/serializer/serializer.hpp"
-#include "duckdb/common/serializer/deserializer.hpp"
 
 namespace duckdb {
 
@@ -20,7 +20,6 @@ CommonTableExpressionMap CommonTableExpressionMap::Copy() const {
 		for (auto &al : kv.second->aliases) {
 			kv_info->aliases.push_back(al);
 		}
-		kv_info->query = unique_ptr_cast<SQLStatement, SelectStatement>(kv.second->query->Copy());
 		kv_info->materialized = kv.second->materialized;
 		res.map[kv.first] = std::move(kv_info);
 	}
@@ -69,7 +68,6 @@ string CommonTableExpressionMap::ToString() const {
 		} else {
 			result += " AS (";
 		}
-		result += cte.query->ToString();
 		result += ")";
 		first_cte = false;
 	}
@@ -143,9 +141,6 @@ bool QueryNode::Equals(const QueryNode *other) const {
 		if (entry.second->aliases != other->cte_map.map.at(entry.first)->aliases) {
 			return false;
 		}
-		if (!entry.second->query->Equals(*other->cte_map.map.at(entry.first)->query)) {
-			return false;
-		}
 	}
 	return other->type == type;
 }
@@ -159,7 +154,6 @@ void QueryNode::CopyProperties(QueryNode &other) const {
 		for (auto &al : kv.second->aliases) {
 			kv_info->aliases.push_back(al);
 		}
-		kv_info->query = unique_ptr_cast<SQLStatement, SelectStatement>(kv.second->query->Copy());
 		kv_info->materialized = kv.second->materialized;
 		other.cte_map.map[kv.first] = std::move(kv_info);
 	}

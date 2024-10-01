@@ -8,8 +8,8 @@
 
 #pragma once
 
-#include "duckdb/parser/sql_statement.hpp"
 #include "duckdb/parser/parser_extension.hpp"
+#include "duckdb/parser/sql_statement.hpp"
 
 namespace duckdb {
 
@@ -18,8 +18,6 @@ public:
 	static constexpr const StatementType TYPE = StatementType::EXTENSION_STATEMENT;
 
 public:
-	ExtensionStatement(ParserExtension extension, unique_ptr<ParserExtensionParseData> parse_data);
-
 	//! The ParserExtension this statement was generated from
 	ParserExtension extension;
 	//! The parse data for this specific statement
