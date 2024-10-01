@@ -9,12 +9,12 @@
 #pragma once
 
 #include "duckdb/common/common.hpp"
+#include "duckdb/common/enums/scan_options.hpp"
 #include "duckdb/common/map.hpp"
+#include "duckdb/common/types/data_chunk.hpp"
 #include "duckdb/storage/buffer/buffer_handle.hpp"
 #include "duckdb/storage/storage_lock.hpp"
-#include "duckdb/common/enums/scan_options.hpp"
 #include "duckdb/storage/table/segment_lock.hpp"
-#include "duckdb/common/types/data_chunk.hpp"
 
 namespace duckdb {
 class AdaptiveFilter;
@@ -193,7 +193,6 @@ public:
 	const vector<storage_t> &GetColumnIds();
 	ScanFilterInfo &GetFilterInfo();
 	TableScanOptions &GetOptions();
-	bool Scan(DuckTransaction &transaction, DataChunk &result);
 	bool ScanCommitted(DataChunk &result, TableScanType type);
 	bool ScanCommitted(DataChunk &result, SegmentLock &l, TableScanType type);
 
@@ -217,9 +216,6 @@ private:
 
 class TableScanState {
 public:
-	TableScanState();
-	~TableScanState();
-
 	//! The underlying table scan state
 	CollectionScanState table_state;
 	//! Transaction-local scan state
@@ -232,8 +228,6 @@ public:
 	ScanFilterInfo filters;
 
 public:
-	void Initialize(vector<storage_t> column_ids, optional_ptr<TableFilterSet> table_filters = nullptr);
-
 	const vector<storage_t> &GetColumnIds();
 
 	ScanFilterInfo &GetFilterInfo();
@@ -246,8 +240,6 @@ private:
 struct ParallelCollectionScanState {
 	ParallelCollectionScanState();
 
-	//! The row group collection we are scanning
-	RowGroupCollection *collection;
 	RowGroup *current_row_group;
 	idx_t vector_index;
 	idx_t max_row;

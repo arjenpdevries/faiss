@@ -11,7 +11,4 @@
 #include "duckdb/execution/physical_operator.hpp"
 #include "duckdb/planner/bound_constraint.hpp"
 
-namespace duckdb {
-class DataTable;
-
-} // namespace duckdb
+namespace duckdb {} // namespace duckdb

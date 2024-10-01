@@ -61,21 +61,7 @@ struct TableScanGlobalState : public GlobalTableFunctionState {
 
 static unique_ptr<LocalTableFunctionState> TableScanInitLocal(ExecutionContext &context, TableFunctionInitInput &input,
                                                               GlobalTableFunctionState *gstate) {
-	auto result = make_uniq<TableScanLocalState>();
-	auto &bind_data = input.bind_data->Cast<TableScanBindData>();
-	vector<column_t> column_ids = input.column_ids;
-	for (auto &col : column_ids) {
-	}
-	result->scan_state.Initialize(std::move(column_ids), input.filters.get());
-	TableScanParallelStateNext(context.client, input.bind_data.get(), result.get(), gstate);
-	if (input.CanRemoveFilterColumns()) {
-		auto &tsgs = gstate->Cast<TableScanGlobalState>();
-		result->all_columns.Initialize(context.client, tsgs.scanned_types);
-	}
-
-	result->scan_state.options.force_fetch_row = ClientConfig::GetConfig(context.client).force_fetch_row;
-
-	return std::move(result);
+	return nullptr;
 }
 
 unique_ptr<GlobalTableFunctionState> TableScanInitGlobal(ClientContext &context, TableFunctionInitInput &input) {
@@ -153,7 +139,6 @@ struct IndexScanGlobalState : public GlobalTableFunctionState {
 	const idx_t row_ids_count;
 	idx_t row_ids_offset;
 	ColumnFetchState fetch_state;
-	TableScanState local_storage_state;
 	vector<storage_t> column_ids;
 	bool finished;
 };

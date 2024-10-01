@@ -58,7 +58,6 @@ struct IndexLock {
 
 struct TableAppendState {
 	TableAppendState();
-	~TableAppendState();
 
 	RowGroupAppendState row_group_append_state;
 	unique_lock<mutex> append_lock;

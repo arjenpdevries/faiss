@@ -11,9 +11,9 @@
 #include "duckdb/common/enums/join_type.hpp"
 #include "duckdb/common/enums/joinref_type.hpp"
 #include "duckdb/common/unordered_set.hpp"
+#include "duckdb/common/vector.hpp"
 #include "duckdb/parser/parsed_expression.hpp"
 #include "duckdb/parser/tableref.hpp"
-#include "duckdb/common/vector.hpp"
 
 namespace duckdb {
 
@@ -24,7 +24,7 @@ public:
 
 public:
 	explicit JoinRef(JoinRefType ref_type = JoinRefType::REGULAR)
-	    : TableRef(TableReferenceType::JOIN), type(JoinType::INNER), ref_type(ref_type) {
+	    : TableRef(), type(JoinType::INNER), ref_type(ref_type) {
 	}
 
 	//! The left hand side of the join

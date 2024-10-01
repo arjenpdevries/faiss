@@ -15,7 +15,6 @@
 
 namespace duckdb {
 class ColumnData;
-class DataTable;
 class Vector;
 struct UpdateInfo;
 struct UpdateNode;
@@ -38,9 +37,7 @@ public:
 	            Vector &base_data);
 	void FetchRow(TransactionData transaction, idx_t row_id, Vector &result, idx_t result_idx);
 
-	void RollbackUpdate(UpdateInfo &info);
 	void CleanupUpdateInternal(const StorageLockKey &lock, UpdateInfo &info);
-	void CleanupUpdate(UpdateInfo &info);
 
 	StringHeap &GetStringHeap() {
 		return heap;

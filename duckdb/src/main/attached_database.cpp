@@ -61,8 +61,6 @@ AttachedDatabase::AttachedDatabase(DatabaseInstance &db, AttachedDatabaseType ty
 	if (type == AttachedDatabaseType::TEMP_DATABASE) {
 		storage = make_uniq<SingleFileStorageManager>(*this, string(IN_MEMORY_PATH), false);
 	}
-
-	transaction_manager = make_uniq<DuckTransactionManager>(*this);
 }
 
 AttachedDatabase::AttachedDatabase(DatabaseInstance &db, Catalog &catalog_p, string name_p, string file_path_p,
@@ -77,7 +75,6 @@ AttachedDatabase::AttachedDatabase(DatabaseInstance &db, Catalog &catalog_p, str
 
 	auto read_only = options.access_mode == AccessMode::READ_ONLY;
 	storage = make_uniq<SingleFileStorageManager>(*this, std::move(file_path_p), read_only);
-	transaction_manager = make_uniq<DuckTransactionManager>(*this);
 }
 
 AttachedDatabase::AttachedDatabase(DatabaseInstance &db, Catalog &catalog_p, StorageExtension &storage_extension_p,

@@ -194,14 +194,13 @@ void Connection::Rollback() {
 }
 
 void Connection::SetAutoCommit(bool auto_commit) {
-	context->transaction.SetAutoCommit(auto_commit);
 }
 
 bool Connection::IsAutoCommit() {
-	return context->transaction.IsAutoCommit();
+	throw Exception(ExceptionType::SETTINGS, "Profiling is not enabled for this connection");
 }
 bool Connection::HasActiveTransaction() {
-	return context->transaction.HasActiveTransaction();
+	throw Exception(ExceptionType::SETTINGS, "Profiling is not enabled for this connection");
 }
 
 } // namespace duckdb

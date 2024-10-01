@@ -70,7 +70,6 @@ public:
 	bool IsTemporary() const;
 
 	//! Returns a list of types of the table
-	vector<LogicalType> GetTypes();
 	const vector<ColumnDefinition> &Columns() const;
 
 	void InitializeScan(TableScanState &state, const vector<column_t> &column_ids,
@@ -115,8 +114,6 @@ public:
 
 	unique_ptr<TableDeleteState> InitializeDelete(TableCatalogEntry &table, ClientContext &context,
 	                                              const vector<unique_ptr<BoundConstraint>> &bound_constraints);
-	//! Delete the entries with the specified row identifier from the table
-	idx_t Delete(TableDeleteState &state, ClientContext &context, Vector &row_ids, idx_t count);
 
 	unique_ptr<TableUpdateState> InitializeUpdate(TableCatalogEntry &table, ClientContext &context,
 	                                              const vector<unique_ptr<BoundConstraint>> &bound_constraints);
@@ -181,7 +178,6 @@ public:
 	//! Obtains a shared lock to prevent checkpointing while operations are running
 	unique_ptr<StorageLockKey> GetSharedCheckpointLock();
 	//! Obtains a lock during a checkpoint operation that prevents other threads from reading this table
-	unique_ptr<StorageLockKey> GetCheckpointLock();
 	//! Checkpoint the table to the specified table data writer
 	void Checkpoint(TableDataWriter &writer, Serializer &serializer);
 	void CommitDropTable();
@@ -206,14 +202,11 @@ public:
 	void VerifyAppendConstraints(ConstraintState &state, ClientContext &context, DataChunk &chunk,
 	                             optional_ptr<ConflictManager> conflict_manager = nullptr);
 
-	shared_ptr<DataTableInfo> &GetDataTableInfo();
-
 	void InitializeIndexes(ClientContext &context);
 	bool HasIndexes() const;
 	void AddIndex(unique_ptr<Index> index);
 	bool HasForeignKeyIndex(const vector<PhysicalIndex> &keys, ForeignKeyType type);
 	void SetIndexStorageInfo(vector<IndexStorageInfo> index_storage_info);
-	void VacuumIndexes();
 	void CleanupAppend(transaction_t lowest_transaction, idx_t start, idx_t count);
 
 	string GetTableName() const;
@@ -251,8 +244,6 @@ private:
 	vector<ColumnDefinition> column_definitions;
 	//! Lock for appending entries to the table
 	mutex append_lock;
-	//! The row groups of the table
-	shared_ptr<RowGroupCollection> row_groups;
 	//! Whether or not the data table is the root DataTable for this table; the root DataTable is the newest version
 	//! that can be appended to
 	atomic<bool> is_root;

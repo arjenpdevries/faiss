@@ -8,10 +8,10 @@
 
 #pragma once
 
-#include "duckdb/common/types.hpp"
-#include "duckdb/common/type_util.hpp"
-#include "duckdb/common/limits.hpp"
 #include "duckdb/common/exception.hpp"
+#include "duckdb/common/limits.hpp"
+#include "duckdb/common/type_util.hpp"
+#include "duckdb/common/types.hpp"
 
 namespace duckdb {
 
@@ -24,12 +24,8 @@ public:
 	static string ToString(hugeint_t input);
 
 	template <class T>
-	DUCKDB_API static bool TryCast(hugeint_t input, T &result);
-
-	template <class T>
 	static T Cast(hugeint_t input) {
 		T result = 0;
-		TryCast(input, result);
 		return result;
 	}
 
@@ -174,33 +170,6 @@ public:
 
 	static const hugeint_t POWERS_OF_TEN[40];
 };
-
-template <>
-DUCKDB_API bool Hugeint::TryCast(hugeint_t input, int8_t &result);
-template <>
-DUCKDB_API bool Hugeint::TryCast(hugeint_t input, int16_t &result);
-template <>
-DUCKDB_API bool Hugeint::TryCast(hugeint_t input, int32_t &result);
-template <>
-DUCKDB_API bool Hugeint::TryCast(hugeint_t input, int64_t &result);
-template <>
-DUCKDB_API bool Hugeint::TryCast(hugeint_t input, uint8_t &result);
-template <>
-DUCKDB_API bool Hugeint::TryCast(hugeint_t input, uint16_t &result);
-template <>
-DUCKDB_API bool Hugeint::TryCast(hugeint_t input, uint32_t &result);
-template <>
-DUCKDB_API bool Hugeint::TryCast(hugeint_t input, uint64_t &result);
-template <>
-DUCKDB_API bool Hugeint::TryCast(hugeint_t input, hugeint_t &result);
-template <>
-DUCKDB_API bool Hugeint::TryCast(hugeint_t input, uhugeint_t &result);
-template <>
-DUCKDB_API bool Hugeint::TryCast(hugeint_t input, float &result);
-template <>
-DUCKDB_API bool Hugeint::TryCast(hugeint_t input, double &result);
-template <>
-DUCKDB_API bool Hugeint::TryCast(hugeint_t input, long double &result);
 
 template <>
 bool Hugeint::TryConvert(int8_t value, hugeint_t &result);

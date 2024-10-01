@@ -12,7 +12,4 @@
 #include "duckdb/planner/bound_constraint.hpp"
 #include "duckdb/planner/expression.hpp"
 
-namespace duckdb {
-class DataTable;
-
-} // namespace duckdb
+namespace duckdb {} // namespace duckdb

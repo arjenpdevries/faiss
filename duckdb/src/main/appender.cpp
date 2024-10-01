@@ -112,7 +112,6 @@ void BaseAppender::EndRow() {
 
 template <class SRC, class DST>
 void BaseAppender::AppendValueInternal(Vector &col, SRC input) {
-	FlatVector::GetData<DST>(col)[chunk.size()] = Cast::Operation<SRC, DST>(input);
 }
 
 template <class SRC, class DST>

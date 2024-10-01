@@ -12,12 +12,6 @@ namespace duckdb {
 
 // LoadInternal adds the faiss functions to the database
 static void LoadInternal(DatabaseInstance &instance) {
-	Connection con(instance);
-	con.BeginTransaction();
-	auto &catalog = Catalog::GetSystemCatalog(*con.context);
-
-	// manual training
-	con.Commit();
 }
 
 void FaissExtension::Load(DuckDB &db) {

@@ -27,19 +27,6 @@ void IntervalTryAddition(T &target, int64_t input, int64_t multiplier, int64_t f
 	if (!TryMultiplyOperator::Operation<int64_t, int64_t, int64_t>(input, multiplier, addition)) {
 		throw OutOfRangeException("interval value is out of range");
 	}
-	T addition_base = Cast::Operation<int64_t, T>(addition);
-	if (!TryAddOperator::Operation<T, T, T>(target, addition_base, target)) {
-		throw OutOfRangeException("interval value is out of range");
-	}
-	if (fraction) {
-		//	Add in (fraction * multiplier) / MICROS_PER_SEC
-		//	This is always in range
-		addition = (fraction * multiplier) / Interval::MICROS_PER_SEC;
-		addition_base = Cast::Operation<int64_t, T>(addition);
-		if (!TryAddOperator::Operation<T, T, T>(target, addition_base, target)) {
-			throw OutOfRangeException("interval fraction is out of range");
-		}
-	}
 }
 
 bool Interval::FromCString(const char *str, idx_t len, interval_t &result, string *error_message, bool strict) {
@@ -112,17 +99,6 @@ interval_parse_number:
 			}
 			// finished the number, parse it from the string
 			string_t nr_string(str + start_pos, UnsafeNumericCast<uint32_t>(pos - start_pos));
-			number = Cast::Operation<string_t, int64_t>(nr_string);
-			fraction = 0;
-			if (c == '.') {
-				// we expect some microseconds
-				int32_t mult = 100000;
-				for (++pos; pos < len && StringUtil::CharacterIsDigit(str[pos]); ++pos, mult /= 10) {
-					if (mult > 0) {
-						fraction += int64_t(str[pos] - '0') * mult;
-					}
-				}
-			}
 			if (negative) {
 				number = -number;
 				fraction = -fraction;

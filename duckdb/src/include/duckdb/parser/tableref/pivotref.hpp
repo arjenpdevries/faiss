@@ -56,7 +56,7 @@ public:
 	static constexpr const TableReferenceType TYPE = TableReferenceType::PIVOT;
 
 public:
-	explicit PivotRef() : TableRef(TableReferenceType::PIVOT), include_nulls(false) {
+	explicit PivotRef() : TableRef(), include_nulls(false) {
 	}
 
 	//! The source table of the pivot

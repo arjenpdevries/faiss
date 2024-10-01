@@ -82,12 +82,10 @@ public:
 	ClientConfig config;
 	//! The set of client-specific data
 	unique_ptr<ClientData> client_data;
-	//! Data for the currently running transaction
-	TransactionContext transaction;
 
 public:
 	MetaTransaction &ActiveTransaction() {
-		return transaction.ActiveTransaction();
+		throw TransactionException("cannot start a transaction within a transaction");
 	}
 
 	//! Interrupt execution of a query
@@ -268,8 +266,6 @@ private:
 	mutex context_lock;
 	//! The currently active query context
 	unique_ptr<ActiveQueryContext> active_query;
-	//! The current query progress
-	QueryProgress query_progress;
 };
 
 class ClientContextLock {

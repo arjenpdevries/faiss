@@ -8,10 +8,10 @@
 
 #pragma once
 
-#include "duckdb/common/vector_size.hpp"
-#include "duckdb/storage/table/chunk_info.hpp"
-#include "duckdb/storage/storage_info.hpp"
 #include "duckdb/common/mutex.hpp"
+#include "duckdb/common/vector_size.hpp"
+#include "duckdb/storage/storage_info.hpp"
+#include "duckdb/storage/table/chunk_info.hpp"
 
 namespace duckdb {
 
@@ -40,7 +40,6 @@ public:
 	void CleanupAppend(transaction_t lowest_active_transaction, idx_t row_group_start, idx_t count);
 
 	idx_t DeleteRows(idx_t vector_idx, transaction_t transaction_id, row_t rows[], idx_t count);
-	void CommitDelete(idx_t vector_idx, transaction_t commit_id, const DeleteInfo &info);
 
 	vector<MetaBlockPointer> Checkpoint(MetadataManager &manager);
 	static shared_ptr<RowVersionManager> Deserialize(MetaBlockPointer delete_pointer, MetadataManager &manager,

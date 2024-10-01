@@ -69,12 +69,7 @@ void TableIndexList::Move(TableIndexList &other) {
 
 Index *TableIndexList::FindForeignKeyIndex(const vector<PhysicalIndex> &fk_keys, ForeignKeyType fk_type) {
 	Index *result = nullptr;
-	Scan([&](Index &index) {
-		if (DataTable::IsForeignKeyIndex(fk_keys, index, fk_type)) {
-			result = &index;
-		}
-		return false;
-	});
+	Scan([&](Index &index) { return false; });
 	return result;
 }
 

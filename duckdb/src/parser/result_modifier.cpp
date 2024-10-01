@@ -1,7 +1,8 @@
 #include "duckdb/parser/result_modifier.hpp"
-#include "duckdb/parser/expression_util.hpp"
-#include "duckdb/common/serializer/serializer.hpp"
+
 #include "duckdb/common/serializer/deserializer.hpp"
+#include "duckdb/common/serializer/serializer.hpp"
+#include "duckdb/parser/expression_util.hpp"
 
 namespace duckdb {
 
@@ -14,12 +15,6 @@ bool LimitModifier::Equals(const ResultModifier &other_p) const {
 		return false;
 	}
 	auto &other = other_p.Cast<LimitModifier>();
-	if (!ParsedExpression::Equals(limit, other.limit)) {
-		return false;
-	}
-	if (!ParsedExpression::Equals(offset, other.offset)) {
-		return false;
-	}
 	return true;
 }
 
@@ -121,12 +116,6 @@ bool LimitPercentModifier::Equals(const ResultModifier &other_p) const {
 		return false;
 	}
 	auto &other = other_p.Cast<LimitPercentModifier>();
-	if (!ParsedExpression::Equals(limit, other.limit)) {
-		return false;
-	}
-	if (!ParsedExpression::Equals(offset, other.offset)) {
-		return false;
-	}
 	return true;
 }
 

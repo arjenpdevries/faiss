@@ -54,7 +54,6 @@ public:
 	//! The query executor
 	unique_ptr<Executor> executor;
 	//! The progress bar
-	unique_ptr<ProgressBar> progress_bar;
 
 public:
 	void SetOpenResult(BaseQueryResult &result) {
@@ -134,7 +133,7 @@ struct DebugClientContextState : public ClientContextState {
 #endif
 
 ClientContext::ClientContext(shared_ptr<DatabaseInstance> database)
-    : db(std::move(database)), interrupted(false), client_data(make_uniq<ClientData>(*this)), transaction(*this) {
+    : db(std::move(database)), interrupted(false), client_data(make_uniq<ClientData>(*this)) {
 	registered_state = make_uniq<RegisteredStateManager>();
 #ifdef DEBUG
 	registered_state->GetOrCreate<DebugClientContextState>("debug_client_context_state");
@@ -156,12 +155,6 @@ unique_ptr<ClientContextLock> ClientContext::LockContext() {
 
 void ClientContext::Destroy() {
 	auto lock = LockContext();
-	if (transaction.HasActiveTransaction()) {
-		transaction.ResetActiveQuery();
-		if (!transaction.IsAutoCommit()) {
-			transaction.Rollback(nullptr);
-		}
-	}
 	CleanupInternal(*lock);
 }
 
@@ -187,14 +180,9 @@ void ClientContext::BeginQueryInternal(ClientContextLock &lock, const string &qu
 		throw ErrorManager::InvalidatedDatabase(*this, ValidChecker::InvalidatedMessage(db_inst));
 	}
 	active_query = make_uniq<ActiveQueryContext>();
-	if (transaction.IsAutoCommit()) {
-		transaction.BeginTransaction();
-	}
-	transaction.SetActiveQuery(db->GetDatabaseManager().GetNewQueryNumber());
 	LogQueryInternal(lock, query);
 	active_query->query = query;
 
-	query_progress.Initialize();
 	// Notify any registered state of query begin
 	for (auto &state : registered_state->States()) {
 		state->QueryBegin(*this);
@@ -206,35 +194,10 @@ ErrorData ClientContext::EndQueryInternal(ClientContextLock &lock, bool success,
 	if (active_query->executor) {
 		active_query->executor->CancelTasks();
 	}
-	active_query->progress_bar.reset();
 
 	D_ASSERT(active_query.get());
 	active_query.reset();
-	query_progress.Initialize();
 	ErrorData error;
-	try {
-		if (transaction.HasActiveTransaction()) {
-			transaction.ResetActiveQuery();
-			if (transaction.IsAutoCommit()) {
-				if (success) {
-					transaction.Commit();
-				} else {
-					transaction.Rollback(previous_error);
-				}
-			} else if (invalidate_transaction) {
-				D_ASSERT(!success);
-				ValidChecker::Invalidate(ActiveTransaction(), "Failed to commit");
-			}
-		}
-	} catch (std::exception &ex) {
-		error = ErrorData(ex);
-		if (Exception::InvalidatesDatabase(error.Type())) {
-			auto &db_inst = DatabaseInstance::GetDatabase(*this);
-			ValidChecker::Invalidate(db_inst, error.RawMessage());
-		}
-	} catch (...) { // LCOV_EXCL_START
-		error = ErrorData("Unhandled exception!");
-	} // LCOV_EXCL_STOP
 
 	// Notify any registered state of query end
 	for (auto const &s : registered_state->States()) {
@@ -256,7 +219,6 @@ void ClientContext::CleanupInternal(ClientContextLock &lock, BaseQueryResult *re
 	if (active_query->executor) {
 		active_query->executor->CancelTasks();
 	}
-	active_query->progress_bar.reset();
 
 	// Relaunch the threads if a SET THREADS command was issued
 	auto &scheduler = TaskScheduler::GetScheduler(*this);
@@ -378,7 +340,8 @@ ClientContext::CreatePreparedStatement(ClientContextLock &lock, const string &qu
 }
 
 QueryProgress ClientContext::GetQueryProgress() {
-	return query_progress;
+	throw InternalException("ClientContext::RebindPreparedStatement called but PreparedStatementData did not have "
+	                        "an unbound statement so rebinding cannot be done");
 }
 
 void BindPreparedStatementParameters(PreparedStatementData &statement, const PendingQueryParameters &parameters) {
@@ -424,7 +387,6 @@ void ClientContext::CheckIfPreparedStatementIsExecutable(PreparedStatementData &
 			    "Cannot execute statement of type \"%s\" on database \"%s\" which is attached in read-only mode!",
 			    StatementTypeToString(statement.statement_type), modified_database));
 		}
-		meta_transaction.ModifyDatabase(*entry);
 	}
 }
 
@@ -442,13 +404,7 @@ ClientContext::PendingPreparedStatementInternal(ClientContextLock &lock, shared_
 		progress_bar_display_create_func_t display_create_func = nullptr;
 		if (config.print_progress_bar) {
 			// If a custom display is set, use that, otherwise just use the default
-			display_create_func =
-			    config.display_create_func ? config.display_create_func : ProgressBar::DefaultProgressBarDisplay;
 		}
-		active_query->progress_bar =
-		    make_uniq<ProgressBar>(executor, NumericCast<idx_t>(config.wait_time), display_create_func);
-		active_query->progress_bar->Start();
-		query_progress.Restart();
 	}
 	auto stream_result = parameters.allow_stream_result && statement.properties.allow_stream_result;
 
@@ -500,11 +456,6 @@ PendingExecutionResult ClientContext::ExecuteTaskInternal(ClientContextLock &loc
 	bool invalidate_transaction = true;
 	try {
 		auto query_result = active_query->executor->ExecuteTask(dry_run);
-		if (active_query->progress_bar) {
-			auto is_finished = PendingQueryResult::IsResultReady(query_result);
-			active_query->progress_bar->Update(is_finished);
-			query_progress = active_query->progress_bar->GetDetailedQueryProgress();
-		}
 		return query_result;
 	} catch (std::exception &ex) {
 		auto error = ErrorData(ex);
@@ -953,38 +904,6 @@ void ClientContext::RegisterFunction(CreateFunctionInfo &info) {
 
 void ClientContext::RunFunctionInTransactionInternal(ClientContextLock &lock, const std::function<void(void)> &fun,
                                                      bool requires_valid_transaction) {
-	if (requires_valid_transaction && transaction.HasActiveTransaction() &&
-	    ValidChecker::IsInvalidated(ActiveTransaction())) {
-		throw TransactionException(ErrorManager::FormatException(*this, ErrorType::INVALIDATED_TRANSACTION));
-	}
-	// check if we are on AutoCommit. In this case we should start a transaction
-	bool require_new_transaction = transaction.IsAutoCommit() && !transaction.HasActiveTransaction();
-	if (require_new_transaction) {
-		D_ASSERT(!active_query);
-		transaction.BeginTransaction();
-	}
-	try {
-		fun();
-	} catch (std::exception &ex) {
-		ErrorData error(ex);
-		bool invalidates_transaction = true;
-		if (!Exception::InvalidatesTransaction(error.Type())) {
-			// standard exceptions don't invalidate the transaction
-			invalidates_transaction = false;
-		} else if (Exception::InvalidatesDatabase(error.Type())) {
-			auto &db_instance = DatabaseInstance::GetDatabase(*this);
-			ValidChecker::Invalidate(db_instance, error.RawMessage());
-		}
-		if (require_new_transaction) {
-			transaction.Rollback(error);
-		} else if (invalidates_transaction) {
-			ValidChecker::Invalidate(ActiveTransaction(), error.RawMessage());
-		}
-		throw;
-	}
-	if (require_new_transaction) {
-		transaction.Commit();
-	}
 }
 
 void ClientContext::RunFunctionInTransaction(const std::function<void(void)> &fun, bool requires_valid_transaction) {

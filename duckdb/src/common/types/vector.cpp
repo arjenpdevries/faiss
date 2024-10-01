@@ -891,7 +891,6 @@ void Vector::Flatten(idx_t count) {
 		// create vector to decompress into
 		Vector other(GetType(), total_count);
 		// now copy the data of this vector to the other vector, decompressing the strings in the process
-		VectorOperations::Copy(*this, other, total_count, 0, 0);
 		// create a reference to the data in the other vector
 		this->Reference(other);
 		break;
@@ -900,7 +899,6 @@ void Vector::Flatten(idx_t count) {
 		// create a new flat vector of this type
 		Vector other(GetType(), count);
 		// now copy the data of this vector to the other vector, removing the selection vector in the process
-		VectorOperations::Copy(*this, other, count, 0, 0);
 		// create a reference to the data in the other vector
 		this->Reference(other);
 		break;
@@ -1024,7 +1022,6 @@ void Vector::Flatten(idx_t count) {
 			}
 
 			// Copy over the data to the new buffer
-			VectorOperations::Copy(*child_vec, new_child, sel, count * array_size, 0, 0);
 			auxiliary = shared_ptr<VectorBuffer>(flattened_buffer.release());
 
 			break;
@@ -1056,7 +1053,6 @@ void Vector::Flatten(idx_t count) {
 
 		buffer = VectorBuffer::CreateStandardVector(GetType(), MaxValue<idx_t>(STANDARD_VECTOR_SIZE, seq_count));
 		data = buffer->GetData();
-		VectorOperations::GenerateSequence(*this, seq_count, start, increment);
 		break;
 	}
 	default:
@@ -1073,7 +1069,6 @@ void Vector::Flatten(const SelectionVector &sel, idx_t count) {
 		// create a new flat vector of this type
 		Vector other(GetType(), count);
 		// copy the data of this vector to the other vector, removing compression and selection vector in the process
-		VectorOperations::Copy(*this, other, sel, count, 0, 0);
 		// create a reference to the data in the other vector
 		this->Reference(other);
 		break;
@@ -1084,7 +1079,6 @@ void Vector::Flatten(const SelectionVector &sel, idx_t count) {
 
 		buffer = VectorBuffer::CreateStandardVector(GetType());
 		data = buffer->GetData();
-		VectorOperations::GenerateSequence(*this, count, sel, start, increment);
 		break;
 	}
 	default:
@@ -1192,7 +1186,6 @@ void Vector::Serialize(Serializer &serializer, idx_t count) {
 		// constant size type: simple copy
 		idx_t write_size = GetTypeIdSize(logical_type.InternalType()) * count;
 		auto ptr = make_unsafe_uniq_array_uninitialized<data_t>(write_size);
-		VectorOperations::WriteToStorage(*this, count, ptr.get());
 		serializer.WriteProperty(102, "data", ptr.get(), write_size);
 	} else {
 		switch (logical_type.InternalType()) {
@@ -1278,7 +1271,6 @@ void Vector::Deserialize(Deserializer &deserializer, idx_t count) {
 		auto ptr = make_unsafe_uniq_array_uninitialized<data_t>(column_size);
 		deserializer.ReadProperty(102, "data", ptr.get(), column_size);
 
-		VectorOperations::ReadFromStorage(ptr.get(), count, *this);
 	} else {
 		switch (logical_type.InternalType()) {
 		case PhysicalType::VARCHAR: {

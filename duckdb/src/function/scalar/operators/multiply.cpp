@@ -7,8 +7,8 @@
 #include "duckdb/common/types/value.hpp"
 #include "duckdb/common/windows_undefs.hpp"
 
-#include <limits>
 #include <algorithm>
+#include <limits>
 
 namespace duckdb {
 
@@ -29,10 +29,6 @@ double MultiplyOperator::Operation(double left, double right) {
 
 template <>
 interval_t MultiplyOperator::Operation(interval_t left, int64_t right) {
-	const auto right32 = Cast::Operation<int64_t, int32_t>(right);
-	left.months = MultiplyOperatorOverflowCheck::Operation<int32_t, int32_t, int32_t>(left.months, right32);
-	left.days = MultiplyOperatorOverflowCheck::Operation<int32_t, int32_t, int32_t>(left.days, right32);
-	left.micros = MultiplyOperatorOverflowCheck::Operation<int64_t, int64_t, int64_t>(left.micros, right);
 	return left;
 }
 

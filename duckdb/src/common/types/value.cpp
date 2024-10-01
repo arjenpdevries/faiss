@@ -1061,66 +1061,7 @@ T Value::GetValueInternal() const {
 	if (IsNull()) {
 		throw InternalException("Calling GetValueInternal on a value that is NULL");
 	}
-	switch (type_.id()) {
-	case LogicalTypeId::BOOLEAN:
-		return Cast::Operation<bool, T>(value_.boolean);
-	case LogicalTypeId::TINYINT:
-		return Cast::Operation<int8_t, T>(value_.tinyint);
-	case LogicalTypeId::SMALLINT:
-		return Cast::Operation<int16_t, T>(value_.smallint);
-	case LogicalTypeId::INTEGER:
-		return Cast::Operation<int32_t, T>(value_.integer);
-	case LogicalTypeId::BIGINT:
-		return Cast::Operation<int64_t, T>(value_.bigint);
-	case LogicalTypeId::HUGEINT:
-	case LogicalTypeId::UUID:
-		return Cast::Operation<hugeint_t, T>(value_.hugeint);
-	case LogicalTypeId::UHUGEINT:
-		return Cast::Operation<uhugeint_t, T>(value_.uhugeint);
-	case LogicalTypeId::DATE:
-		return Cast::Operation<date_t, T>(value_.date);
-	case LogicalTypeId::TIME:
-		return Cast::Operation<dtime_t, T>(value_.time);
-	case LogicalTypeId::TIME_TZ:
-		return Cast::Operation<dtime_tz_t, T>(value_.timetz);
-	case LogicalTypeId::TIMESTAMP:
-	case LogicalTypeId::TIMESTAMP_TZ:
-		return Cast::Operation<timestamp_t, T>(value_.timestamp);
-	case LogicalTypeId::UTINYINT:
-		return Cast::Operation<uint8_t, T>(value_.utinyint);
-	case LogicalTypeId::USMALLINT:
-		return Cast::Operation<uint16_t, T>(value_.usmallint);
-	case LogicalTypeId::UINTEGER:
-		return Cast::Operation<uint32_t, T>(value_.uinteger);
-	case LogicalTypeId::TIMESTAMP_MS:
-	case LogicalTypeId::TIMESTAMP_NS:
-	case LogicalTypeId::TIMESTAMP_SEC:
-	case LogicalTypeId::UBIGINT:
-		return Cast::Operation<uint64_t, T>(value_.ubigint);
-	case LogicalTypeId::FLOAT:
-		return Cast::Operation<float, T>(value_.float_);
-	case LogicalTypeId::DOUBLE:
-		return Cast::Operation<double, T>(value_.double_);
-	case LogicalTypeId::VARCHAR:
-		return Cast::Operation<string_t, T>(StringValue::Get(*this).c_str());
-	case LogicalTypeId::INTERVAL:
-		return Cast::Operation<interval_t, T>(value_.interval);
-	case LogicalTypeId::DECIMAL:
-	case LogicalTypeId::ENUM: {
-		switch (type_.InternalType()) {
-		case PhysicalType::UINT8:
-			return Cast::Operation<uint8_t, T>(value_.utinyint);
-		case PhysicalType::UINT16:
-			return Cast::Operation<uint16_t, T>(value_.usmallint);
-		case PhysicalType::UINT32:
-			return Cast::Operation<uint32_t, T>(value_.uinteger);
-		default:
-			throw InternalException("Invalid Internal Type for ENUMs");
-		}
-	}
-	default:
-		throw NotImplementedException("Unimplemented type \"%s\" for GetValue()", type_.ToString());
-	}
+	throw NotImplementedException("Unimplemented type \"%s\" for GetValue()", type_.ToString());
 }
 
 template <>
@@ -1457,7 +1398,6 @@ hash_t Value::Hash() const {
 	}
 	Vector input(*this);
 	Vector result(LogicalType::HASH);
-	VectorOperations::Hash(input, result, 1);
 
 	auto data = FlatVector::GetData<hash_t>(result);
 	return data[0];
@@ -1722,27 +1662,27 @@ hugeint_t IntegralValue::Get(const Value &value) {
 // Comparison Operators
 //===--------------------------------------------------------------------===//
 bool Value::operator==(const Value &rhs) const {
-	return ValueOperations::Equals(*this, rhs);
+	return false;
 }
 
 bool Value::operator!=(const Value &rhs) const {
-	return ValueOperations::NotEquals(*this, rhs);
+	return false;
 }
 
 bool Value::operator<(const Value &rhs) const {
-	return ValueOperations::LessThan(*this, rhs);
+	return false;
 }
 
 bool Value::operator>(const Value &rhs) const {
-	return ValueOperations::GreaterThan(*this, rhs);
+	return false;
 }
 
 bool Value::operator<=(const Value &rhs) const {
-	return ValueOperations::LessThanEquals(*this, rhs);
+	return false;
 }
 
 bool Value::operator>=(const Value &rhs) const {
-	return ValueOperations::GreaterThanEquals(*this, rhs);
+	return false;
 }
 
 bool Value::operator==(const int64_t &rhs) const {
@@ -1792,7 +1732,7 @@ void Value::Print() const {
 }
 
 bool Value::NotDistinctFrom(const Value &lvalue, const Value &rvalue) {
-	return ValueOperations::NotDistinctFrom(lvalue, rvalue);
+	return false;
 }
 
 static string SanitizeValue(string input) {

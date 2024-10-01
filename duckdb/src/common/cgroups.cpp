@@ -1,10 +1,10 @@
 #include "duckdb/common/cgroups.hpp"
 
-#include "duckdb/common/string_util.hpp"
 #include "duckdb/common/file_system.hpp"
 #include "duckdb/common/limits.hpp"
-#include "duckdb/common/types/cast_helpers.hpp"
 #include "duckdb/common/operator/cast_operators.hpp"
+#include "duckdb/common/string_util.hpp"
+#include "duckdb/common/types/cast_helpers.hpp"
 
 #include <cinttypes>
 
@@ -130,9 +130,6 @@ optional_idx CGroups::ReadCGroupValue(FileSystem &fs, const char *file_path) {
 	buffer[bytes_read] = '\0';
 
 	idx_t value;
-	if (TryCast::Operation<string_t, idx_t>(string_t(buffer), value)) {
-		return optional_idx(value);
-	}
 	return optional_idx();
 #endif
 }

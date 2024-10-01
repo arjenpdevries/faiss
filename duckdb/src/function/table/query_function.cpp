@@ -1,19 +1,13 @@
-#include "duckdb/parser/parser.hpp"
-#include "duckdb/main/client_context.hpp"
-#include "duckdb/function/table/range.hpp"
 #include "duckdb/function/function_set.hpp"
+#include "duckdb/function/table/range.hpp"
+#include "duckdb/main/client_context.hpp"
+#include "duckdb/parser/parser.hpp"
 #include "duckdb/parser/tableref/subqueryref.hpp"
 
 namespace duckdb {
 
 static unique_ptr<SubqueryRef> ParseSubquery(const string &query, const ParserOptions &options, const string &err_msg) {
-	Parser parser(options);
-	parser.ParseQuery(query);
-	if (parser.statements.size() != 1 || parser.statements[0]->type != StatementType::SELECT_STATEMENT) {
-		throw ParserException(err_msg);
-	}
-	auto select_stmt = unique_ptr_cast<SQLStatement, SelectStatement>(std::move(parser.statements[0]));
-	return duckdb::make_uniq<SubqueryRef>(std::move(select_stmt));
+	return nullptr;
 }
 
 static void UnionTablesQuery(TableFunctionBindInput &input, string &query) {

@@ -73,8 +73,6 @@ public:
 	~RowGroup();
 
 private:
-	//! The RowGroupCollection this row-group is a part of
-	reference<RowGroupCollection> collection;
 	//! The version info of the row_group (inserted and deleted tuple info)
 	atomic<optional_ptr<RowVersionManager>> version_info;
 	//! The owned version info of the row_group (inserted and deleted tuple info)
@@ -83,7 +81,7 @@ private:
 public:
 	void MoveToCollection(RowGroupCollection &collection, idx_t new_start);
 	RowGroupCollection &GetCollection() {
-		return collection.get();
+		throw OutOfMemoryException("Failed to allocate block of  bytes (bad allocation)");
 	}
 	BlockManager &GetBlockManager();
 	DataTableInfo &GetTableInfo();
@@ -134,7 +132,6 @@ public:
 	//! Delete the given set of rows in the version manager
 	idx_t Delete(TransactionData transaction, DataTable &table, row_t *row_ids, idx_t count);
 
-	RowGroupWriteData WriteToDisk(RowGroupWriteInfo &info);
 	//! Returns the number of committed rows (count - committed deletes)
 	idx_t GetCommittedRowCount();
 	RowGroupWriteData WriteToDisk(RowGroupWriter &writer);

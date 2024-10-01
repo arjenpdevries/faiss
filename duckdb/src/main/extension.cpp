@@ -107,10 +107,6 @@ bool VersioningUtils::ParseSemver(string &semver, idx_t &major_out, idx_t &minor
 	idx_t major, minor, patch;
 	bool succeeded = true;
 
-	succeeded &= TryCast::Operation<string_t, idx_t>(split[0], major);
-	succeeded &= TryCast::Operation<string_t, idx_t>(split[1], minor);
-	succeeded &= TryCast::Operation<string_t, idx_t>(split[2], patch);
-
 	if (!succeeded) {
 		return false;
 	}

@@ -37,8 +37,6 @@ private:
 	bool PrepareWrite();
 
 private:
-	//! The table
-	DataTable &table;
 	//! The partial block manager (if we created one yet)
 	unique_ptr<PartialBlockManager> partial_manager;
 };

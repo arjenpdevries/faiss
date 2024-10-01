@@ -11,9 +11,11 @@
 #include "duckdb/common/case_insensitive_map.hpp"
 #include "duckdb/common/constants.hpp"
 #include "duckdb/common/enums/expression_type.hpp"
+#include "duckdb/common/enums/on_entry_not_found.hpp"
 #include "duckdb/common/stack_checker.hpp"
 #include "duckdb/common/types.hpp"
 #include "duckdb/common/unordered_map.hpp"
+#include "duckdb/parser/expression/parameter_expression.hpp"
 #include "duckdb/parser/group_by_node.hpp"
 #include "duckdb/parser/parsed_data/create_info.hpp"
 #include "duckdb/parser/parsed_data/create_secret_info.hpp"
@@ -24,8 +26,6 @@
 #include "nodes/parsenodes.hpp"
 #include "nodes/primnodes.hpp"
 #include "pg_definitions.hpp"
-#include "duckdb/parser/expression/parameter_expression.hpp"
-#include "duckdb/common/enums/on_entry_not_found.hpp"
 
 namespace duckdb {
 
@@ -55,9 +55,7 @@ class Transformer {
 	};
 
 public:
-	explicit Transformer(ParserOptions &options);
 	Transformer(Transformer &parent);
-	~Transformer();
 
 	//! Transforms a Postgres parse tree into a set of SQL Statements
 	bool TransformParseTree(duckdb_libpgquery::PGList *tree, vector<unique_ptr<SQLStatement>> &statements);

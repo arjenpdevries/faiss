@@ -8,9 +8,9 @@
 
 #pragma once
 
-#include "duckdb/transaction/undo_buffer.hpp"
 #include "duckdb/common/types/data_chunk.hpp"
 #include "duckdb/common/unordered_map.hpp"
+#include "duckdb/transaction/undo_buffer.hpp"
 
 namespace duckdb {
 
@@ -33,8 +33,6 @@ public:
 private:
 	//! Lowest active transaction
 	transaction_t lowest_active_transaction;
-	// data for index cleanup
-	optional_ptr<DataTable> current_table;
 	DataChunk chunk;
 	row_t row_numbers[STANDARD_VECTOR_SIZE];
 	idx_t count;

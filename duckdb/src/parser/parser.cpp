@@ -188,7 +188,6 @@ vector<string> SplitQueryStringIntoStatements(const string &query) {
 }
 
 void Parser::ParseQuery(const string &query) {
-	Transformer transformer(options);
 	string parser_error;
 	optional_idx parser_error_location;
 	{
@@ -216,7 +215,6 @@ void Parser::ParseQuery(const string &query) {
 
 				// if it succeeded, we transform the Postgres parse tree into a list of
 				// SQLStatements
-				transformer.TransformParseTree(parser.parse_tree, statements);
 				parsing_succeed = true;
 			} else {
 				parser_error = parser.error_message;
@@ -250,7 +248,6 @@ void Parser::ParseQuery(const string &query) {
 							// empty statement
 							continue;
 						}
-						transformer.TransformParseTree(another_parser.parse_tree, statements);
 						// important to set in the case of a mixture of DDB and parser ext statements
 						statements.back()->stmt_length = query_statement.size() - 1;
 						statements.back()->stmt_location = stmt_loc;

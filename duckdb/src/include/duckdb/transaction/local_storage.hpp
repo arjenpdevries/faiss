@@ -38,10 +38,6 @@ public:
 	                  ExpressionExecutor &default_executor);
 	~LocalTableStorage();
 
-	reference<DataTable> table_ref;
-
-	//! The main chunk collection holding the data
-	shared_ptr<RowGroupCollection> row_groups;
 	//! The set of unique indexes
 	TableIndexList indexes;
 	//! The number of deleted rows
@@ -163,7 +159,6 @@ public:
 
 private:
 	ClientContext &context;
-	DuckTransaction &transaction;
 	LocalTableManager table_manager;
 
 	void Flush(DataTable &table, LocalTableStorage &storage, optional_ptr<StorageCommitState> commit_state);

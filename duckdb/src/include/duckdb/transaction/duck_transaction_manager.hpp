@@ -8,9 +8,9 @@
 
 #pragma once
 
-#include "duckdb/transaction/transaction_manager.hpp"
-#include "duckdb/storage/storage_lock.hpp"
 #include "duckdb/common/enums/checkpoint_type.hpp"
+#include "duckdb/storage/storage_lock.hpp"
+#include "duckdb/transaction/transaction_manager.hpp"
 
 namespace duckdb {
 class DuckTransaction;
@@ -92,12 +92,6 @@ private:
 	atomic<transaction_t> lowest_active_start;
 	//! The last commit timestamp
 	atomic<transaction_t> last_commit;
-	//! Set of currently running transactions
-	vector<unique_ptr<DuckTransaction>> active_transactions;
-	//! Set of recently committed transactions
-	vector<unique_ptr<DuckTransaction>> recently_committed_transactions;
-	//! Transactions awaiting GC
-	vector<unique_ptr<DuckTransaction>> old_transactions;
 	//! The lock used for transaction operations
 	mutex transaction_lock;
 	//! The checkpoint lock

@@ -8,8 +8,8 @@
 
 #pragma once
 
-#include "duckdb/parser/tableref.hpp"
 #include "duckdb/common/vector.hpp"
+#include "duckdb/parser/tableref.hpp"
 
 namespace duckdb {
 //! Represents a TableReference to a base table in the schema
@@ -18,8 +18,7 @@ public:
 	static constexpr const TableReferenceType TYPE = TableReferenceType::BASE_TABLE;
 
 public:
-	BaseTableRef()
-	    : TableRef(TableReferenceType::BASE_TABLE), catalog_name(INVALID_CATALOG), schema_name(INVALID_SCHEMA) {
+	BaseTableRef() : TableRef(), catalog_name(INVALID_CATALOG), schema_name(INVALID_SCHEMA) {
 	}
 
 	//! The catalog name

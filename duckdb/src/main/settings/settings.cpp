@@ -883,13 +883,11 @@ Value AutoloadKnownExtensions::GetSetting(const ClientContext &context) {
 //===--------------------------------------------------------------------===//
 void EnableProgressBarSetting::ResetLocal(ClientContext &context) {
 	auto &config = ClientConfig::GetConfig(context);
-	ProgressBar::SystemOverrideCheck(config);
 	config.enable_progress_bar = ClientConfig().enable_progress_bar;
 }
 
 void EnableProgressBarSetting::SetLocal(ClientContext &context, const Value &input) {
 	auto &config = ClientConfig::GetConfig(context);
-	ProgressBar::SystemOverrideCheck(config);
 	config.enable_progress_bar = input.GetValue<bool>();
 }
 
@@ -902,13 +900,11 @@ Value EnableProgressBarSetting::GetSetting(const ClientContext &context) {
 //===--------------------------------------------------------------------===//
 void EnableProgressBarPrintSetting::SetLocal(ClientContext &context, const Value &input) {
 	auto &config = ClientConfig::GetConfig(context);
-	ProgressBar::SystemOverrideCheck(config);
 	config.print_progress_bar = input.GetValue<bool>();
 }
 
 void EnableProgressBarPrintSetting::ResetLocal(ClientContext &context) {
 	auto &config = ClientConfig::GetConfig(context);
-	ProgressBar::SystemOverrideCheck(config);
 	config.print_progress_bar = ClientConfig().print_progress_bar;
 }
 
@@ -1750,14 +1746,12 @@ Value ProfilingModeSetting::GetSetting(const ClientContext &context) {
 //===--------------------------------------------------------------------===//
 void ProgressBarTimeSetting::ResetLocal(ClientContext &context) {
 	auto &config = ClientConfig::GetConfig(context);
-	ProgressBar::SystemOverrideCheck(config);
 	config.wait_time = ClientConfig().wait_time;
 	config.enable_progress_bar = ClientConfig().enable_progress_bar;
 }
 
 void ProgressBarTimeSetting::SetLocal(ClientContext &context, const Value &input) {
 	auto &config = ClientConfig::GetConfig(context);
-	ProgressBar::SystemOverrideCheck(config);
 	config.wait_time = input.GetValue<int32_t>();
 	config.enable_progress_bar = true;
 }

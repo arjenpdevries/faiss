@@ -15,7 +15,6 @@
 
 namespace duckdb {
 
-class DataTable;
 struct CreateViewInfo;
 
 //! A view catalog entry

@@ -48,8 +48,6 @@ public:
 		return checkpoint_lock.GetSharedLock();
 	}
 
-	string GetSchemaName();
-	string GetTableName();
 	void SetTableName(string name);
 
 private:

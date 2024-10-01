@@ -67,7 +67,6 @@ struct NumericStats {
 	template <class T>
 	static inline void UpdateValue(T new_value, T &min, T &max) {
 		min = LessThan::Operation(new_value, min) ? new_value : min;
-		max = GreaterThan::Operation(new_value, max) ? new_value : max;
 	}
 	template <class T>
 	static inline void Update(NumericStatsData &nstats, T new_value) {

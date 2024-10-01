@@ -154,7 +154,6 @@ bool WriteAheadLog::Replay(AttachedDatabase &database, unique_ptr<FileHandle> ha
 	auto wal_path = handle->GetPath();
 
 	con.BeginTransaction();
-	MetaTransaction::Get(*con.context).ModifyDatabase(database);
 
 	auto &config = DBConfig::GetConfig(database.GetDatabase());
 	// first deserialize the WAL to look for a checkpoint flag
@@ -418,7 +417,6 @@ void WriteAheadLogDeserializer::ReplayRowGroupData() {
 		throw InternalException("Corrupt WAL: insert without table");
 	}
 	auto &storage = state.current_table->GetStorage();
-	auto &table_info = storage.GetDataTableInfo();
 }
 
 void WriteAheadLogDeserializer::ReplayDelete() {
@@ -439,7 +437,6 @@ void WriteAheadLogDeserializer::ReplayDelete() {
 	TableDeleteState delete_state;
 	for (idx_t i = 0; i < chunk.size(); i++) {
 		row_ids[0] = source_ids[i];
-		state.current_table->GetStorage().Delete(delete_state, context, row_identifiers, 1);
 	}
 }
 

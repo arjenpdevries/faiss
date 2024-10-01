@@ -78,7 +78,6 @@ public:
 public:
 	string ToString(const LogicalOperator &op);
 	string ToString(const ProfilingNode &op);
-	string ToString(const Pipeline &op);
 
 	void Render(const LogicalOperator &op, std::ostream &ss);
 	void Render(const ProfilingNode &op, std::ostream &ss);

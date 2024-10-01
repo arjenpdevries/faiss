@@ -8,8 +8,8 @@
 
 #pragma once
 
-#include "duckdb/transaction/transaction.hpp"
 #include "duckdb/common/reference_map.hpp"
+#include "duckdb/transaction/transaction.hpp"
 
 namespace duckdb {
 class CheckpointLock;
@@ -18,6 +18,7 @@ class RowVersionManager;
 class DuckTransactionManager;
 class StorageLockKey;
 class StorageCommitState;
+class DataTable;
 struct DataTableInfo;
 struct UndoBufferProperties;
 
@@ -85,9 +86,6 @@ public:
 	shared_ptr<CheckpointLock> SharedLockTable(DataTableInfo &info);
 
 private:
-	DuckTransactionManager &transaction_manager;
-	//! The undo buffer is used to store old versions of rows that are updated
-	//! or deleted
 	UndoBuffer undo_buffer;
 	//! The set of uncommitted appends for the transaction
 	unique_ptr<LocalStorage> storage;
@@ -98,7 +96,6 @@ private:
 	//! Map of all sequences that were used during the transaction and the value they had in this transaction
 	reference_map_t<SequenceCatalogEntry, reference<SequenceValue>> sequence_usage;
 	//! Collections that are updated by this transaction
-	reference_map_t<RowGroupCollection, shared_ptr<RowGroupCollection>> updated_collections;
 	//! Lock for the active_locks map
 	mutex active_locks_lock;
 	//! Active locks on tables

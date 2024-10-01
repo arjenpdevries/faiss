@@ -1,16 +1,6 @@
-# add_subdirectory(arrow)
-# add_subdirectory(crypto)
 add_subdirectory(enums)
 add_subdirectory(exception)
-add_subdirectory(operator)
-add_subdirectory(progress_bar)
-add_subdirectory(tree_renderer)
-add_subdirectory(row_operations)
-# add_subdirectory(serializer)
-add_subdirectory(sort)
 add_subdirectory(types)
-add_subdirectory(value_operations)
-add_subdirectory(vector_operations)
 
 if(${EXIT_TIME_DESTRUCTORS_WARNING})
   set(CMAKE_CXX_FLAGS_DEBUG
@@ -55,8 +45,6 @@ add_library_unity(
   string_util.cpp
   enum_util.cpp
   symbols.cpp
-  render_tree.cpp
-  tree_renderer.cpp
   types.cpp
   virtual_file_system.cpp
   windows_util.cpp)

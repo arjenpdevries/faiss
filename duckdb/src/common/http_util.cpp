@@ -12,9 +12,6 @@ void HTTPUtil::ParseHTTPProxyHost(string &proxy_value, string &hostname_out, idx
 		port_out = default_port;
 	} else if (proxy_split.size() == 2) {
 		idx_t port;
-		if (!TryCast::Operation<string_t, idx_t>(proxy_split[1], port, false)) {
-			throw InvalidInputException("Failed to parse port from http_proxy '%s'", proxy_value);
-		}
 		hostname_out = proxy_split[0];
 		port_out = port;
 	} else {

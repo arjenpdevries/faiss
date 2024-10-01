@@ -134,7 +134,6 @@ void DataChunk::Copy(DataChunk &other, idx_t offset) const {
 
 	for (idx_t i = 0; i < ColumnCount(); i++) {
 		D_ASSERT(other.data[i].GetVectorType() == VectorType::FLAT_VECTOR);
-		VectorOperations::Copy(data[i], other.data[i], size(), offset, 0);
 	}
 	other.SetCardinality(size() - offset);
 }
@@ -146,7 +145,6 @@ void DataChunk::Copy(DataChunk &other, const SelectionVector &sel, const idx_t s
 
 	for (idx_t i = 0; i < ColumnCount(); i++) {
 		D_ASSERT(other.data[i].GetVectorType() == VectorType::FLAT_VECTOR);
-		VectorOperations::Copy(data[i], other.data[i], sel, source_count, offset, 0);
 	}
 	other.SetCardinality(source_count - offset);
 }
@@ -211,11 +209,6 @@ void DataChunk::Append(const DataChunk &other, bool resize, SelectionVector *sel
 	}
 	for (idx_t i = 0; i < ColumnCount(); i++) {
 		D_ASSERT(data[i].GetVectorType() == VectorType::FLAT_VECTOR);
-		if (sel) {
-			VectorOperations::Copy(other.data[i], data[i], *sel, sel_count, 0, size());
-		} else {
-			VectorOperations::Copy(other.data[i], data[i], other.size(), 0, size());
-		}
 	}
 	SetCardinality(new_size);
 }
@@ -329,20 +322,11 @@ unsafe_unique_array<UnifiedVectorFormat> DataChunk::ToUnifiedFormat() {
 
 void DataChunk::Hash(Vector &result) {
 	D_ASSERT(result.GetType().id() == LogicalType::HASH);
-	VectorOperations::Hash(data[0], result, size());
-	for (idx_t i = 1; i < ColumnCount(); i++) {
-		VectorOperations::CombineHash(result, data[i], size());
-	}
 }
 
 void DataChunk::Hash(vector<idx_t> &column_ids, Vector &result) {
 	D_ASSERT(result.GetType().id() == LogicalType::HASH);
 	D_ASSERT(!column_ids.empty());
-
-	VectorOperations::Hash(data[column_ids[0]], result, size());
-	for (idx_t i = 1; i < column_ids.size(); i++) {
-		VectorOperations::CombineHash(result, data[column_ids[i]], size());
-	}
 }
 
 void DataChunk::Verify() {

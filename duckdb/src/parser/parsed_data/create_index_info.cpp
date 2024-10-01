@@ -1,6 +1,7 @@
 #include "duckdb/parser/parsed_data/create_index_info.hpp"
-#include "duckdb/parser/parsed_expression_iterator.hpp"
+
 #include "duckdb/parser/expression/columnref_expression.hpp"
+#include "duckdb/parser/parsed_expression_iterator.hpp"
 
 namespace duckdb {
 
@@ -15,15 +16,7 @@ CreateIndexInfo::CreateIndexInfo(const duckdb::CreateIndexInfo &info)
 
 static void RemoveTableQualificationRecursive(unique_ptr<ParsedExpression> &expr, const string &table_name) {
 	if (expr->GetExpressionType() == ExpressionType::COLUMN_REF) {
-		auto &col_ref = expr->Cast<ColumnRefExpression>();
-		auto &col_names = col_ref.column_names;
-		if (col_ref.IsQualified() && col_ref.GetTableName() == table_name) {
-			col_names.erase(col_names.begin());
-		}
 	} else {
-		ParsedExpressionIterator::EnumerateChildren(*expr, [&table_name](unique_ptr<ParsedExpression> &child) {
-			RemoveTableQualificationRecursive(child, table_name);
-		});
 	}
 }
 
@@ -37,14 +30,6 @@ vector<string> CreateIndexInfo::ExpressionsToList() const {
 		// we need to remove them to reproduce the original query
 		RemoveTableQualificationRecursive(copy, table);
 		bool add_parenthesis = true;
-		if (copy->type == ExpressionType::COLUMN_REF) {
-			auto &column_ref = copy->Cast<ColumnRefExpression>();
-			if (!column_ref.IsQualified()) {
-				// Only when column references are not qualified, i.e (col1, col2)
-				// then these expressions do not need to be wrapped in parenthesis
-				add_parenthesis = false;
-			}
-		}
 		if (add_parenthesis) {
 			list.push_back(StringUtil::Format("(%s)", copy->ToString()));
 		} else {

@@ -370,7 +370,6 @@ void SingleFileCheckpointWriter::WriteTable(TableCatalogEntry &table, Serializer
 	serializer.WriteProperty(100, "table", &table);
 
 	// Write the table data
-	auto table_lock = table.GetStorage().GetCheckpointLock();
 	if (auto writer = GetTableDataWriter(table)) {
 		writer->WriteTableData(serializer);
 	}

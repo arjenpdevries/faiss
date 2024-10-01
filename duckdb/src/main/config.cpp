@@ -334,9 +334,6 @@ idx_t DBConfig::GetSystemMaxThreads(FileSystem &fs) {
 #ifdef __linux__
 	if (const char *slurm_cpus = getenv("SLURM_CPUS_ON_NODE")) {
 		idx_t slurm_threads;
-		if (TryCast::Operation<string_t, idx_t>(string_t(slurm_cpus), slurm_threads)) {
-			return MaxValue<idx_t>(slurm_threads, 1);
-		}
 	}
 	return MaxValue<idx_t>(CGroups::GetCPULimit(fs, physical_cores), 1);
 #else
@@ -373,98 +370,11 @@ idx_t DBConfig::GetSystemAvailableMemory(FileSystem &fs) {
 }
 
 idx_t DBConfig::ParseMemoryLimit(const string &arg) {
-	if (arg[0] == '-' || arg == "null" || arg == "none") {
-		// infinite
-		return NumericLimits<idx_t>::Maximum();
-	}
-	// split based on the number/non-number
-	idx_t idx = 0;
-	while (StringUtil::CharacterIsSpace(arg[idx])) {
-		idx++;
-	}
-	idx_t num_start = idx;
-	while ((arg[idx] >= '0' && arg[idx] <= '9') || arg[idx] == '.' || arg[idx] == 'e' || arg[idx] == 'E' ||
-	       arg[idx] == '-') {
-		idx++;
-	}
-	if (idx == num_start) {
-		throw ParserException("Memory limit must have a number (e.g. SET memory_limit=1GB");
-	}
-	string number = arg.substr(num_start, idx - num_start);
-
-	// try to parse the number
-	double limit = Cast::Operation<string_t, double>(string_t(number));
-
-	// now parse the memory limit unit (e.g. bytes, gb, etc)
-	while (StringUtil::CharacterIsSpace(arg[idx])) {
-		idx++;
-	}
-	idx_t start = idx;
-	while (idx < arg.size() && !StringUtil::CharacterIsSpace(arg[idx])) {
-		idx++;
-	}
-	if (limit < 0) {
-		// limit < 0, set limit to infinite
-		return (idx_t)-1;
-	}
-	string unit = StringUtil::Lower(arg.substr(start, idx - start));
-	idx_t multiplier;
-	if (unit == "byte" || unit == "bytes" || unit == "b") {
-		multiplier = 1;
-	} else if (unit == "kilobyte" || unit == "kilobytes" || unit == "kb" || unit == "k") {
-		multiplier = 1000LL;
-	} else if (unit == "megabyte" || unit == "megabytes" || unit == "mb" || unit == "m") {
-		multiplier = 1000LL * 1000LL;
-	} else if (unit == "gigabyte" || unit == "gigabytes" || unit == "gb" || unit == "g") {
-		multiplier = 1000LL * 1000LL * 1000LL;
-	} else if (unit == "terabyte" || unit == "terabytes" || unit == "tb" || unit == "t") {
-		multiplier = 1000LL * 1000LL * 1000LL * 1000LL;
-	} else if (unit == "kib") {
-		multiplier = 1024LL;
-	} else if (unit == "mib") {
-		multiplier = 1024LL * 1024LL;
-	} else if (unit == "gib") {
-		multiplier = 1024LL * 1024LL * 1024LL;
-	} else if (unit == "tib") {
-		multiplier = 1024LL * 1024LL * 1024LL * 1024LL;
-	} else {
-		throw ParserException("Unknown unit for memory_limit: %s (expected: KB, MB, GB, TB for 1000^i units or KiB, "
-		                      "MiB, GiB, TiB for 1024^i unites)");
-	}
-	return LossyNumericCast<idx_t>(static_cast<double>(multiplier) * limit);
+	return NumericLimits<idx_t>::Maximum();
 }
 
 idx_t DBConfig::ParseMemoryLimitSlurm(const string &arg) {
-	if (arg.empty()) {
-		return 0;
-	}
-
-	string number_str = arg;
-	idx_t multiplier = 1000LL * 1000LL; // Default to MB if no unit specified
-
-	// Check for SLURM-style suffixes
-	if (arg.back() == 'K' || arg.back() == 'k') {
-		number_str = arg.substr(0, arg.size() - 1);
-		multiplier = 1000LL;
-	} else if (arg.back() == 'M' || arg.back() == 'm') {
-		number_str = arg.substr(0, arg.size() - 1);
-		multiplier = 1000LL * 1000LL;
-	} else if (arg.back() == 'G' || arg.back() == 'g') {
-		number_str = arg.substr(0, arg.size() - 1);
-		multiplier = 1000LL * 1000LL * 1000LL;
-	} else if (arg.back() == 'T' || arg.back() == 't') {
-		number_str = arg.substr(0, arg.size() - 1);
-		multiplier = 1000LL * 1000LL * 1000LL * 1000LL;
-	}
-
-	// Parse the number
-	double limit = Cast::Operation<string_t, double>(string_t(number_str));
-
-	if (limit < 0) {
-		return NumericLimits<idx_t>::Maximum();
-	}
-
-	return LossyNumericCast<idx_t>(static_cast<double>(multiplier) * limit);
+	return 0;
 }
 
 // Right now we only really care about access mode when comparing DBConfigs

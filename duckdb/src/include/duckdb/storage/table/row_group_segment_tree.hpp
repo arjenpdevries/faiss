@@ -8,8 +8,8 @@
 
 #pragma once
 
-#include "duckdb/storage/table/segment_tree.hpp"
 #include "duckdb/storage/table/row_group.hpp"
+#include "duckdb/storage/table/segment_tree.hpp"
 
 namespace duckdb {
 struct DataTableInfo;
@@ -26,7 +26,6 @@ public:
 protected:
 	unique_ptr<RowGroup> LoadSegment() override;
 
-	RowGroupCollection &collection;
 	idx_t current_row_group;
 	idx_t max_row_group;
 	unique_ptr<MetadataReader> reader;

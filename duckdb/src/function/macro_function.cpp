@@ -23,7 +23,6 @@ string FormatMacroFunction(MacroFunction &function, const string &name) {
 		if (!parameters.empty()) {
 			parameters += ", ";
 		}
-		parameters += param->Cast<ColumnRefExpression>().GetColumnName();
 	}
 	for (auto &named_param : function.default_parameters) {
 		if (!parameters.empty()) {

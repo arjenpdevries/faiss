@@ -9,11 +9,11 @@
 #pragma once
 
 #include "duckdb/catalog/catalog_entry/sequence_catalog_entry.hpp"
-#include "duckdb/common/types/data_chunk.hpp"
-#include "duckdb/transaction/undo_buffer.hpp"
 #include "duckdb/common/atomic.hpp"
-#include "duckdb/transaction/transaction_data.hpp"
 #include "duckdb/common/shared_ptr.hpp"
+#include "duckdb/common/types/data_chunk.hpp"
+#include "duckdb/transaction/transaction_data.hpp"
+#include "duckdb/transaction/undo_buffer.hpp"
 
 namespace duckdb {
 class SequenceCatalogEntry;
@@ -23,7 +23,6 @@ class AttachedDatabase;
 class ColumnData;
 class ClientContext;
 class CatalogEntry;
-class DataTable;
 class DatabaseInstance;
 class LocalStorage;
 class MetaTransaction;

@@ -8,9 +8,9 @@
 
 #pragma once
 
-#include "duckdb/parser/tableref.hpp"
 #include "duckdb/common/optionally_owned_ptr.hpp"
 #include "duckdb/common/types/column/column_data_collection.hpp"
+#include "duckdb/parser/tableref.hpp"
 
 namespace duckdb {
 
@@ -21,11 +21,10 @@ public:
 
 public:
 	explicit ColumnDataRef(shared_ptr<ColumnDataCollection> collection)
-	    : TableRef(TableReferenceType::COLUMN_DATA), collection(std::move(collection)) {
+	    : TableRef(), collection(std::move(collection)) {
 	}
 	ColumnDataRef(shared_ptr<ColumnDataCollection> collection, vector<string> expected_names)
-	    : TableRef(TableReferenceType::COLUMN_DATA), expected_names(std::move(expected_names)),
-	      collection(std::move(collection)) {
+	    : TableRef(), expected_names(std::move(expected_names)), collection(std::move(collection)) {
 	}
 
 public:

@@ -1,8 +1,9 @@
 #include "duckdb/parser/query_node/select_node.hpp"
+
+#include "duckdb/common/serializer/deserializer.hpp"
+#include "duckdb/common/serializer/serializer.hpp"
 #include "duckdb/parser/expression_util.hpp"
 #include "duckdb/parser/keyword_helper.hpp"
-#include "duckdb/common/serializer/serializer.hpp"
-#include "duckdb/common/serializer/deserializer.hpp"
 
 namespace duckdb {
 
@@ -127,13 +128,7 @@ bool SelectNode::Equals(const QueryNode *other_p) const {
 		return false;
 	}
 	// WHERE
-	if (!ParsedExpression::Equals(where_clause, other.where_clause)) {
-		return false;
-	}
 	// GROUP BY
-	if (!ParsedExpression::ListEquals(groups.group_expressions, other.groups.group_expressions)) {
-		return false;
-	}
 	if (groups.grouping_sets != other.groups.grouping_sets) {
 		return false;
 	}
@@ -141,13 +136,6 @@ bool SelectNode::Equals(const QueryNode *other_p) const {
 		return false;
 	}
 	// HAVING
-	if (!ParsedExpression::Equals(having, other.having)) {
-		return false;
-	}
-	// QUALIFY
-	if (!ParsedExpression::Equals(qualify, other.qualify)) {
-		return false;
-	}
 	return true;
 }
 

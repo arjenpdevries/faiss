@@ -1,13 +1,14 @@
 #include "duckdb/common/types/hugeint.hpp"
-#include "duckdb/common/types/uhugeint.hpp"
-#include "duckdb/common/exception.hpp"
+
 #include "duckdb/common/algorithm.hpp"
+#include "duckdb/common/exception.hpp"
 #include "duckdb/common/hugeint.hpp"
 #include "duckdb/common/limits.hpp"
 #include "duckdb/common/numeric_utils.hpp"
-#include "duckdb/common/windows_undefs.hpp"
-#include "duckdb/common/types/value.hpp"
 #include "duckdb/common/operator/cast_operators.hpp"
+#include "duckdb/common/types/uhugeint.hpp"
+#include "duckdb/common/types/value.hpp"
+#include "duckdb/common/windows_undefs.hpp"
 
 #include <cmath>
 #include <limits>
@@ -581,71 +582,6 @@ bool HugeintTryCastInteger(hugeint_t input, DST &result) {
 	return false;
 }
 
-template <>
-bool Hugeint::TryCast(hugeint_t input, int8_t &result) {
-	return HugeintTryCastInteger<int8_t>(input, result);
-}
-
-template <>
-bool Hugeint::TryCast(hugeint_t input, int16_t &result) {
-	return HugeintTryCastInteger<int16_t>(input, result);
-}
-
-template <>
-bool Hugeint::TryCast(hugeint_t input, int32_t &result) {
-	return HugeintTryCastInteger<int32_t>(input, result);
-}
-
-template <>
-bool Hugeint::TryCast(hugeint_t input, int64_t &result) {
-	return HugeintTryCastInteger<int64_t>(input, result);
-}
-
-template <>
-bool Hugeint::TryCast(hugeint_t input, uint8_t &result) {
-	return HugeintTryCastInteger<uint8_t, false>(input, result);
-}
-
-template <>
-bool Hugeint::TryCast(hugeint_t input, uint16_t &result) {
-	return HugeintTryCastInteger<uint16_t, false>(input, result);
-}
-
-template <>
-bool Hugeint::TryCast(hugeint_t input, uint32_t &result) {
-	return HugeintTryCastInteger<uint32_t, false>(input, result);
-}
-
-template <>
-bool Hugeint::TryCast(hugeint_t input, uint64_t &result) {
-	return HugeintTryCastInteger<uint64_t, false>(input, result);
-}
-
-template <>
-bool Hugeint::TryCast(hugeint_t input, hugeint_t &result) {
-	result = input;
-	return true;
-}
-
-template <>
-bool Hugeint::TryCast(hugeint_t input, uhugeint_t &result) {
-	if (input < 0) {
-		return false;
-	}
-
-	result.lower = input.lower;
-	result.upper = UnsafeNumericCast<uint64_t>(input.upper);
-	return true;
-}
-
-template <>
-bool Hugeint::TryCast(hugeint_t input, float &result) {
-	double dbl_result;
-	Hugeint::TryCast(input, dbl_result);
-	result = (float)dbl_result;
-	return true;
-}
-
 template <class REAL_T>
 bool CastBigintToFloating(hugeint_t input, REAL_T &result) {
 	switch (input.upper) {
@@ -658,16 +594,6 @@ bool CastBigintToFloating(hugeint_t input, REAL_T &result) {
 		break;
 	}
 	return true;
-}
-
-template <>
-bool Hugeint::TryCast(hugeint_t input, double &result) {
-	return CastBigintToFloating<double>(input, result);
-}
-
-template <>
-bool Hugeint::TryCast(hugeint_t input, long double &result) {
-	return CastBigintToFloating<long double>(input, result);
 }
 
 template <class DST>
@@ -688,7 +614,7 @@ template <>
 bool Hugeint::TryConvert(const char *value, hugeint_t &result) {
 	auto len = strlen(value);
 	string_t string_val(value, UnsafeNumericCast<uint32_t>(len));
-	return TryCast::Operation<string_t, hugeint_t>(string_val, result, true);
+	return false;
 }
 
 template <>

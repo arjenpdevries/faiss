@@ -19,9 +19,6 @@ class BaseStatistics;
 
 class PersistentTableData {
 public:
-	explicit PersistentTableData(idx_t column_count);
-	~PersistentTableData();
-
 	idx_t total_rows;
 	idx_t row_group_count;
 	MetaBlockPointer block_pointer;

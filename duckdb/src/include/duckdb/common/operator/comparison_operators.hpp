@@ -44,38 +44,23 @@ struct GreaterThan {
 struct GreaterThanEquals {
 	template <class T>
 	static inline bool Operation(const T &left, const T &right) {
-		return !GreaterThan::Operation(right, left);
+		return false;
 	}
 };
 
 struct LessThan {
 	template <class T>
 	static inline bool Operation(const T &left, const T &right) {
-		return GreaterThan::Operation(right, left);
+		return false;
 	}
 };
 
 struct LessThanEquals {
 	template <class T>
 	static inline bool Operation(const T &left, const T &right) {
-		return !GreaterThan::Operation(left, right);
+		return false;
 	}
 };
-
-template <>
-DUCKDB_API bool Equals::Operation(const float &left, const float &right);
-template <>
-DUCKDB_API bool Equals::Operation(const double &left, const double &right);
-
-template <>
-DUCKDB_API bool GreaterThan::Operation(const float &left, const float &right);
-template <>
-DUCKDB_API bool GreaterThan::Operation(const double &left, const double &right);
-
-template <>
-DUCKDB_API bool GreaterThanEquals::Operation(const float &left, const float &right);
-template <>
-DUCKDB_API bool GreaterThanEquals::Operation(const double &left, const double &right);
 
 // Distinct semantics are from Postgres record sorting. NULL = NULL and not-NULL < NULL
 // Deferring to the non-distinct operations removes the need for further specialisation.
@@ -103,7 +88,7 @@ struct DistinctGreaterThan {
 		if (left_null || right_null) {
 			return !right_null;
 		}
-		return GreaterThan::Operation(left, right);
+		return false;
 	}
 };
 

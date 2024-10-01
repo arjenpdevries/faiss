@@ -245,8 +245,7 @@ void Pipeline::AddDependency(shared_ptr<Pipeline> &pipeline) {
 }
 
 string Pipeline::ToString() const {
-	TextTreeRenderer renderer;
-	return renderer.ToString(*this);
+	return "renderer.ToString(*this)";
 }
 
 void Pipeline::Print() const {

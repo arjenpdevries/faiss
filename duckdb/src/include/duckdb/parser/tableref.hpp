@@ -9,10 +9,10 @@
 #pragma once
 
 #include "duckdb/common/common.hpp"
-#include "duckdb/common/optional_idx.hpp"
 #include "duckdb/common/enums/tableref_type.hpp"
-#include "duckdb/parser/parsed_data/sample_options.hpp"
+#include "duckdb/common/optional_idx.hpp"
 #include "duckdb/main/external_dependencies.hpp"
+#include "duckdb/parser/parsed_data/sample_options.hpp"
 
 namespace duckdb {
 
@@ -22,8 +22,6 @@ public:
 	static constexpr const TableReferenceType TYPE = TableReferenceType::INVALID;
 
 public:
-	explicit TableRef(TableReferenceType type) : type(type) {
-	}
 	virtual ~TableRef() {
 	}
 

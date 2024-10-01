@@ -31,14 +31,7 @@ unique_ptr<MacroFunction> ScalarMacroFunction::Copy() const {
 
 void RemoveQualificationRecursive(unique_ptr<ParsedExpression> &expr) {
 	if (expr->GetExpressionType() == ExpressionType::COLUMN_REF) {
-		auto &col_ref = expr->Cast<ColumnRefExpression>();
-		auto &col_names = col_ref.column_names;
-		if (col_names.size() == 2 && col_names[0].find(DummyBinding::DUMMY_NAME) != string::npos) {
-			col_names.erase(col_names.begin());
-		}
 	} else {
-		ParsedExpressionIterator::EnumerateChildren(
-		    *expr, [](unique_ptr<ParsedExpression> &child) { RemoveQualificationRecursive(child); });
 	}
 }
 

@@ -263,7 +263,6 @@ struct PersistentCollectionData {
 
 	void Serialize(Serializer &serializer) const;
 	static PersistentCollectionData Deserialize(Deserializer &deserializer);
-	bool HasUpdates() const;
 };
 
 } // namespace duckdb

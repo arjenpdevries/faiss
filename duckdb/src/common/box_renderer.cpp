@@ -161,11 +161,6 @@ list<ColumnDataCollection> BoxRenderer::FetchRenderCollections(ClientContext &co
 		// fetch the next chunk
 		result.FetchChunk(chunk_idx, fetch_result);
 		idx_t insert_count = MinValue<idx_t>(fetch_result.size(), top_rows - row_idx);
-
-		// cast all columns to varchar
-		for (idx_t c = 0; c < column_count; c++) {
-			VectorOperations::Cast(context, fetch_result.data[c], insert_result.data[c], insert_count);
-		}
 		insert_result.SetCardinality(insert_count);
 
 		// construct the render collection
@@ -191,10 +186,6 @@ list<ColumnDataCollection> BoxRenderer::FetchRenderCollections(ClientContext &co
 			inverted_sel.set_index(r, fetch_result.size() - r - 1);
 		}
 
-		for (idx_t c = 0; c < column_count; c++) {
-			Vector slice(fetch_result.data[c], inverted_sel, insert_count);
-			VectorOperations::Cast(context, slice, insert_result.data[c], insert_count);
-		}
 		insert_result.SetCardinality(insert_count);
 		// construct the render collection
 		bottom_collection.Append(insert_result);

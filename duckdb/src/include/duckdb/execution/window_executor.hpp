@@ -88,7 +88,6 @@ struct WindowInputExpression {
 		D_ASSERT(!chunk.data.empty());
 		auto &source = chunk.data[0];
 		auto source_offset = scalar ? 0 : target_offset;
-		VectorOperations::Copy(source, target, source_offset + width, source_offset, target_offset);
 	}
 
 	optional_ptr<Expression> expr;

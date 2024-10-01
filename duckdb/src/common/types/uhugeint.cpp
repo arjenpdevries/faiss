@@ -1,12 +1,13 @@
 #include "duckdb/common/types/uhugeint.hpp"
-#include "duckdb/common/types/hugeint.hpp"
-#include "duckdb/common/exception.hpp"
+
 #include "duckdb/common/algorithm.hpp"
+#include "duckdb/common/exception.hpp"
 #include "duckdb/common/limits.hpp"
 #include "duckdb/common/numeric_utils.hpp"
-#include "duckdb/common/windows_undefs.hpp"
-#include "duckdb/common/types/value.hpp"
 #include "duckdb/common/operator/cast_operators.hpp"
+#include "duckdb/common/types/hugeint.hpp"
+#include "duckdb/common/types/value.hpp"
+#include "duckdb/common/windows_undefs.hpp"
 
 #include <cmath>
 #include <limits>
@@ -346,80 +347,10 @@ bool UhugeintTryCastInteger(uhugeint_t input, DST &result) {
 	return false;
 }
 
-template <>
-bool Uhugeint::TryCast(uhugeint_t input, int8_t &result) {
-	return UhugeintTryCastInteger<int8_t>(input, result);
-}
-
-template <>
-bool Uhugeint::TryCast(uhugeint_t input, int16_t &result) {
-	return UhugeintTryCastInteger<int16_t>(input, result);
-}
-
-template <>
-bool Uhugeint::TryCast(uhugeint_t input, int32_t &result) {
-	return UhugeintTryCastInteger<int32_t>(input, result);
-}
-
-template <>
-bool Uhugeint::TryCast(uhugeint_t input, int64_t &result) {
-	return UhugeintTryCastInteger<int64_t>(input, result);
-}
-
-template <>
-bool Uhugeint::TryCast(uhugeint_t input, uint8_t &result) {
-	return UhugeintTryCastInteger<uint8_t>(input, result);
-}
-
-template <>
-bool Uhugeint::TryCast(uhugeint_t input, uint16_t &result) {
-	return UhugeintTryCastInteger<uint16_t>(input, result);
-}
-
-template <>
-bool Uhugeint::TryCast(uhugeint_t input, uint32_t &result) {
-	return UhugeintTryCastInteger<uint32_t>(input, result);
-}
-
-template <>
-bool Uhugeint::TryCast(uhugeint_t input, uint64_t &result) {
-	return UhugeintTryCastInteger<uint64_t>(input, result);
-}
-
-template <>
-bool Uhugeint::TryCast(uhugeint_t input, uhugeint_t &result) {
-	result = input;
-	return true;
-}
-
-template <>
-bool Uhugeint::TryCast(uhugeint_t input, hugeint_t &result) {
-	if (input > uhugeint_t(NumericLimits<hugeint_t>::Maximum())) {
-		return false;
-	}
-
-	result.lower = input.lower;
-	result.upper = UnsafeNumericCast<int64_t>(input.upper);
-	return true;
-}
-
-template <>
-bool Uhugeint::TryCast(uhugeint_t input, float &result) {
-	double dbl_result;
-	Uhugeint::TryCast(input, dbl_result);
-	result = (float)dbl_result;
-	return true;
-}
-
 template <class REAL_T>
 bool CastUhugeintToFloating(uhugeint_t input, REAL_T &result) {
 	result = REAL_T(input.lower) + REAL_T(input.upper) * REAL_T(NumericLimits<uint64_t>::Maximum());
 	return true;
-}
-
-template <>
-bool Uhugeint::TryCast(uhugeint_t input, double &result) {
-	return CastUhugeintToFloating<double>(input, result);
 }
 
 template <class DST>
@@ -434,7 +365,7 @@ template <>
 bool Uhugeint::TryConvert(const char *value, uhugeint_t &result) {
 	auto len = strlen(value);
 	string_t string_val(value, UnsafeNumericCast<uint32_t>(len));
-	return TryCast::Operation<string_t, uhugeint_t>(string_val, result, true);
+	return false;
 }
 
 template <>

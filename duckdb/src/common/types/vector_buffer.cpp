@@ -81,14 +81,12 @@ void VectorListBuffer::Reserve(idx_t to_reserve) {
 
 void VectorListBuffer::Append(const Vector &to_append, idx_t to_append_size, idx_t source_offset) {
 	Reserve(size + to_append_size - source_offset);
-	VectorOperations::Copy(to_append, *child, to_append_size, source_offset, size);
 	size += to_append_size - source_offset;
 }
 
 void VectorListBuffer::Append(const Vector &to_append, const SelectionVector &sel, idx_t to_append_size,
                               idx_t source_offset) {
 	Reserve(size + to_append_size - source_offset);
-	VectorOperations::Copy(to_append, *child, sel, to_append_size, source_offset, size);
 	size += to_append_size - source_offset;
 }
 

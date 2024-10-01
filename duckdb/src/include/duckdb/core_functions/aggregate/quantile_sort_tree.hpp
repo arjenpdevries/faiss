@@ -8,10 +8,11 @@
 
 #pragma once
 
-#include "duckdb/core_functions/aggregate/quantile_helpers.hpp"
-#include "duckdb/execution/merge_sort_tree.hpp"
 #include "duckdb/common/operator/cast_operators.hpp"
 #include "duckdb/common/operator/multiply.hpp"
+#include "duckdb/core_functions/aggregate/quantile_helpers.hpp"
+#include "duckdb/execution/merge_sort_tree.hpp"
+
 #include <algorithm>
 #include <numeric>
 #include <stdlib.h>
@@ -76,18 +77,6 @@ struct QuantileCompare {
 		const auto rval = accessor(rhs);
 
 		return desc ? (rval < lval) : (lval < rval);
-	}
-};
-
-struct CastInterpolation {
-	template <class INPUT_TYPE, class TARGET_TYPE>
-	static inline TARGET_TYPE Cast(const INPUT_TYPE &src, Vector &result) {
-		return Cast::Operation<INPUT_TYPE, TARGET_TYPE>(src);
-	}
-	template <typename TARGET_TYPE>
-	static inline TARGET_TYPE Interpolate(const TARGET_TYPE &lo, const double d, const TARGET_TYPE &hi) {
-		const auto delta = hi - lo;
-		return LossyNumericCast<TARGET_TYPE>(lo + delta * d);
 	}
 };
 
@@ -176,7 +165,6 @@ struct Interpolator<true> {
 			    DecimalMultiplyOverflowCheck::Operation<hugeint_t, hugeint_t, hugeint_t>(Hugeint::Convert(n), integral);
 			const auto scaled_n =
 			    DecimalMultiplyOverflowCheck::Operation<hugeint_t, hugeint_t, hugeint_t>(Hugeint::Convert(n), scaling);
-			floored = Cast::Operation<hugeint_t, idx_t>((scaled_n - scaled_q) / scaling);
 			break;
 		}
 		default:

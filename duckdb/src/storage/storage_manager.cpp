@@ -177,7 +177,6 @@ private:
 	idx_t initial_written = 0;
 	WriteAheadLog &wal;
 	WALCommitState state;
-	reference_map_t<DataTable, unordered_map<idx_t, OptimisticallyWrittenRowGroupData>> optimistically_written_data;
 };
 
 SingleFileStorageCommitState::SingleFileStorageCommitState(StorageManager &storage, WriteAheadLog &wal)
@@ -219,42 +218,15 @@ void SingleFileStorageCommitState::FlushCommit() {
 
 void SingleFileStorageCommitState::AddRowGroupData(DataTable &table, idx_t start_index, idx_t count,
                                                    unique_ptr<PersistentCollectionData> row_group_data) {
-	if (row_group_data->HasUpdates()) {
-		// cannot serialize optimistic block pointers if in-memory updates exist
-		return;
-	}
-	if (table.HasIndexes()) {
-		// cannot serialize optimistic block pointers if the table has indexes
-		return;
-	}
-	auto &entries = optimistically_written_data[table];
-	auto entry = entries.find(start_index);
-	if (entry != entries.end()) {
-		throw InternalException("FIXME: AddOptimisticallyWrittenRowGroup is writing a duplicate row group");
-	}
-	entries.insert(
-	    make_pair(start_index, OptimisticallyWrittenRowGroupData(start_index, count, std::move(row_group_data))));
 }
 
 optional_ptr<PersistentCollectionData> SingleFileStorageCommitState::GetRowGroupData(DataTable &table,
                                                                                      idx_t start_index, idx_t &count) {
-	auto entry = optimistically_written_data.find(table);
-	if (entry == optimistically_written_data.end()) {
-		// no data for this table
-		return nullptr;
-	}
-	auto &row_groups = entry->second;
-	auto start_entry = row_groups.find(start_index);
-	if (start_entry == row_groups.end()) {
-		// this row group was not optimistically written
-		return nullptr;
-	}
-	count = start_entry->second.count;
-	return start_entry->second.row_group_data.get();
+	return nullptr;
 }
 
 bool SingleFileStorageCommitState::HasRowGroupData() {
-	return !optimistically_written_data.empty();
+	return false;
 }
 
 unique_ptr<StorageCommitState> SingleFileStorageManager::GenStorageCommitState(WriteAheadLog &wal) {

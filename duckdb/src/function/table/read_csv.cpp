@@ -379,21 +379,7 @@ unique_ptr<TableRef> ReadCSVReplacement(ClientContext &context, ReplacementScanI
 		lower_name = lower_name.substr(0, lower_name.size() - 3);
 	} else if (StringUtil::EndsWith(lower_name, CompressionExtensionFromType(FileCompressionType::ZSTD))) {
 	}
-	if (!StringUtil::EndsWith(lower_name, ".csv") && !StringUtil::Contains(lower_name, ".csv?") &&
-	    !StringUtil::EndsWith(lower_name, ".tsv") && !StringUtil::Contains(lower_name, ".tsv?")) {
-		return nullptr;
-	}
-	auto table_function = make_uniq<TableFunctionRef>();
-	vector<unique_ptr<ParsedExpression>> children;
-	children.push_back(make_uniq<ConstantExpression>(Value(table_name)));
-	table_function->function = make_uniq<FunctionExpression>("read_csv_auto", std::move(children));
-
-	if (!FileSystem::HasGlob(table_name)) {
-		auto &fs = FileSystem::GetFileSystem(context);
-		table_function->alias = fs.ExtractBaseName(table_name);
-	}
-
-	return std::move(table_function);
+	return nullptr;
 }
 
 void BuiltinFunctions::RegisterReadFunctions() {

@@ -12,22 +12,22 @@
 
 namespace duckdb {
 
-class EmptyTableRef : public TableRef {
+class EmptyTableRef {
 public:
 	static constexpr const TableReferenceType TYPE = TableReferenceType::EMPTY_FROM;
 
 public:
-	EmptyTableRef() : TableRef(TableReferenceType::EMPTY_FROM) {
+	EmptyTableRef() {
 	}
 
 public:
-	string ToString() const override;
-	bool Equals(const TableRef &other_p) const override;
+	string ToString() const;
+	bool Equals(const TableRef &other_p) const;
 
-	unique_ptr<TableRef> Copy() override;
+	unique_ptr<TableRef> Copy();
 
 	//! Deserializes a blob back into a DummyTableRef
-	void Serialize(Serializer &serializer) const override;
+	void Serialize(Serializer &serializer) const;
 	static unique_ptr<TableRef> Deserialize(Deserializer &source);
 };
 } // namespace duckdb

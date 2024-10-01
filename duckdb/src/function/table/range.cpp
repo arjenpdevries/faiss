@@ -141,12 +141,6 @@ static OperatorResultType RangeFunction(ExecutionContext &context, TableFunction
 		auto end = state.end;
 		hugeint_t current_value = state.start + increment * UnsafeNumericCast<int64_t>(state.current_idx);
 		int64_t current_value_i64;
-		if (!Hugeint::TryCast<int64_t>(current_value, current_value_i64)) {
-			// move to next row
-			state.current_input_row++;
-			state.initialized_row = false;
-			continue;
-		}
 		int64_t offset = increment < 0 ? 1 : -1;
 		idx_t remaining = MinValue<idx_t>(
 		    Hugeint::Cast<idx_t>((end - current_value + (increment + offset)) / increment), STANDARD_VECTOR_SIZE);
