@@ -8,19 +8,19 @@
 
 #pragma once
 
-#include "duckdb/common/exception.hpp"
-#include "duckdb/common/stack_checker.hpp"
-#include "duckdb/common/exception/binder_exception.hpp"
+#include "duckdb/catalog/catalog_entry_retriever.hpp"
 #include "duckdb/common/error_data.hpp"
+#include "duckdb/common/exception.hpp"
+#include "duckdb/common/exception/binder_exception.hpp"
+#include "duckdb/common/stack_checker.hpp"
 #include "duckdb/common/unordered_map.hpp"
+#include "duckdb/function/scalar_function.hpp"
 #include "duckdb/parser/expression/bound_expression.hpp"
 #include "duckdb/parser/expression/lambdaref_expression.hpp"
 #include "duckdb/parser/parsed_expression.hpp"
 #include "duckdb/parser/tokens.hpp"
 #include "duckdb/planner/expression.hpp"
-#include "duckdb/catalog/catalog_entry_retriever.hpp"
 #include "duckdb/planner/expression/bound_lambda_expression.hpp"
-#include "duckdb/function/scalar_function.hpp"
 
 namespace duckdb {
 
@@ -45,24 +45,22 @@ struct BoundColumnReferenceInfo {
 struct BindResult {
 	BindResult() {
 	}
-	explicit BindResult(const Exception &ex) : error(ex) {
+	explicit BindResult(const Exception &ex) {
 	}
-	explicit BindResult(const string &error_msg) : error(ExceptionType::BINDER, error_msg) {
+	explicit BindResult(const string &error_msg) {
 	}
-	explicit BindResult(ErrorData error) : error(std::move(error)) {
+	explicit BindResult(ErrorData error) {
 	}
 	explicit BindResult(unique_ptr<Expression> expr) : expression(std::move(expr)) {
 	}
 
 	bool HasError() const {
-		return error.HasError();
+		return false;
 	}
 	void SetError(const string &error_message) {
-		error = ErrorData(ExceptionType::BINDER, error_message);
 	}
 
 	unique_ptr<Expression> expression;
-	ErrorData error;
 };
 
 class ExpressionBinder {

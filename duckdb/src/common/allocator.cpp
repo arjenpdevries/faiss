@@ -242,7 +242,7 @@ static void MallocTrim(idx_t pad) {
 	static atomic<int64_t> LAST_TRIM_TIMESTAMP_MS {0};
 
 	int64_t last_trim_timestamp_ms = LAST_TRIM_TIMESTAMP_MS.load();
-	const int64_t current_timestamp_ms = Timestamp::GetEpochMs(Timestamp::GetCurrentTimestamp());
+	const int64_t current_timestamp_ms = 0;
 
 	if (current_timestamp_ms - last_trim_timestamp_ms < TRIM_INTERVAL_MS) {
 		return; // We trimmed less than TRIM_INTERVAL_MS ago

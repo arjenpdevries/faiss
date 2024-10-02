@@ -1,4 +1,3 @@
-# add_subdirectory(enums)
 add_subdirectory(exception)
 add_subdirectory(types)
 
@@ -16,37 +15,16 @@ add_library_unity(
   OBJECT
   allocator.cpp
   assert.cpp
-  bind_helpers.cpp
-  # box_renderer.cpp
-  cgroups.cpp
-  compressed_file_system.cpp
   constants.cpp
   checksum.cpp
-  encryption_state.cpp
   exception.cpp
   exception_format_value.cpp
   extra_type_info.cpp
-  file_buffer.cpp
-  file_system.cpp
-  filename_pattern.cpp
-  fsst.cpp
-  gzip_file_system.cpp
-  # hive_partitioning.cpp
-  http_util.cpp
-  pipe_file_system.cpp
-  local_file_system.cpp
-  # multi_file_list.cpp
-  # multi_file_reader.cpp
-  error_data.cpp
   printer.cpp
-  re2_regex.cpp
   random_engine.cpp
   string_util.cpp
-  enum_util.cpp
-  symbols.cpp
   types.cpp
-  virtual_file_system.cpp
-  windows_util.cpp)
+  )
 set(ALL_OBJECT_FILES
     ${ALL_OBJECT_FILES} $<TARGET_OBJECTS:duckdb_common>
     PARENT_SCOPE)

@@ -462,7 +462,6 @@ string LogicalType::ToString() const {
 			if (i > 0) {
 				ret += ", ";
 			}
-			ret += KeywordHelper::WriteQuoted(EnumType::GetString(*this, i).GetString(), '\'');
 		}
 		ret += ")";
 		return ret;
@@ -475,18 +474,15 @@ string LogicalType::ToString() const {
 		auto &mods = UserType::GetTypeModifiers(*this);
 
 		if (!catalog.empty()) {
-			result = KeywordHelper::WriteOptionallyQuoted(catalog);
 		}
 		if (!schema.empty()) {
 			if (!result.empty()) {
 				result += ".";
 			}
-			result += KeywordHelper::WriteOptionallyQuoted(schema);
 		}
 		if (!result.empty()) {
 			result += ".";
 		}
-		result += KeywordHelper::WriteOptionallyQuoted(type);
 
 		if (!mods.empty()) {
 			result += "(";
@@ -518,70 +514,7 @@ LogicalTypeId TransformStringToLogicalTypeId(const string &str) {
 }
 
 LogicalType TransformStringToLogicalType(const string &str) {
-	if (StringUtil::Lower(str) == "null") {
-		return LogicalType::SQLNULL;
-	}
-	ColumnList column_list;
-	try {
-		column_list = Parser::ParseColumnList("dummy " + str);
-	} catch (const std::runtime_error &e) {
-		const vector<string> suggested_types {"BIGINT",
-		                                      "INT8",
-		                                      "LONG",
-		                                      "BIT",
-		                                      "BITSTRING",
-		                                      "BLOB",
-		                                      "BYTEA",
-		                                      "BINARY,",
-		                                      "VARBINARY",
-		                                      "BOOLEAN",
-		                                      "BOOL",
-		                                      "LOGICAL",
-		                                      "DATE",
-		                                      "DECIMAL(prec, scale)",
-		                                      "DOUBLE",
-		                                      "FLOAT8",
-		                                      "FLOAT",
-		                                      "FLOAT4",
-		                                      "REAL",
-		                                      "HUGEINT",
-		                                      "INTEGER",
-		                                      "INT4",
-		                                      "INT",
-		                                      "SIGNED",
-		                                      "INTERVAL",
-		                                      "SMALLINT",
-		                                      "INT2",
-		                                      "SHORT",
-		                                      "TIME",
-		                                      "TIMESTAMPTZ	",
-		                                      "TIMESTAMP",
-		                                      "DATETIME",
-		                                      "TINYINT",
-		                                      "INT1",
-		                                      "UBIGINT",
-		                                      "UHUGEINT",
-		                                      "UINTEGER",
-		                                      "USMALLINT",
-		                                      "UTINYINT",
-		                                      "UUID",
-		                                      "VARCHAR",
-		                                      "CHAR",
-		                                      "BPCHAR",
-		                                      "TEXT",
-		                                      "STRING",
-		                                      "MAP(INTEGER, VARCHAR)",
-		                                      "UNION(num INTEGER, text VARCHAR)"};
-		std::ostringstream error;
-		error << "Value \"" << str << "\" can not be converted to a DuckDB Type." << '\n';
-		error << "Possible examples as suggestions: " << '\n';
-		auto suggestions = StringUtil::TopNJaroWinkler(suggested_types, str);
-		for (auto &suggestion : suggestions) {
-			error << "* " << suggestion << '\n';
-		}
-		throw InvalidInputException(error.str());
-	}
-	return column_list.GetColumn(LogicalIndex(0)).Type();
+	return LogicalType::SQLNULL;
 }
 
 LogicalType GetUserTypeRecursive(const LogicalType &type, ClientContext &context) {
@@ -845,28 +778,6 @@ static bool CombineUnequalTypes(const LogicalType &left, const LogicalType &righ
 	}
 
 	// for other types - use implicit cast rules to check if we can combine the types
-	auto left_to_right_cost = CastRules::ImplicitCast(left, right);
-	auto right_to_left_cost = CastRules::ImplicitCast(right, left);
-	if (left_to_right_cost >= 0 && (left_to_right_cost < right_to_left_cost || right_to_left_cost < 0)) {
-		// we can implicitly cast left to right, return right
-		//! Depending on the type, we might need to grow the `width` of the DECIMAL type
-		if (right.id() == LogicalTypeId::DECIMAL) {
-			result = DecimalSizeCheck(left, right);
-		} else {
-			result = right;
-		}
-		return true;
-	}
-	if (right_to_left_cost >= 0) {
-		// we can implicitly cast right to left, return left
-		//! Depending on the type, we might need to grow the `width` of the DECIMAL type
-		if (left.id() == LogicalTypeId::DECIMAL) {
-			result = DecimalSizeCheck(right, left);
-		} else {
-			result = left;
-		}
-		return true;
-	}
 	// for integer literals - rerun the operation with the underlying type
 	if (left.id() == LogicalTypeId::INTEGER_LITERAL) {
 		return OP::Operation(IntegerLiteral::GetType(left), right, result);

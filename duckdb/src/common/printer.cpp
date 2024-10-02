@@ -1,15 +1,17 @@
 #include "duckdb/common/printer.hpp"
+
 #include "duckdb/common/progress_bar/progress_bar.hpp"
-#include "duckdb/common/windows_util.hpp"
 #include "duckdb/common/windows.hpp"
+#include "duckdb/common/windows_util.hpp"
+
 #include <stdio.h>
 
 #ifndef DUCKDB_DISABLE_PRINT
 #ifdef DUCKDB_WINDOWS
 #include <io.h>
 #else
-#include <sys/ioctl.h>
 #include <stdio.h>
+#include <sys/ioctl.h>
 #include <unistd.h>
 #endif
 #endif
@@ -17,17 +19,6 @@
 namespace duckdb {
 
 void Printer::RawPrint(OutputStream stream, const string &str) {
-#ifndef DUCKDB_DISABLE_PRINT
-#ifdef DUCKDB_WINDOWS
-	if (IsTerminal(stream)) {
-		// print utf8 to terminal
-		auto unicode = WindowsUtil::UTF8ToMBCS(str.c_str());
-		fprintf(stream == OutputStream::STREAM_STDERR ? stderr : stdout, "%s", unicode.c_str());
-		return;
-	}
-#endif
-	fprintf(stream == OutputStream::STREAM_STDERR ? stderr : stdout, "%s", str.c_str());
-#endif
 }
 
 // LCOV_EXCL_START

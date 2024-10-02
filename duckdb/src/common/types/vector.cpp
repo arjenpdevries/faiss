@@ -571,9 +571,6 @@ Value Vector::GetValueInternal(const Vector &v_p, idx_t index_p) {
 		auto str_compressed = reinterpret_cast<string_t *>(data)[index];
 		auto decoder = FSSTVector::GetDecoder(*vector);
 		auto &decompress_buffer = FSSTVector::GetDecompressBuffer(*vector);
-		Value result = FSSTPrimitives::DecompressValue(decoder, str_compressed.GetData(), str_compressed.GetSize(),
-		                                               decompress_buffer);
-		return result;
 	}
 
 	switch (vector->GetType().id()) {
@@ -585,10 +582,6 @@ Value Vector::GetValueInternal(const Vector &v_p, idx_t index_p) {
 		return Value::SMALLINT(reinterpret_cast<int16_t *>(data)[index]);
 	case LogicalTypeId::INTEGER:
 		return Value::INTEGER(reinterpret_cast<int32_t *>(data)[index]);
-	case LogicalTypeId::DATE:
-		return Value::DATE(reinterpret_cast<date_t *>(data)[index]);
-	case LogicalTypeId::TIME:
-		return Value::TIME(reinterpret_cast<dtime_t *>(data)[index]);
 	case LogicalTypeId::TIME_TZ:
 		return Value::TIMETZ(reinterpret_cast<dtime_tz_t *>(data)[index]);
 	case LogicalTypeId::BIGINT:
@@ -779,9 +772,6 @@ string Vector::ToString(idx_t count) const {
 			string_t compressed_string = reinterpret_cast<string_t *>(data)[i];
 			auto decoder = FSSTVector::GetDecoder(*this);
 			auto &decompress_buffer = FSSTVector::GetDecompressBuffer(*this);
-			Value val = FSSTPrimitives::DecompressValue(decoder, compressed_string.GetData(),
-			                                            compressed_string.GetSize(), decompress_buffer);
-			retval += GetValue(i).ToString() + (i == count - 1 ? "" : ", ");
 		}
 	} break;
 	case VectorType::CONSTANT_VECTOR:
@@ -2070,8 +2060,6 @@ void FSSTVector::DecompressVector(const Vector &src, Vector &dst, idx_t src_offs
 		if (dst_mask.RowIsValid(target_idx) && compressed_string.GetSize() > 0) {
 			auto decoder = FSSTVector::GetDecoder(src);
 			auto &decompress_buffer = FSSTVector::GetDecompressBuffer(src);
-			tdata[target_idx] = FSSTPrimitives::DecompressValue(decoder, dst, compressed_string.GetData(),
-			                                                    compressed_string.GetSize(), decompress_buffer);
 		} else {
 			tdata[target_idx] = string_t(nullptr, 0);
 		}

@@ -43,7 +43,6 @@ public:
 	template <class T, typename... ARGS>
 	string FormatExceptionRecursive(ErrorType error_type, vector<ExceptionFormatValue> &values, T param,
 	                                ARGS... params) {
-		values.push_back(ExceptionFormatValue::CreateFormatValue<T>(param));
 		return FormatExceptionRecursive(error_type, values, params...);
 	}
 

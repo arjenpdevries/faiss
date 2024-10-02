@@ -8,9 +8,9 @@
 
 #pragma once
 
+#include "duckdb/common/unordered_map.hpp"
 #include "duckdb/function/function.hpp"
 #include "duckdb/parser/parsed_data/pragma_info.hpp"
-#include "duckdb/common/unordered_map.hpp"
 
 namespace duckdb {
 class ClientContext;
@@ -40,7 +40,7 @@ public:
 	DUCKDB_API static PragmaFunction PragmaStatement(const string &name, pragma_query_t query);
 	DUCKDB_API static PragmaFunction PragmaStatement(const string &name, pragma_function_t function);
 
-	DUCKDB_API string ToString() const override;
+	DUCKDB_API string ToString() const;
 
 public:
 	PragmaType type;

@@ -87,7 +87,6 @@ struct FunctionParameters {
 class Function {
 public:
 	DUCKDB_API explicit Function(string name);
-	DUCKDB_API virtual ~Function();
 
 	//! The name of the function
 	string name;
@@ -112,10 +111,6 @@ public:
 
 class SimpleFunction : public Function {
 public:
-	DUCKDB_API SimpleFunction(string name, vector<LogicalType> arguments,
-	                          LogicalType varargs = LogicalType(LogicalTypeId::INVALID));
-	DUCKDB_API ~SimpleFunction() override;
-
 	//! The set of arguments of the function
 	vector<LogicalType> arguments;
 	//! The set of original arguments of the function - only set if Function::EraseArgument is called
@@ -126,22 +121,15 @@ public:
 	LogicalType varargs;
 
 public:
-	DUCKDB_API virtual string ToString() const;
-
 	DUCKDB_API bool HasVarArgs() const;
 };
 
 class SimpleNamedParameterFunction : public SimpleFunction {
 public:
-	DUCKDB_API SimpleNamedParameterFunction(string name, vector<LogicalType> arguments,
-	                                        LogicalType varargs = LogicalType(LogicalTypeId::INVALID));
-	DUCKDB_API ~SimpleNamedParameterFunction() override;
-
 	//! The named parameters of the function
 	named_parameter_type_map_t named_parameters;
 
 public:
-	DUCKDB_API string ToString() const override;
 	DUCKDB_API bool HasNamedParameters() const;
 };
 
@@ -151,7 +139,6 @@ public:
 	                              FunctionStability stability,
 	                              LogicalType varargs = LogicalType(LogicalTypeId::INVALID),
 	                              FunctionNullHandling null_handling = FunctionNullHandling::DEFAULT_NULL_HANDLING);
-	DUCKDB_API ~BaseScalarFunction() override;
 
 	//! Return type of the function
 	LogicalType return_type;
@@ -163,7 +150,7 @@ public:
 public:
 	DUCKDB_API hash_t Hash() const;
 
-	DUCKDB_API string ToString() const override;
+	DUCKDB_API string ToString() const;
 };
 
 } // namespace duckdb

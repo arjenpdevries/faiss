@@ -10,11 +10,11 @@
 
 #include "duckdb/common/assert.hpp"
 #include "duckdb/common/exception_format_value.hpp"
-#include "duckdb/common/unordered_map.hpp"
 #include "duckdb/common/typedefs.hpp"
+#include "duckdb/common/unordered_map.hpp"
 
-#include <vector>
 #include <stdexcept>
+#include <vector>
 
 namespace duckdb {
 enum class PhysicalType : uint8_t;
@@ -131,7 +131,6 @@ public:
 	template <class T, typename... ARGS>
 	static string ConstructMessageRecursive(const string &msg, std::vector<ExceptionFormatValue> &values, T param,
 	                                        ARGS... params) {
-		values.push_back(ExceptionFormatValue::CreateFormatValue<T>(param));
 		return ConstructMessageRecursive(msg, values, params...);
 	}
 

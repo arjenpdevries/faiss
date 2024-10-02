@@ -10,15 +10,16 @@
 
 #include "duckdb/common/common.hpp"
 #include "duckdb/common/enums/file_compression_type.hpp"
+#include "duckdb/common/enums/file_glob_options.hpp"
+#include "duckdb/common/error_data.hpp"
 #include "duckdb/common/exception.hpp"
 #include "duckdb/common/file_buffer.hpp"
+#include "duckdb/common/file_open_flags.hpp"
+#include "duckdb/common/optional_idx.hpp"
+#include "duckdb/common/optional_ptr.hpp"
 #include "duckdb/common/unordered_map.hpp"
 #include "duckdb/common/vector.hpp"
-#include "duckdb/common/enums/file_glob_options.hpp"
-#include "duckdb/common/optional_ptr.hpp"
-#include "duckdb/common/optional_idx.hpp"
-#include "duckdb/common/error_data.hpp"
-#include "duckdb/common/file_open_flags.hpp"
+
 #include <functional>
 
 #undef CreateDirectory
@@ -137,13 +138,6 @@ public:
 	//! the file
 	DUCKDB_API virtual void Truncate(FileHandle &handle, int64_t new_size);
 
-	//! Check if a directory exists
-	DUCKDB_API virtual bool DirectoryExists(const string &directory, optional_ptr<FileOpener> opener = nullptr);
-	//! Create a directory if it does not exist
-	DUCKDB_API virtual void CreateDirectory(const string &directory, optional_ptr<FileOpener> opener = nullptr);
-	//! Recursively remove a directory and all files in it
-	DUCKDB_API virtual void RemoveDirectory(const string &directory, optional_ptr<FileOpener> opener = nullptr);
-
 	//! List files in a directory, invoking the callback method for each one with (filename, is_dir)
 	DUCKDB_API virtual bool ListFiles(const string &directory,
 	                                  const std::function<void(const string &, bool)> &callback,
@@ -165,10 +159,6 @@ public:
 	DUCKDB_API static void SetWorkingDirectory(const string &path);
 	//! Gets the working directory
 	DUCKDB_API static string GetWorkingDirectory();
-	//! Gets the users home directory
-	DUCKDB_API static string GetHomeDirectory(optional_ptr<FileOpener> opener);
-	//! Gets the users home directory
-	DUCKDB_API virtual string GetHomeDirectory();
 	//! Expands a given path, including e.g. expanding the home directory of the user
 	DUCKDB_API static string ExpandPath(const string &path, optional_ptr<FileOpener> opener);
 	//! Expands a given path, including e.g. expanding the home directory of the user
@@ -202,25 +192,6 @@ public:
 	DUCKDB_API virtual vector<string> Glob(const string &path, FileOpener *opener = nullptr);
 	DUCKDB_API vector<string> GlobFiles(const string &path, ClientContext &context,
 	                                    FileGlobOptions options = FileGlobOptions::DISALLOW_EMPTY);
-
-	//! registers a sub-file system to handle certain file name prefixes, e.g. http:// etc.
-	DUCKDB_API virtual void RegisterSubSystem(unique_ptr<FileSystem> sub_fs);
-	DUCKDB_API virtual void RegisterSubSystem(FileCompressionType compression_type, unique_ptr<FileSystem> fs);
-
-	//! Unregister a sub-filesystem by name
-	DUCKDB_API virtual void UnregisterSubSystem(const string &name);
-
-	//! List registered sub-filesystems, including builtin ones
-	DUCKDB_API virtual vector<string> ListSubSystems();
-
-	//! Whether or not a sub-system can handle a specific file path
-	DUCKDB_API virtual bool CanHandleFile(const string &fpath);
-
-	//! Set the file pointer of a file handle to a specified location. Reads and writes will happen from this location
-	DUCKDB_API virtual void Seek(FileHandle &handle, idx_t location);
-	//! Reset a file to the beginning (equivalent to Seek(handle, 0) for simple files)
-	DUCKDB_API virtual void Reset(FileHandle &handle);
-	DUCKDB_API virtual idx_t SeekPosition(FileHandle &handle);
 
 	//! If FS was manually set by the user
 	DUCKDB_API virtual bool IsManuallySet();

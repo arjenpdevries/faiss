@@ -17,8 +17,6 @@ class TableRef;
 
 class ErrorData {
 public:
-	//! Not initialized, default constructor
-	DUCKDB_API ErrorData();
 	//! From std::exception
 	DUCKDB_API ErrorData(const std::exception &ex); // NOLINT: allow implicit construction from exception
 	//! From a raw string and exception type

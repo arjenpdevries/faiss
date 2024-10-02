@@ -222,23 +222,6 @@ Value Value::MinimumValue(const LogicalType &type) {
 		return Value::UINTEGER(NumericLimits<uint32_t>::Minimum());
 	case LogicalTypeId::UBIGINT:
 		return Value::UBIGINT(NumericLimits<uint64_t>::Minimum());
-	case LogicalTypeId::DATE:
-		return Value::DATE(Date::FromDate(Date::DATE_MIN_YEAR, Date::DATE_MIN_MONTH, Date::DATE_MIN_DAY));
-	case LogicalTypeId::TIME:
-		return Value::TIME(dtime_t(0));
-	case LogicalTypeId::TIMESTAMP:
-		return Value::TIMESTAMP(Date::FromDate(Timestamp::MIN_YEAR, Timestamp::MIN_MONTH, Timestamp::MIN_DAY),
-		                        dtime_t(0));
-	case LogicalTypeId::TIMESTAMP_SEC: {
-		//	Casting rounds up, which will overflow
-		const auto min_us = MinimumValue(LogicalType::TIMESTAMP).GetValue<timestamp_t>();
-		return Value::TIMESTAMPSEC(timestamp_t(Timestamp::GetEpochSeconds(min_us)));
-	}
-	case LogicalTypeId::TIMESTAMP_MS: {
-		//	Casting rounds up, which will overflow
-		const auto min_us = MinimumValue(LogicalType::TIMESTAMP).GetValue<timestamp_t>();
-		return Value::TIMESTAMPMS(timestamp_t(Timestamp::GetEpochMs(min_us)));
-	}
 	case LogicalTypeId::TIMESTAMP_NS: {
 		// Clear the fractional day.
 		auto min_ns = NumericLimits<int64_t>::Minimum();
@@ -249,9 +232,6 @@ Value Value::MinimumValue(const LogicalType &type) {
 	case LogicalTypeId::TIME_TZ:
 		//	"00:00:00+1559" from the PG docs, but actually 00:00:00+15:59:59
 		return Value::TIMETZ(dtime_tz_t(dtime_t(0), dtime_tz_t::MAX_OFFSET));
-	case LogicalTypeId::TIMESTAMP_TZ:
-		return Value::TIMESTAMPTZ(Timestamp::FromDatetime(
-		    Date::FromDate(Timestamp::MIN_YEAR, Timestamp::MIN_MONTH, Timestamp::MIN_DAY), dtime_t(0)));
 	case LogicalTypeId::FLOAT:
 		return Value::FLOAT(NumericLimits<float>::Minimum());
 	case LogicalTypeId::DOUBLE:
@@ -311,25 +291,10 @@ Value Value::MaximumValue(const LogicalType &type) {
 		return Value::UINTEGER(NumericLimits<uint32_t>::Maximum());
 	case LogicalTypeId::UBIGINT:
 		return Value::UBIGINT(NumericLimits<uint64_t>::Maximum());
-	case LogicalTypeId::DATE:
-		return Value::DATE(Date::FromDate(Date::DATE_MAX_YEAR, Date::DATE_MAX_MONTH, Date::DATE_MAX_DAY));
-	case LogicalTypeId::TIME:
-		//	24:00:00 according to PG
-		return Value::TIME(dtime_t(Interval::MICROS_PER_DAY));
 	case LogicalTypeId::TIMESTAMP:
 		return Value::TIMESTAMP(timestamp_t(NumericLimits<int64_t>::Maximum() - 1));
-	case LogicalTypeId::TIMESTAMP_MS: {
-		//	Casting rounds up, which will overflow
-		const auto max_us = MaximumValue(LogicalType::TIMESTAMP).GetValue<timestamp_t>();
-		return Value::TIMESTAMPMS(timestamp_t(Timestamp::GetEpochMs(max_us)));
-	}
 	case LogicalTypeId::TIMESTAMP_NS:
 		return Value::TIMESTAMPNS(timestamp_t(NumericLimits<int64_t>::Maximum() - 1));
-	case LogicalTypeId::TIMESTAMP_SEC: {
-		//	Casting rounds up, which will overflow
-		const auto max_us = MaximumValue(LogicalType::TIMESTAMP).GetValue<timestamp_t>();
-		return Value::TIMESTAMPSEC(timestamp_t(Timestamp::GetEpochSeconds(max_us)));
-	}
 	case LogicalTypeId::TIME_TZ:
 		//	"24:00:00-1559" from the PG docs but actually "24:00:00-15:59:59"
 		return Value::TIMETZ(dtime_tz_t(dtime_t(Interval::MICROS_PER_DAY), dtime_tz_t::MIN_OFFSET));
@@ -371,8 +336,6 @@ Value Value::MaximumValue(const LogicalType &type) {
 
 Value Value::Infinity(const LogicalType &type) {
 	switch (type.id()) {
-	case LogicalTypeId::DATE:
-		return Value::DATE(date_t::infinity());
 	case LogicalTypeId::TIMESTAMP:
 		return Value::TIMESTAMP(timestamp_t::infinity());
 	case LogicalTypeId::TIMESTAMP_MS:
@@ -394,8 +357,6 @@ Value Value::Infinity(const LogicalType &type) {
 
 Value Value::NegativeInfinity(const LogicalType &type) {
 	switch (type.id()) {
-	case LogicalTypeId::DATE:
-		return Value::DATE(date_t::ninfinity());
 	case LogicalTypeId::TIMESTAMP:
 		return Value::TIMESTAMP(timestamp_t::ninfinity());
 	case LogicalTypeId::TIMESTAMP_MS:
@@ -615,33 +576,11 @@ Value Value::POINTER(uintptr_t value) {
 	return result;
 }
 
-Value Value::DATE(date_t value) {
-	Value result(LogicalType::DATE);
-	result.value_.date = value;
-	result.is_null = false;
-	return result;
-}
-
-Value Value::DATE(int32_t year, int32_t month, int32_t day) {
-	return Value::DATE(Date::FromDate(year, month, day));
-}
-
-Value Value::TIME(dtime_t value) {
-	Value result(LogicalType::TIME);
-	result.value_.time = value;
-	result.is_null = false;
-	return result;
-}
-
 Value Value::TIMETZ(dtime_tz_t value) {
 	Value result(LogicalType::TIME_TZ);
 	result.value_.timetz = value;
 	result.is_null = false;
 	return result;
-}
-
-Value Value::TIME(int32_t hour, int32_t min, int32_t sec, int32_t micros) {
-	return Value::TIME(Time::FromTime(hour, min, sec, micros));
 }
 
 Value Value::TIMESTAMP(timestamp_t value) {
@@ -680,14 +619,14 @@ Value Value::TIMESTAMPSEC(timestamp_t timestamp) {
 }
 
 Value Value::TIMESTAMP(date_t date, dtime_t time) {
-	return Value::TIMESTAMP(Timestamp::FromDatetime(date, time));
+	Value result(LogicalType::TIMESTAMP_S);
+	return result;
 }
 
 Value Value::TIMESTAMP(int32_t year, int32_t month, int32_t day, int32_t hour, int32_t min, int32_t sec,
                        int32_t micros) {
-	auto val = Value::TIMESTAMP(Date::FromDate(year, month, day), Time::FromTime(hour, min, sec, micros));
-	val.type_ = LogicalType::TIMESTAMP;
-	return val;
+	Value result(LogicalType::TIMESTAMP_S);
+	return result;
 }
 
 Value Value::STRUCT(const LogicalType &type, vector<Value> struct_values) {
@@ -979,16 +918,6 @@ Value Value::CreateValue(uhugeint_t value) {
 }
 
 template <>
-Value Value::CreateValue(date_t value) {
-	return Value::DATE(value);
-}
-
-template <>
-Value Value::CreateValue(dtime_t value) {
-	return Value::TIME(value);
-}
-
-template <>
 Value Value::CreateValue(dtime_tz_t value) {
 	return Value::TIMETZ(value);
 }
@@ -1208,11 +1137,6 @@ Value Value::Numeric(const LogicalType &type, int64_t value) {
 		return Value((double)value);
 	case LogicalTypeId::POINTER:
 		return Value::POINTER(NumericCast<uintptr_t>(value));
-	case LogicalTypeId::DATE:
-		D_ASSERT(value >= NumericLimits<int32_t>::Minimum() && value <= NumericLimits<int32_t>::Maximum());
-		return Value::DATE(date_t(NumericCast<int32_t>(value)));
-	case LogicalTypeId::TIME:
-		return Value::TIME(dtime_t(value));
 	case LogicalTypeId::TIMESTAMP:
 		return Value::TIMESTAMP(timestamp_t(value));
 	case LogicalTypeId::TIMESTAMP_NS:

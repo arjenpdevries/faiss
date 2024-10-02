@@ -236,31 +236,6 @@ void Parser::ParseQuery(const string &query) {
 			auto query_statements = SplitQueryStringIntoStatements(query);
 			idx_t stmt_loc = 0;
 			for (auto const &query_statement : query_statements) {
-				ErrorData another_parser_error;
-				// Creating a new scope to allow extensions to use PostgresParser, which is not reentrant
-				{
-					PostgresParser another_parser;
-					another_parser.Parse(query_statement);
-					// LCOV_EXCL_START
-					// first see if DuckDB can parse this individual query statement
-					if (another_parser.success) {
-						if (!another_parser.parse_tree) {
-							// empty statement
-							continue;
-						}
-						// important to set in the case of a mixture of DDB and parser ext statements
-						statements.back()->stmt_length = query_statement.size() - 1;
-						statements.back()->stmt_location = stmt_loc;
-						stmt_loc += query_statement.size();
-						continue;
-					} else {
-						another_parser_error = ErrorData(another_parser.error_message);
-						if (another_parser.error_location > 0) {
-							another_parser_error.AddQueryLocation(
-							    NumericCast<idx_t>(another_parser.error_location - 1));
-						}
-					}
-				} // LCOV_EXCL_STOP
 				// LCOV_EXCL_START
 				// let extensions parse the statement which DuckDB failed to parse
 				bool parsed_single_statement = false;

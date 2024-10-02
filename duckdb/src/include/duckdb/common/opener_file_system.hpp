@@ -89,14 +89,6 @@ public:
 		GetFileSystem().MoveFile(source, target, GetOpener());
 	}
 
-	string GetHomeDirectory() override {
-		return FileSystem::GetHomeDirectory(GetOpener());
-	}
-
-	string ExpandPath(const string &path) override {
-		return FileSystem::ExpandPath(path, GetOpener());
-	}
-
 	bool FileExists(const string &filename, optional_ptr<FileOpener> opener) override {
 		VerifyNoOpener(opener);
 		return GetFileSystem().FileExists(filename, GetOpener());

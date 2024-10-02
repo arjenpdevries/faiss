@@ -18,7 +18,6 @@ public:
 	class ColumnListIterator;
 
 public:
-	DUCKDB_API explicit ColumnList(bool allow_duplicate_names = false);
 	DUCKDB_API explicit ColumnList(vector<ColumnDefinition> columns, bool allow_duplicate_names = false);
 
 	DUCKDB_API void AddColumn(ColumnDefinition column);

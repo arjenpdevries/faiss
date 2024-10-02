@@ -1,11 +1,11 @@
 #include "duckdb/common/exception.hpp"
-#include "duckdb/common/types.hpp"
 #include "duckdb/common/helper.hpp" // defines DUCKDB_EXPLICIT_FALLTHROUGH which fmt will use to annotate
-#include "fmt/format.h"
-#include "fmt/printf.h"
+#include "duckdb/common/types.hpp"
 #include "duckdb/common/types/hugeint.hpp"
 #include "duckdb/common/types/uhugeint.hpp"
 #include "duckdb/parser/keyword_helper.hpp"
+#include "fmt/format.h"
+#include "fmt/printf.h"
 
 namespace duckdb {
 
@@ -23,57 +23,6 @@ ExceptionFormatValue::ExceptionFormatValue(uhugeint_t uhuge_val)
 }
 ExceptionFormatValue::ExceptionFormatValue(string str_val)
     : type(ExceptionFormatValueType::FORMAT_VALUE_TYPE_STRING), str_val(std::move(str_val)) {
-}
-
-template <>
-ExceptionFormatValue ExceptionFormatValue::CreateFormatValue(PhysicalType value) {
-	return ExceptionFormatValue(TypeIdToString(value));
-}
-template <>
-ExceptionFormatValue
-ExceptionFormatValue::CreateFormatValue(LogicalType value) { // NOLINT: templating requires us to copy value here
-	return ExceptionFormatValue(value.ToString());
-}
-template <>
-ExceptionFormatValue ExceptionFormatValue::CreateFormatValue(float value) {
-	return ExceptionFormatValue(double(value));
-}
-template <>
-ExceptionFormatValue ExceptionFormatValue::CreateFormatValue(double value) {
-	return ExceptionFormatValue(double(value));
-}
-template <>
-ExceptionFormatValue ExceptionFormatValue::CreateFormatValue(string value) {
-	return ExceptionFormatValue(std::move(value));
-}
-
-template <>
-ExceptionFormatValue
-ExceptionFormatValue::CreateFormatValue(SQLString value) { // NOLINT: templating requires us to copy value here
-	return KeywordHelper::WriteQuoted(value.raw_string, '\'');
-}
-
-template <>
-ExceptionFormatValue
-ExceptionFormatValue::CreateFormatValue(SQLIdentifier value) { // NOLINT: templating requires us to copy value here
-	return KeywordHelper::WriteOptionallyQuoted(value.raw_string, '"');
-}
-
-template <>
-ExceptionFormatValue ExceptionFormatValue::CreateFormatValue(const char *value) {
-	return ExceptionFormatValue(string(value));
-}
-template <>
-ExceptionFormatValue ExceptionFormatValue::CreateFormatValue(char *value) {
-	return ExceptionFormatValue(string(value));
-}
-template <>
-ExceptionFormatValue ExceptionFormatValue::CreateFormatValue(hugeint_t value) {
-	return ExceptionFormatValue(value);
-}
-template <>
-ExceptionFormatValue ExceptionFormatValue::CreateFormatValue(uhugeint_t value) {
-	return ExceptionFormatValue(value);
 }
 
 string ExceptionFormatValue::Format(const string &msg, std::vector<ExceptionFormatValue> &values) {

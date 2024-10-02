@@ -8,27 +8,22 @@ endif()
 add_library_unity(
   duckdb_common_types
   OBJECT
-  # batched_data_collection.cpp
   bit.cpp
   blob.cpp
   cast_helpers.cpp
   conflict_manager.cpp
   conflict_info.cpp
   data_chunk.cpp
-  date.cpp
   decimal.cpp
   hash.cpp
   hugeint.cpp
   uhugeint.cpp
   uuid.cpp
   hyperloglog.cpp
-  interval.cpp
   list_segment.cpp
   selection_vector.cpp
   string_heap.cpp
   string_type.cpp
-  timestamp.cpp
-  time.cpp
   validity_mask.cpp
   value.cpp
   varint.cpp

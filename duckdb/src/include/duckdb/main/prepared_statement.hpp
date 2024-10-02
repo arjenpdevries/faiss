@@ -39,8 +39,6 @@ public:
 	string query;
 	//! Whether or not the statement was successfully prepared
 	bool success;
-	//! The error message (if success = false)
-	ErrorData error;
 	//! The parameter mapping
 	case_insensitive_map_t<idx_t> named_param_map;
 
