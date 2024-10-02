@@ -83,7 +83,6 @@ template class unique_ptr<Pipeline>;
 template class unique_ptr<RowGroup>;
 template class unique_ptr<RowDataBlock>;
 template class unique_ptr<RowDataCollection>;
-template class unique_ptr<ColumnDataCollection>;
 template class unique_ptr<PartitionedColumnData>;
 template class unique_ptr<VacuumInfo>;
 
@@ -172,7 +171,6 @@ INSTANTIATE_VECTOR(vector<shared_ptr<Pipeline>>)
 INSTANTIATE_VECTOR(vector<weak_ptr<Pipeline>>)
 INSTANTIATE_VECTOR(vector<shared_ptr<MetaPipeline>>)
 INSTANTIATE_VECTOR(vector<unique_ptr<JoinHashTable>>)
-INSTANTIATE_VECTOR(vector<unique_ptr<ColumnDataCollection>>)
 INSTANTIATE_VECTOR(vector<shared_ptr<ColumnDataAllocator>>)
 INSTANTIATE_VECTOR(vector<unique_ptr<RowDataBlock>>)
 

@@ -1,4 +1,5 @@
 #include "duckdb/common/virtual_file_system.hpp"
+
 #include "duckdb/common/gzip_file_system.hpp"
 #include "duckdb/common/pipe_file_system.hpp"
 #include "duckdb/common/string_util.hpp"
@@ -18,13 +19,6 @@ unique_ptr<FileHandle> VirtualFileSystem::OpenFile(const string &path, FileOpenF
 		if (StringUtil::EndsWith(lower_path, ".tmp")) {
 			// strip .tmp
 			lower_path = lower_path.substr(0, lower_path.length() - 4);
-		}
-		if (IsFileCompressed(path, FileCompressionType::GZIP)) {
-			compression = FileCompressionType::GZIP;
-		} else if (IsFileCompressed(path, FileCompressionType::ZSTD)) {
-			compression = FileCompressionType::ZSTD;
-		} else {
-			compression = FileCompressionType::UNCOMPRESSED;
 		}
 	}
 	// open the base file handle in UNCOMPRESSED mode

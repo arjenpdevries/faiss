@@ -1,4 +1,5 @@
 #include "duckdb/main/prepared_statement.hpp"
+
 #include "duckdb/common/exception.hpp"
 #include "duckdb/main/client_context.hpp"
 #include "duckdb/main/prepared_statement_data.hpp"
@@ -70,50 +71,20 @@ case_insensitive_map_t<LogicalType> PreparedStatement::GetExpectedParameterTypes
 
 unique_ptr<QueryResult> PreparedStatement::Execute(case_insensitive_map_t<BoundParameterData> &named_values,
                                                    bool allow_stream_result) {
-	auto pending = PendingQuery(named_values, allow_stream_result);
-	if (pending->HasError()) {
-		return make_uniq<MaterializedQueryResult>(pending->GetErrorObject());
-	}
-	return pending->Execute();
+	return nullptr;
 }
 
 unique_ptr<QueryResult> PreparedStatement::Execute(vector<Value> &values, bool allow_stream_result) {
-	auto pending = PendingQuery(values, allow_stream_result);
-	if (pending->HasError()) {
-		return make_uniq<MaterializedQueryResult>(pending->GetErrorObject());
-	}
-	return pending->Execute();
+	return nullptr;
 }
 
 unique_ptr<PendingQueryResult> PreparedStatement::PendingQuery(vector<Value> &values, bool allow_stream_result) {
-	case_insensitive_map_t<BoundParameterData> named_values;
-	for (idx_t i = 0; i < values.size(); i++) {
-		auto &val = values[i];
-		named_values[std::to_string(i + 1)] = BoundParameterData(val);
-	}
-	return PendingQuery(named_values, allow_stream_result);
+	return nullptr;
 }
 
 unique_ptr<PendingQueryResult> PreparedStatement::PendingQuery(case_insensitive_map_t<BoundParameterData> &named_values,
                                                                bool allow_stream_result) {
-	if (!success) {
-		auto exception = InvalidInputException("Attempting to execute an unsuccessfully prepared statement!");
-		return make_uniq<PendingQueryResult>(ErrorData(exception));
-	}
-	PendingQueryParameters parameters;
-	parameters.parameters = &named_values;
-
-	try {
-		VerifyParameters(named_values, named_param_map);
-	} catch (const std::exception &ex) {
-		return make_uniq<PendingQueryResult>(ErrorData(ex));
-	}
-
-	D_ASSERT(data);
-	parameters.allow_stream_result = allow_stream_result && data->properties.allow_stream_result;
-	auto result = context->PendingQuery(query, data, parameters);
-	// The result should not contain any reference to the 'vector<Value> parameters.parameters'
-	return result;
+	return nullptr;
 }
 
 } // namespace duckdb

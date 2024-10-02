@@ -1,4 +1,4 @@
-add_subdirectory(enums)
+# add_subdirectory(enums)
 add_subdirectory(exception)
 add_subdirectory(types)
 
@@ -17,7 +17,7 @@ add_library_unity(
   allocator.cpp
   assert.cpp
   bind_helpers.cpp
-  box_renderer.cpp
+  # box_renderer.cpp
   cgroups.cpp
   compressed_file_system.cpp
   constants.cpp
@@ -31,15 +31,14 @@ add_library_unity(
   filename_pattern.cpp
   fsst.cpp
   gzip_file_system.cpp
-  hive_partitioning.cpp
+  # hive_partitioning.cpp
   http_util.cpp
   pipe_file_system.cpp
   local_file_system.cpp
-  multi_file_list.cpp
-  multi_file_reader.cpp
+  # multi_file_list.cpp
+  # multi_file_reader.cpp
   error_data.cpp
   printer.cpp
-  radix_partitioning.cpp
   re2_regex.cpp
   random_engine.cpp
   string_util.cpp

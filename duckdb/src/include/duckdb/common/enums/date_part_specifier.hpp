@@ -54,7 +54,4 @@ inline bool IsBigintDatepart(DatePartSpecifier part_code) {
 	return size_t(part_code) < size_t(DatePartSpecifier::BEGIN_DOUBLE);
 }
 
-DUCKDB_API bool TryGetDatePartSpecifier(const string &specifier, DatePartSpecifier &result);
-DUCKDB_API DatePartSpecifier GetDatePartSpecifier(const string &specifier);
-
 } // namespace duckdb

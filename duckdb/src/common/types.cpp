@@ -1038,10 +1038,6 @@ struct ForceGetTypeOperation {
 
 bool LogicalType::TryGetMaxLogicalType(ClientContext &context, const LogicalType &left, const LogicalType &right,
                                        LogicalType &result) {
-	if (DBConfig::GetConfig(context).options.old_implicit_casting) {
-		result = LogicalType::ForceMaxLogicalType(left, right);
-		return true;
-	}
 	return TryGetMaxLogicalTypeInternal<TryGetTypeOperation>(left, right, result);
 }
 

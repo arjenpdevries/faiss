@@ -33,7 +33,6 @@ void DataChunk::Initialize(Allocator &allocator, const vector<LogicalType> &type
 }
 
 void DataChunk::Initialize(ClientContext &context, const vector<LogicalType> &types, idx_t capacity_p) {
-	Initialize(Allocator::Get(context), types, capacity_p);
 }
 
 idx_t DataChunk::GetAllocationSize() const {
@@ -59,7 +58,6 @@ void DataChunk::Initialize(Allocator &allocator, vector<LogicalType>::const_iter
 
 void DataChunk::Initialize(ClientContext &context, vector<LogicalType>::const_iterator begin,
                            vector<LogicalType>::const_iterator end, idx_t capacity_p) {
-	Initialize(Allocator::Get(context), begin, end, capacity_p);
 }
 
 void DataChunk::InitializeEmpty(vector<LogicalType>::const_iterator begin, vector<LogicalType>::const_iterator end) {

@@ -161,9 +161,6 @@ interval_parse_identifier:
 		goto end_of_string;
 	}
 
-	if (!TryGetDatePartSpecifier(specifier_str, specifier)) {
-		return false;
-	}
 	// add the specifier to the interval
 	switch (specifier) {
 	case DatePartSpecifier::MILLENNIUM:

@@ -21,8 +21,7 @@ public:
 	}
 
 	FileSystem &GetFileSystem() const override {
-		auto &config = DBConfig::GetConfig(context);
-		return *config.file_system;
+		throw Exception(ExceptionType::SETTINGS, "Profiling is not enabled for this connection");
 	}
 
 	optional_ptr<FileOpener> GetOpener() const override {
@@ -34,13 +33,6 @@ private:
 };
 
 ClientData::ClientData(ClientContext &context) {
-	auto &db = DatabaseInstance::GetDatabase(context);
-	http_logger = make_shared_ptr<HTTPLogger>(context);
-	temporary_objects = make_shared_ptr<AttachedDatabase>(db, AttachedDatabaseType::TEMP_DATABASE);
-	random_engine = make_uniq<RandomEngine>();
-	file_opener = make_uniq<ClientContextFileOpener>(context);
-	client_file_system = make_uniq<ClientFileSystem>(context);
-	temporary_objects->Initialize(DEFAULT_BLOCK_ALLOC_SIZE);
 }
 
 ClientData::~ClientData() {

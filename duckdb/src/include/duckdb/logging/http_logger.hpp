@@ -53,24 +53,6 @@ private:
 
 	template <class REQUEST, class RESPONSE>
 	void Log(const REQUEST &req, const RESPONSE &res) {
-		const auto &config = ClientConfig::GetConfig(context);
-		D_ASSERT(config.enable_http_logging);
-
-		lock_guard<mutex> guard(lock);
-		if (config.http_logging_output.empty()) {
-			stringstream out;
-			TemplatedWriteRequests(out, req, res);
-			Printer::Print(out.str());
-		} else {
-			ofstream out(config.http_logging_output, ios::app);
-			TemplatedWriteRequests(out, req, res);
-			out.close();
-			// Throw an IO exception if it fails to write to the file
-			if (out.fail()) {
-				throw IOException("Failed to write HTTP log to file \"%s\": %s", config.http_logging_output,
-				                  strerror(errno));
-			}
-		}
 	}
 
 private:

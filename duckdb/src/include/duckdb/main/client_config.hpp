@@ -38,9 +38,6 @@ struct ClientConfig {
 	//! The file to save query profiling information to, instead of printing it to the console
 	//! (empty = print to console)
 	string profiler_save_location;
-	//! The custom settings for the profiler
-	//! (empty = use the default settings)
-	profiler_settings_t profiler_settings = ProfilingInfo::DefaultSettings();
 
 	//! Allows suppressing profiler output, even if enabled. We turn on the profiler on all test runs but don't want
 	//! to output anything
@@ -146,9 +143,6 @@ struct ClientConfig {
 	string http_logging_output;
 
 public:
-	static ClientConfig &GetConfig(ClientContext &context);
-	static const ClientConfig &GetConfig(const ClientContext &context);
-
 	bool AnyVerification() {
 		return query_verification_enabled || verify_external || verify_serializer || verify_fetch_row;
 	}

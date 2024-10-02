@@ -493,23 +493,6 @@ static string LookupExtensionForPattern(const string &pattern) {
 
 vector<string> FileSystem::GlobFiles(const string &pattern, ClientContext &context, FileGlobOptions options) {
 	auto result = Glob(pattern);
-	if (result.empty()) {
-		string required_extension = LookupExtensionForPattern(pattern);
-		if (!required_extension.empty() && !context.db->ExtensionIsLoaded(required_extension)) {
-			auto &dbconfig = DBConfig::GetConfig(context);
-			// an extension is required to read this file, but it is not loaded - try to load it
-			// success! glob again
-			// check the extension is loaded just in case to prevent an infinite loop here
-			if (!context.db->ExtensionIsLoaded(required_extension)) {
-				throw InternalException("Extension load \"%s\" did not throw but somehow the extension was not loaded",
-				                        required_extension);
-			}
-			return GlobFiles(pattern, context, options);
-		}
-		if (options == FileGlobOptions::DISALLOW_EMPTY) {
-			throw IOException("No files found that match the pattern \"%s\"", pattern);
-		}
-	}
 	return result;
 }
 

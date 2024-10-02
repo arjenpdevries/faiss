@@ -3,8 +3,6 @@
 namespace duckdb {
 
 void BuiltinFunctions::RegisterPragmaFunctions() {
-	Register<PragmaQueries>();
-	Register<PragmaFunctions>();
 }
 
 } // namespace duckdb

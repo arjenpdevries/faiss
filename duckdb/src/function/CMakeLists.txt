@@ -1,7 +1,5 @@
 add_subdirectory(aggregate)
-add_subdirectory(pragma)
 add_subdirectory(scalar)
-add_subdirectory(table)
 
 add_library_unity(
   duckdb_function

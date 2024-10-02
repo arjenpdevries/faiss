@@ -1,7 +1,8 @@
 #include "duckdb/main/error_manager.hpp"
+
+#include "duckdb/common/exception/list.hpp"
 #include "duckdb/main/config.hpp"
 #include "utf8proc_wrapper.hpp"
-#include "duckdb/common/exception/list.hpp"
 
 namespace duckdb {
 
@@ -69,11 +70,11 @@ void ErrorManager::AddCustomError(ErrorType type, string new_error) {
 }
 
 ErrorManager &ErrorManager::Get(ClientContext &context) {
-	return *DBConfig::GetConfig(context).error_manager;
+	throw Exception(ExceptionType::SETTINGS, "Profiling is not enabled for this connection");
 }
 
 ErrorManager &ErrorManager::Get(DatabaseInstance &context) {
-	return *DBConfig::GetConfig(context).error_manager;
+	throw Exception(ExceptionType::SETTINGS, "Profiling is not enabled for this connection");
 }
 
 } // namespace duckdb

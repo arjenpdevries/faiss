@@ -1,6 +1,7 @@
 #include "duckdb/common/exception/catalog_exception.hpp"
-#include "duckdb/common/to_string.hpp"
+
 #include "duckdb/common/string_util.hpp"
+#include "duckdb/common/to_string.hpp"
 
 namespace duckdb {
 
@@ -21,13 +22,11 @@ CatalogException CatalogException::MissingEntry(CatalogType type, const string &
 	auto extra_info = Exception::InitializeExtraInfo("MISSING_ENTRY", context.query_location);
 
 	extra_info["name"] = name;
-	extra_info["type"] = CatalogTypeToString(type);
 	if (!suggestion.empty()) {
 		extra_info["candidates"] = suggestion;
 	}
-	return CatalogException(
-	    StringUtil::Format("%s with name %s does not exist!%s", CatalogTypeToString(type), name, did_you_mean),
-	    extra_info);
+	return CatalogException(StringUtil::Format("%s with name %s does not exist!%s", "", name, did_you_mean),
+	                        extra_info);
 }
 
 CatalogException CatalogException::MissingEntry(const string &type, const string &name,
@@ -47,9 +46,8 @@ CatalogException CatalogException::MissingEntry(const string &type, const string
 CatalogException CatalogException::EntryAlreadyExists(CatalogType type, const string &name, QueryErrorContext context) {
 	auto extra_info = Exception::InitializeExtraInfo("ENTRY_ALREADY_EXISTS", optional_idx());
 	extra_info["name"] = name;
-	extra_info["type"] = CatalogTypeToString(type);
-	return CatalogException(StringUtil::Format("%s with name \"%s\" already exists!", CatalogTypeToString(type), name),
-	                        extra_info);
+	return CatalogException(
+	    StringUtil::Format("%s with name \"%s\" already exists!", "CatalogTypeToString(type)", name), extra_info);
 }
 
 } // namespace duckdb

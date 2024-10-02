@@ -18,11 +18,6 @@ ColumnDataAllocator::ColumnDataAllocator(BufferManager &buffer_manager)
 ColumnDataAllocator::ColumnDataAllocator(ClientContext &context, ColumnDataAllocatorType allocator_type)
     : type(allocator_type) {
 	switch (type) {
-	case ColumnDataAllocatorType::BUFFER_MANAGER_ALLOCATOR:
-	case ColumnDataAllocatorType::HYBRID:
-	case ColumnDataAllocatorType::IN_MEMORY_ALLOCATOR:
-		alloc.allocator = &Allocator::Get(context);
-		break;
 	default:
 		throw InternalException("Unrecognized column data allocator type");
 	}

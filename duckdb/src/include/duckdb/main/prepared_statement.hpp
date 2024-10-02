@@ -8,11 +8,11 @@
 
 #pragma once
 
+#include "duckdb/common/case_insensitive_map.hpp"
+#include "duckdb/common/error_data.hpp"
 #include "duckdb/common/winapi.hpp"
 #include "duckdb/main/materialized_query_result.hpp"
 #include "duckdb/main/pending_query_result.hpp"
-#include "duckdb/common/error_data.hpp"
-#include "duckdb/common/case_insensitive_map.hpp"
 #include "duckdb/planner/expression/bound_parameter_data.hpp"
 
 namespace duckdb {
@@ -154,7 +154,7 @@ public:
 
 private:
 	unique_ptr<PendingQueryResult> PendingQueryRecursive(vector<Value> &values) {
-		return PendingQuery(values);
+		return nullptr;
 	}
 
 	template <typename T, typename... ARGS>

@@ -1,5 +1,4 @@
-add_subdirectory(column)
-add_subdirectory(row)
+# add_subdirectory(column)
 
 if(${EXIT_TIME_DESTRUCTORS_WARNING})
   set(CMAKE_CXX_FLAGS_DEBUG
@@ -9,7 +8,7 @@ endif()
 add_library_unity(
   duckdb_common_types
   OBJECT
-  batched_data_collection.cpp
+  # batched_data_collection.cpp
   bit.cpp
   blob.cpp
   cast_helpers.cpp

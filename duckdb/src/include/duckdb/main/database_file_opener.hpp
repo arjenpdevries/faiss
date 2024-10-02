@@ -43,8 +43,7 @@ public:
 	}
 
 	FileSystem &GetFileSystem() const override {
-		auto &config = DBConfig::GetConfig(db);
-		return *config.file_system;
+		throw Exception(ExceptionType::SETTINGS, "Profiling is not enabled for this connection");
 	}
 	optional_ptr<FileOpener> GetOpener() const override {
 		return &database_opener;

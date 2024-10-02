@@ -8,12 +8,12 @@
 namespace duckdb {
 
 SettingLookupResult ClientContextFileOpener::TryGetCurrentSetting(const string &key, Value &result) {
-	return context.TryGetCurrentSetting(key, result);
+	throw Exception(ExceptionType::SETTINGS, "Profiling is not enabled for this connection");
 }
 
 // LCOV_EXCL_START
 SettingLookupResult ClientContextFileOpener::TryGetCurrentSetting(const string &key, Value &result, FileOpenerInfo &) {
-	return context.TryGetCurrentSetting(key, result);
+	throw Exception(ExceptionType::SETTINGS, "Profiling is not enabled for this connection");
 }
 
 optional_ptr<DatabaseInstance> ClientContextFileOpener::TryGetDatabase() {

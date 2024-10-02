@@ -29,7 +29,6 @@ bool PushdownInternal(ClientContext &context, const MultiFileReaderOptions &opti
 	filter_info.filename_enabled = options.filename;
 
 	auto start_files = expanded_files.size();
-	HivePartitioning::ApplyFiltersToFileList(context, expanded_files, filters, filter_info, info);
 
 	if (expanded_files.size() != start_files) {
 		return true;
@@ -70,13 +69,6 @@ MultiFileListIterationHelper::MultiFileListIterator::MultiFileListIterator(Multi
     : file_list(file_list_p) {
 	if (!file_list) {
 		return;
-	}
-
-	file_list->InitializeScan(file_scan_data);
-	if (!file_list->Scan(file_scan_data, current_file)) {
-		// There is no first file: move iterator to nop state
-		file_list = nullptr;
-		file_scan_data.current_file_idx = DConstants::INVALID_INDEX;
 	}
 }
 

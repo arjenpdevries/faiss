@@ -48,14 +48,6 @@ class TupleDataCollection {
 	friend class PartitionedTupleData;
 
 public:
-	//! Constructs a TupleDataCollection with the specified layout
-	TupleDataCollection(BufferManager &buffer_manager, const TupleDataLayout &layout);
-	//! Constructs a TupleDataCollection with the same (shared) allocator
-	explicit TupleDataCollection(shared_ptr<TupleDataAllocator> allocator);
-
-	~TupleDataCollection();
-
-public:
 	//! The layout of the stored rows
 	const TupleDataLayout &GetLayout() const;
 	//! The number of rows stored in the tuple data collection
@@ -72,23 +64,6 @@ public:
 	//! Gets the gather function for the given type
 	static TupleDataGatherFunction GetGatherFunction(const LogicalType &type);
 
-	//! Initializes an Append state - useful for optimizing many appends made to the same tuple data collection
-	void InitializeAppend(TupleDataAppendState &append_state,
-	                      TupleDataPinProperties properties = TupleDataPinProperties::UNPIN_AFTER_DONE);
-	//! Initializes an Append state - useful for optimizing many appends made to the same tuple data collection
-	void InitializeAppend(TupleDataAppendState &append_state, vector<column_t> column_ids,
-	                      TupleDataPinProperties properties = TupleDataPinProperties::UNPIN_AFTER_DONE);
-	//! Initializes the Pin state of an Append state
-	//! - Useful for optimizing many appends made to the same tuple data collection
-	void InitializeAppend(TupleDataPinState &pin_state,
-	                      TupleDataPinProperties = TupleDataPinProperties::UNPIN_AFTER_DONE);
-	//! Initializes the Chunk state of an Append state
-	//! - Useful for optimizing many appends made to the same tuple data collection
-	void InitializeChunkState(TupleDataChunkState &chunk_state, vector<column_t> column_ids = {});
-	//! Initializes the Chunk state of an Append state
-	//! - Useful for optimizing many appends made to the same tuple data collection
-	static void InitializeChunkState(TupleDataChunkState &chunk_state, const vector<LogicalType> &types,
-	                                 vector<column_t> column_ids = {});
 	//! Append a DataChunk directly to this TupleDataCollection - calls InitializeAppend and Append internally
 	void Append(DataChunk &new_chunk, const SelectionVector &append_sel = *FlatVector::IncrementalSelectionVector(),
 	            idx_t append_count = DConstants::INVALID_INDEX);

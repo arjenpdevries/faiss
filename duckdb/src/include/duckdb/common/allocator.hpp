@@ -105,9 +105,6 @@ public:
 	static void DefaultFree(PrivateAllocatorData *private_data, data_ptr_t pointer, idx_t size);
 	static data_ptr_t DefaultReallocate(PrivateAllocatorData *private_data, data_ptr_t pointer, idx_t old_size,
 	                                    idx_t size);
-	static Allocator &Get(ClientContext &context);
-	static Allocator &Get(DatabaseInstance &db);
-	static Allocator &Get(AttachedDatabase &db);
 
 	PrivateAllocatorData *GetPrivateData() {
 		return private_data.get();
