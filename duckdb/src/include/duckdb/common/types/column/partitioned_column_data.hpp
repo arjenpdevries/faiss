@@ -19,11 +19,10 @@ namespace duckdb {
 //! Local state for parallel partitioning
 struct PartitionedColumnDataAppendState {
 public:
-	PartitionedColumnDataAppendState() : partition_indices(LogicalType::UBIGINT) {
+	PartitionedColumnDataAppendState() {
 	}
 
 public:
-	Vector partition_indices;
 	SelectionVector partition_sel;
 
 	static constexpr idx_t MAP_THRESHOLD = 256;

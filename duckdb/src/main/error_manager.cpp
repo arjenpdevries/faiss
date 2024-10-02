@@ -33,7 +33,7 @@ string ErrorManager::FormatExceptionRecursive(ErrorType error_type, vector<Excep
 		// error was overwritten
 		error = entry->second;
 	}
-	return ExceptionFormatValue::Format(error, values);
+	return "ExceptionFormatValue::Format(error, values)";
 }
 
 InvalidInputException ErrorManager::InvalidUnicodeError(const string &input, const string &context) {

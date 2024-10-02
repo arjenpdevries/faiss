@@ -25,11 +25,10 @@
 #include "duckdb/common/vector.hpp"
 #include "duckdb/common/winapi.hpp"
 #include "duckdb/execution/index/index_type_set.hpp"
-#include "duckdb/function/cast/default_casts.hpp"
+// #include "duckdb/function/cast/default_casts.hpp"
 #include "duckdb/function/replacement_scan.hpp"
 #include "duckdb/main/client_properties.hpp"
 #include "duckdb/optimizer/optimizer_extension.hpp"
-#include "duckdb/parser/parsed_data/create_info.hpp"
 #include "duckdb/parser/parser_extension.hpp"
 #include "duckdb/planner/operator_extension.hpp"
 #include "duckdb/storage/compression/bitpacking.hpp"
@@ -84,12 +83,11 @@ struct ExtensionOption {
 	// NOLINTNEXTLINE: work around bug in clang-tidy
 	ExtensionOption(string description_p, LogicalType type_p, set_option_callback_t set_function_p,
 	                Value default_value_p)
-	    : description(std::move(description_p)), type(std::move(type_p)), set_function(set_function_p),
+	    : description(std::move(description_p)), set_function(set_function_p),
 	      default_value(std::move(default_value_p)) {
 	}
 
 	string description;
-	LogicalType type;
 	set_option_callback_t set_function;
 	Value default_value;
 };
@@ -323,7 +321,7 @@ public:
 	DUCKDB_API static bool IsInMemoryDatabase(const char *database_path);
 
 	DUCKDB_API void AddExtensionOption(const string &name, string description, LogicalType parameter,
-	                                   const Value &default_value = Value(), set_option_callback_t function = nullptr);
+	                                   const Value &default_value, set_option_callback_t function = nullptr);
 	//! Fetch an option by index. Returns a pointer to the option, or nullptr if out of range
 	DUCKDB_API static optional_ptr<const ConfigurationOption> GetOptionByIndex(idx_t index);
 	//! Fetch an option by name. Returns a pointer to the option, or nullptr if none exists.

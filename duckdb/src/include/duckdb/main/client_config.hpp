@@ -148,7 +148,6 @@ public:
 	}
 
 	void SetUserVariable(const string &name, Value value) {
-		user_variables[name] = std::move(value);
 	}
 
 	bool GetUserVariable(const string &name, Value &result) {

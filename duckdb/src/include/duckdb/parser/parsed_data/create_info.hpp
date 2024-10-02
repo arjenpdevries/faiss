@@ -46,8 +46,6 @@ public:
 	string sql;
 	//! The inherent dependencies of the created entry
 	LogicalDependencyList dependencies;
-	//! User provided comment
-	Value comment;
 	//! Key-value tags with additional metadata
 	unordered_map<string, string> tags;
 

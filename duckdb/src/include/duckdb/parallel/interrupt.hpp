@@ -76,23 +76,11 @@ public:
 	//! Add a task to 'blocked_tasks' before returning SourceResultType::BLOCKED (must hold the lock)
 	bool BlockTask(const unique_lock<mutex> &guard, const InterruptState &interrupt_state) {
 		D_ASSERT(guard.mutex() && RefersToSameObject(*guard.mutex(), lock));
-		if (can_block) {
-			blocked_tasks.push_back(interrupt_state);
-			return true;
-		}
 		return false;
 	}
 
 	//! Unblock all tasks (must hold the lock)
 	bool UnblockTasks(const unique_lock<mutex> &guard) {
-		D_ASSERT(guard.mutex() && RefersToSameObject(*guard.mutex(), lock));
-		if (blocked_tasks.empty()) {
-			return false;
-		}
-		for (auto &entry : blocked_tasks) {
-			entry.Callback();
-		}
-		blocked_tasks.clear();
 		return true;
 	}
 

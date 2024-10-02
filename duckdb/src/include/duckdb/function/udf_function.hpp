@@ -8,8 +8,8 @@
 
 #pragma once
 
-#include "duckdb/function/scalar_function.hpp"
 #include "duckdb/function/aggregate_function.hpp"
+#include "duckdb/function/scalar_function.hpp"
 
 namespace duckdb {
 
@@ -60,17 +60,7 @@ public:
 	template <typename TR, typename... ARGS>
 	inline static void RegisterFunction(const string &name, scalar_function_t udf_function, ClientContext &context,
 	                                    LogicalType varargs = LogicalType(LogicalTypeId::INVALID)) {
-		vector<LogicalType> arguments;
-		GetArgumentTypesRecursive<ARGS...>(arguments);
-
-		LogicalType ret_type = GetArgumentType<TR>();
-
-		RegisterFunction(name, arguments, ret_type, std::move(udf_function), context, std::move(varargs));
 	}
-
-	static void RegisterFunction(string name, vector<LogicalType> args, LogicalType ret_type,
-	                             scalar_function_t udf_function, ClientContext &context,
-	                             LogicalType varargs = LogicalType(LogicalTypeId::INVALID));
 
 	//--------------------------------- Aggregate UDFs ------------------------------------//
 	template <typename UDF_OP, typename STATE, typename TR, typename TA>
@@ -117,18 +107,6 @@ public:
 	}
 
 	//! A generic CreateAggregateFunction ---------------------------------------------------------------------------//
-	inline static AggregateFunction
-	CreateAggregateFunction(const string &name, const vector<LogicalType> &arguments, const LogicalType &return_type,
-	                        aggregate_size_t state_size, aggregate_initialize_t initialize, aggregate_update_t update,
-	                        aggregate_combine_t combine, aggregate_finalize_t finalize,
-	                        aggregate_simple_update_t simple_update = nullptr, bind_aggregate_function_t bind = nullptr,
-	                        aggregate_destructor_t destructor = nullptr) {
-
-		AggregateFunction aggr_function(name, arguments, return_type, state_size, initialize, update, combine, finalize,
-		                                simple_update, bind, destructor);
-		aggr_function.null_handling = FunctionNullHandling::SPECIAL_HANDLING;
-		return aggr_function;
-	}
 
 	static void RegisterAggrFunction(AggregateFunction aggr_function, ClientContext &context,
 	                                 LogicalType varargs = LogicalType(LogicalTypeId::INVALID));

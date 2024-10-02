@@ -40,7 +40,7 @@ public:
 
 public:
 	idx_t GetChildCount() {
-		return children.size();
+		return 0;
 	}
 	ProfilingInfo &GetProfilingInfo() {
 		return profiling_info;
@@ -49,11 +49,10 @@ public:
 		return profiling_info;
 	}
 	optional_ptr<ProfilingNode> GetChild(idx_t idx) {
-		return children[idx].get();
+		return nullptr;
 	}
 	optional_ptr<ProfilingNode> AddChild(unique_ptr<ProfilingNode> child) {
-		children.push_back(std::move(child));
-		return children.back().get();
+		return nullptr;
 	}
 };
 

@@ -2,134 +2,52 @@
                  w _ITM_registerTMCloneTable
                  U _Unwind_Resume@GCC_3.0
                  U std::runtime_error::what() const@GLIBCXX_3.4
-                 U std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >::find_last_of(char const*, unsigned long, unsigned long) const@GLIBCXX_3.4.21
-                 U std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >::find_first_not_of(char const*, unsigned long, unsigned long) const@GLIBCXX_3.4.21
-                 U std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >::find(char const*, unsigned long, unsigned long) const@GLIBCXX_3.4.21
-                 U std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >::find(char, unsigned long) const@GLIBCXX_3.4.21
-                 U std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >::rfind(char, unsigned long) const@GLIBCXX_3.4.21
                  U std::__detail::_Prime_rehash_policy::_M_need_rehash(unsigned long, unsigned long, unsigned long) const@GLIBCXX_3.4.18
-                 U std::ostream::put(char)@GLIBCXX_3.4
-                 U std::random_device::_M_fini()@GLIBCXX_3.4.18
-                 U std::random_device::_M_init(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&)@GLIBCXX_3.4.21
-                 U std::random_device::_M_getval()@GLIBCXX_3.4.18
                  U std::runtime_error::runtime_error(char const*)@GLIBCXX_3.4.21
                  U std::runtime_error::runtime_error(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&)@GLIBCXX_3.4.21
                  U std::runtime_error::~runtime_error()@GLIBCXX_3.4
                  U std::runtime_error::~runtime_error()@GLIBCXX_3.4
-                 U std::locale::locale()@GLIBCXX_3.4
-                 U std::locale::~locale()@GLIBCXX_3.4
                  U std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >::_M_dispose()@GLIBCXX_3.4.21
                  U std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >::_M_replace(unsigned long, unsigned long, char const*, unsigned long)@GLIBCXX_3.4.21
-                 U std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >::_M_construct(unsigned long, char)@GLIBCXX_3.4.21
-                 U std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >::swap(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >&)@GLIBCXX_3.4.21
-                 U std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >::append(char const*)@GLIBCXX_3.4.21
-                 U std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >::append(char const*, unsigned long)@GLIBCXX_3.4.21
-                 U std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >::insert(unsigned long, char const*)@GLIBCXX_3.4.21
-                 U std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >::replace(unsigned long, unsigned long, char const*, unsigned long)@GLIBCXX_3.4.21
                  U std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >::reserve(unsigned long)@GLIBCXX_3.4.21
-                 U std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >::_M_erase(unsigned long, unsigned long)@GLIBCXX_3.4.21
                  U std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >::_M_append(char const*, unsigned long)@GLIBCXX_3.4.21
                  U std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >::_M_assign(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&)@GLIBCXX_3.4.21
                  U std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >::_M_create(unsigned long&, unsigned long)@GLIBCXX_3.4.21
-                 U std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >::_M_mutate(unsigned long, unsigned long, char const*, unsigned long)@GLIBCXX_3.4.21
-                 U std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >::basic_string(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >&&)@GLIBCXX_3.4.21
-                 U std::__cxx11::basic_string<wchar_t, std::char_traits<wchar_t>, std::allocator<wchar_t> >::_M_create(unsigned long&, unsigned long)@GLIBCXX_3.4.21
-                 U std::__cxx11::basic_stringbuf<char, std::char_traits<char>, std::allocator<char> >::_M_sync(char*, unsigned long, unsigned long)@GLIBCXX_3.4.21
-                 U std::__cxx11::basic_stringstream<char, std::char_traits<char>, std::allocator<char> >::~basic_stringstream()@GLIBCXX_3.4.21
-                 U std::__cxx11::basic_ostringstream<char, std::char_traits<char>, std::allocator<char> >::~basic_ostringstream()@GLIBCXX_3.4.21
-                 U std::ios_base::ios_base()@GLIBCXX_3.4
-                 U std::ios_base::~ios_base()@GLIBCXX_3.4
                  U std::bad_alloc::~bad_alloc()@GLIBCXX_3.4
-                 U std::basic_ios<char, std::char_traits<char> >::init(std::basic_streambuf<char, std::char_traits<char> >*)@GLIBCXX_3.4
                  U std::_Hash_bytes(void const*, unsigned long, unsigned long)@CXXABI_1.3.5
-                 U std::basic_ostream<char, std::char_traits<char> >& std::__ostream_insert<char, std::char_traits<char> >(std::basic_ostream<char, std::char_traits<char> >&, char const*, long)@GLIBCXX_3.4.9
                  U std::__throw_bad_alloc()@GLIBCXX_3.4
                  U std::_Rb_tree_decrement(std::_Rb_tree_node_base*)@GLIBCXX_3.4
-                 U std::_Rb_tree_increment(std::_Rb_tree_node_base const*)@GLIBCXX_3.4
                  U std::uncaught_exception()@GLIBCXX_3.4
                  U std::__throw_logic_error(char const*)@GLIBCXX_3.4
                  U std::__throw_length_error(char const*)@GLIBCXX_3.4
-                 U std::__throw_out_of_range(char const*)@GLIBCXX_3.4
-                 U std::ios_base_library_init()@GLIBCXX_3.4.32
-                 U std::__throw_invalid_argument(char const*)@GLIBCXX_3.4
-                 U std::__throw_out_of_range_fmt(char const*, ...)@GLIBCXX_3.4.20
                  U std::__throw_bad_array_new_length()@GLIBCXX_3.4.29
                  U std::_Rb_tree_insert_and_rebalance(bool, std::_Rb_tree_node_base*, std::_Rb_tree_node_base*, std::_Rb_tree_node_base&)@GLIBCXX_3.4
-                 U std::basic_istream<char, std::char_traits<char> >& std::getline<char, std::char_traits<char>, std::allocator<char> >(std::basic_istream<char, std::char_traits<char> >&, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >&, char)@GLIBCXX_3.4.21
                  U typeinfo for std::runtime_error@GLIBCXX_3.4
                  U typeinfo for std::bad_alloc@GLIBCXX_3.4
-                 U typeinfo for std::exception@GLIBCXX_3.4
-                 U VTT for std::__cxx11::basic_stringstream<char, std::char_traits<char>, std::allocator<char> >@GLIBCXX_3.4.21
-                 U VTT for std::__cxx11::basic_ostringstream<char, std::char_traits<char>, std::allocator<char> >@GLIBCXX_3.4.21
                  U vtable for __cxxabiv1::__class_type_info@CXXABI_1.3
                  U vtable for __cxxabiv1::__si_class_type_info@CXXABI_1.3
-                 U vtable for __cxxabiv1::__vmi_class_type_info@CXXABI_1.3
-                 U vtable for std::__cxx11::basic_stringbuf<char, std::char_traits<char>, std::allocator<char> >@GLIBCXX_3.4.21
-                 U vtable for std::__cxx11::basic_stringstream<char, std::char_traits<char>, std::allocator<char> >@GLIBCXX_3.4.21
-                 U vtable for std::__cxx11::basic_ostringstream<char, std::char_traits<char>, std::allocator<char> >@GLIBCXX_3.4.21
-                 U vtable for std::basic_streambuf<char, std::char_traits<char> >@GLIBCXX_3.4
                  U vtable for std::bad_alloc@GLIBCXX_3.4
-                 U vtable for std::basic_ios<char, std::char_traits<char> >@GLIBCXX_3.4
-                 U operator delete[](void*)@GLIBCXX_3.4
                  U operator delete(void*)@GLIBCXX_3.4
-                 U operator new[](unsigned long)@GLIBCXX_3.4
                  U operator new(unsigned long)@GLIBCXX_3.4
                  U __cxa_allocate_exception@CXXABI_1.3
                  U __cxa_atexit@GLIBC_2.2.5
-                 U __cxa_begin_catch@CXXABI_1.3
-                 U __cxa_end_catch@CXXABI_1.3
                  w __cxa_finalize@GLIBC_2.2.5
                  U __cxa_free_exception@CXXABI_1.3
                  U __cxa_guard_abort@CXXABI_1.3
                  U __cxa_guard_acquire@CXXABI_1.3
                  U __cxa_guard_release@CXXABI_1.3
-                 U __cxa_rethrow@CXXABI_1.3
                  U __cxa_throw@CXXABI_1.3
-                 U __cxa_throw_bad_array_new_length@CXXABI_1.3.8
-                 U __errno_location@GLIBC_2.2.5
                  w __gmon_start__
                  U __gxx_personality_v0@CXXABI_1.3
-                 U __isoc23_strtoull@GLIBC_2.38
                  U __libc_single_threaded@GLIBC_2.32
                  U __stack_chk_fail@GLIBC_2.4
-                 U __udivti3@GCC_3.0
-                 U calloc@GLIBC_2.2.5
-                 U fclose@GLIBC_2.2.5
-                 U fflush@GLIBC_2.2.5
-                 U fmod@GLIBC_2.38
-                 U fopen@GLIBC_2.2.5
-                 U fputs@GLIBC_2.2.5
-                 U fread@GLIBC_2.2.5
                  U free@GLIBC_2.2.5
-                 U fseek@GLIBC_2.2.5
-                 U ftell@GLIBC_2.2.5
-                 U fwrite@GLIBC_2.2.5
-                 U ioctl@GLIBC_2.2.5
-                 U isatty@GLIBC_2.2.5
-                 U isprint@GLIBC_2.2.5
-                 U isspace@GLIBC_2.2.5
-                 U ldexp@GLIBC_2.2.5
-                 U llroundl@GLIBC_2.2.5
                  U malloc@GLIBC_2.2.5
                  U malloc_trim@GLIBC_2.2.5
-                 U memchr@GLIBC_2.2.5
                  U memcmp@GLIBC_2.2.5
                  U memcpy@GLIBC_2.14
-                 U memmove@GLIBC_2.2.5
                  U memset@GLIBC_2.2.5
-                 U pow@GLIBC_2.29
                  U realloc@GLIBC_2.2.5
-                 U snprintf@GLIBC_2.2.5
-                 U sqrt@GLIBC_2.2.5
-                 U stderr@GLIBC_2.2.5
-                 U stdout@GLIBC_2.2.5
-                 U strchr@GLIBC_2.2.5
                  U strcmp@GLIBC_2.2.5
-                 U strerror_r@GLIBC_2.2.5
                  U strlen@GLIBC_2.2.5
-                 U tolower@GLIBC_2.2.5
-                 U toupper@GLIBC_2.2.5
                  U vsnprintf@GLIBC_2.2.5
-                 U wcslen@GLIBC_2.2.5
-                 U wmemcmp@GLIBC_2.2.5
-                 U wmemcpy@GLIBC_2.2.5

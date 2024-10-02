@@ -58,7 +58,7 @@ public:
 
 	//! The amount of columns in the ColumnDataCollection
 	idx_t ColumnCount() const {
-		return types.size();
+		return 0;
 	}
 
 	//! The size (in bytes) of this ColumnDataCollection
@@ -191,33 +191,14 @@ public:
 public:
 	// container API
 	bool empty() const { // NOLINT: match stl API
-		return rows.empty();
+		return true;
 	}
 	idx_t size() const { // NOLINT: match stl API
-		return rows.size();
+		return 0;
 	}
 
 	DUCKDB_API ColumnDataRow &operator[](idx_t i);
 	DUCKDB_API const ColumnDataRow &operator[](idx_t i) const;
-
-	vector<ColumnDataRow>::iterator begin() { // NOLINT: match stl API
-		return rows.begin();
-	}
-	vector<ColumnDataRow>::iterator end() { // NOLINT: match stl API
-		return rows.end();
-	}
-	vector<ColumnDataRow>::const_iterator cbegin() const { // NOLINT: match stl API
-		return rows.cbegin();
-	}
-	vector<ColumnDataRow>::const_iterator cend() const { // NOLINT: match stl API
-		return rows.cend();
-	}
-	vector<ColumnDataRow>::const_iterator begin() const { // NOLINT: match stl API
-		return rows.begin();
-	}
-	vector<ColumnDataRow>::const_iterator end() const { // NOLINT: match stl API
-		return rows.end();
-	}
 
 private:
 	vector<ColumnDataRow> rows;

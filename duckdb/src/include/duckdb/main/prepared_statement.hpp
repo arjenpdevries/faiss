@@ -102,9 +102,6 @@ public:
 			}
 		}
 		vector<string> excess_values;
-		for (auto &val : excess_set) {
-			excess_values.push_back(val);
-		}
 		return StringUtil::Format("Parameter argument/count mismatch, identifiers of the excess parameters: %s",
 		                          StringUtil::Join(excess_values, ", "));
 	}
@@ -121,9 +118,6 @@ public:
 			}
 		}
 		vector<string> missing_values;
-		for (auto &val : missing_set) {
-			missing_values.push_back(val);
-		}
 		return StringUtil::Format("Values were not provided for the following prepared statement parameters: %s",
 		                          StringUtil::Join(missing_values, ", "));
 	}
@@ -157,7 +151,6 @@ private:
 
 	template <typename T, typename... ARGS>
 	unique_ptr<PendingQueryResult> PendingQueryRecursive(vector<Value> &values, T value, ARGS... args) {
-		values.push_back(Value::CreateValue<T>(value));
 		return PendingQueryRecursive(values, args...);
 	}
 
@@ -167,7 +160,6 @@ private:
 
 	template <typename T, typename... ARGS>
 	unique_ptr<QueryResult> ExecuteRecursive(vector<Value> &values, T value, ARGS... args) {
-		values.push_back(Value::CreateValue<T>(value));
 		return ExecuteRecursive(values, args...);
 	}
 };

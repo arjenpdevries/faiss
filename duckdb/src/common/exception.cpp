@@ -1,13 +1,15 @@
 #include "duckdb/common/exception.hpp"
+
+#include "duckdb/common/exception/list.hpp"
 #include "duckdb/common/string_util.hpp"
 #include "duckdb/common/to_string.hpp"
 #include "duckdb/common/types.hpp"
-#include "duckdb/common/exception/list.hpp"
 #include "duckdb/parser/tableref.hpp"
 #include "duckdb/planner/expression.hpp"
 
 #ifdef DUCKDB_CRASH_ON_ASSERT
 #include "duckdb/common/printer.hpp"
+
 #include <stdio.h>
 #include <stdlib.h>
 #endif
@@ -32,13 +34,7 @@ string Exception::ToJSON(ExceptionType type, const string &message) {
 }
 
 string Exception::ToJSON(ExceptionType type, const string &message, const unordered_map<string, string> &extra_info) {
-#ifdef DUCKDB_DEBUG_STACKTRACE
-	auto extended_extra_info = extra_info;
-	extended_extra_info["stack_trace"] = Exception::GetStackTrace();
-	return StringUtil::ToJSONMap(type, message, extended_extra_info);
-#else
-	return StringUtil::ToJSONMap(type, message, extra_info);
-#endif
+	return "";
 }
 
 bool Exception::UncaughtException() {
@@ -89,30 +85,6 @@ string Exception::GetStackTrace(int max_depth) {
 	// Stack trace not available. Toggle DUCKDB_DEBUG_STACKTRACE in exception.cpp to enable stack traces.
 	return "";
 #endif
-}
-
-string Exception::ConstructMessageRecursive(const string &msg, std::vector<ExceptionFormatValue> &values) {
-#ifdef DEBUG
-	// Verify that we have the required amount of values for the message
-	idx_t parameter_count = 0;
-	for (idx_t i = 0; i + 1 < msg.size(); i++) {
-		if (msg[i] != '%') {
-			continue;
-		}
-		if (msg[i + 1] == '%') {
-			i++;
-			continue;
-		}
-		parameter_count++;
-	}
-	if (parameter_count != values.size()) {
-		throw InternalException("Primary exception: %s\nSecondary exception in ConstructMessageRecursive: Expected %d "
-		                        "parameters, received %d",
-		                        msg.c_str(), parameter_count, values.size());
-	}
-
-#endif
-	return ExceptionFormatValue::Format(msg, values);
 }
 
 struct ExceptionEntry {
@@ -217,19 +189,18 @@ void Exception::SetQueryLocation(optional_idx error_location, unordered_map<stri
 }
 
 InvalidTypeException::InvalidTypeException(PhysicalType type, const string &msg)
-    : Exception(ExceptionType::INVALID_TYPE, "Invalid Type [" + TypeIdToString(type) + "]: " + msg) {
+    : Exception(ExceptionType::INVALID_TYPE, "Invalid Type [" + msg) {
 }
 
 InvalidTypeException::InvalidTypeException(const LogicalType &type, const string &msg)
-    : Exception(ExceptionType::INVALID_TYPE, "Invalid Type [" + type.ToString() + "]: " + msg) {
+    : Exception(ExceptionType::INVALID_TYPE, "Invalid Type [" + msg) {
 }
 
 InvalidTypeException::InvalidTypeException(const string &msg) : Exception(ExceptionType::INVALID_TYPE, msg) {
 }
 
 TypeMismatchException::TypeMismatchException(const PhysicalType type_1, const PhysicalType type_2, const string &msg)
-    : Exception(ExceptionType::MISMATCH_TYPE,
-                "Type " + TypeIdToString(type_1) + " does not match with " + TypeIdToString(type_2) + ". " + msg) {
+    : Exception(ExceptionType::MISMATCH_TYPE, "Type " + msg) {
 }
 
 TypeMismatchException::TypeMismatchException(const LogicalType &type_1, const LogicalType &type_2, const string &msg)
@@ -238,8 +209,7 @@ TypeMismatchException::TypeMismatchException(const LogicalType &type_1, const Lo
 
 TypeMismatchException::TypeMismatchException(optional_idx error_location, const LogicalType &type_1,
                                              const LogicalType &type_2, const string &msg)
-    : Exception(ExceptionType::MISMATCH_TYPE,
-                "Type " + type_1.ToString() + " does not match with " + type_2.ToString() + ". " + msg,
+    : Exception(ExceptionType::MISMATCH_TYPE, " does not match with " + msg,
                 Exception::InitializeExtraInfo(error_location)) {
 }
 
@@ -256,31 +226,25 @@ OutOfRangeException::OutOfRangeException(const string &msg) : Exception(Exceptio
 }
 
 OutOfRangeException::OutOfRangeException(const int64_t value, const PhysicalType orig_type, const PhysicalType new_type)
-    : Exception(ExceptionType::OUT_OF_RANGE, "Type " + TypeIdToString(orig_type) + " with value " +
-                                                 to_string((intmax_t)value) +
+    : Exception(ExceptionType::OUT_OF_RANGE, "Type " + to_string((intmax_t)value) +
                                                  " can't be cast because the value is out of range "
-                                                 "for the destination type " +
-                                                 TypeIdToString(new_type)) {
+                                                 "for the destination type ") {
 }
 
 OutOfRangeException::OutOfRangeException(const double value, const PhysicalType orig_type, const PhysicalType new_type)
-    : Exception(ExceptionType::OUT_OF_RANGE, "Type " + TypeIdToString(orig_type) + " with value " + to_string(value) +
+    : Exception(ExceptionType::OUT_OF_RANGE, "Type " + to_string(value) +
                                                  " can't be cast because the value is out of range "
-                                                 "for the destination type " +
-                                                 TypeIdToString(new_type)) {
+                                                 "for the destination type ") {
 }
 
 OutOfRangeException::OutOfRangeException(const hugeint_t value, const PhysicalType orig_type,
                                          const PhysicalType new_type)
-    : Exception(ExceptionType::OUT_OF_RANGE, "Type " + TypeIdToString(orig_type) + " with value " + value.ToString() +
-                                                 " can't be cast because the value is out of range "
-                                                 "for the destination type " +
-                                                 TypeIdToString(new_type)) {
+    : Exception(ExceptionType::OUT_OF_RANGE, " can't be cast because the value is out of range "
+                                             "for the destination type ") {
 }
 
 OutOfRangeException::OutOfRangeException(const PhysicalType var_type, const idx_t length)
-    : Exception(ExceptionType::OUT_OF_RANGE,
-                "The value is too long to fit into type " + TypeIdToString(var_type) + "(" + to_string(length) + ")") {
+    : Exception(ExceptionType::OUT_OF_RANGE, "The value is too long to fit into type " + to_string(length) + ")") {
 }
 
 ConnectionException::ConnectionException(const string &msg) : Exception(ExceptionType::CONNECTION, msg) {
@@ -328,10 +292,6 @@ FatalException::FatalException(ExceptionType type, const string &msg) : Exceptio
 }
 
 InternalException::InternalException(const string &msg) : Exception(ExceptionType::INTERNAL, msg) {
-#ifdef DUCKDB_CRASH_ON_ASSERT
-	Printer::Print("ABORT THROWN BY INTERNAL EXCEPTION: " + msg);
-	abort();
-#endif
 }
 
 InvalidInputException::InvalidInputException(const string &msg) : Exception(ExceptionType::INVALID_INPUT, msg) {

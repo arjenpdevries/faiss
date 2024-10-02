@@ -17,7 +17,6 @@ namespace duckdb {
 class VectorBuffer;
 
 struct SelectionData {
-	DUCKDB_API explicit SelectionData(idx_t count);
 
 	unsafe_unique_array<sel_t> owned_data;
 };
@@ -26,27 +25,14 @@ struct SelectionVector {
 	SelectionVector() : sel_vector(nullptr) {
 	}
 	explicit SelectionVector(sel_t *sel) {
-		Initialize(sel);
 	}
 	explicit SelectionVector(idx_t count) {
-		Initialize(count);
 	}
 	SelectionVector(idx_t start, idx_t count) {
-		Initialize(STANDARD_VECTOR_SIZE);
-		for (idx_t i = 0; i < count; i++) {
-			set_index(i, start + i);
-		}
-	}
-	SelectionVector(const SelectionVector &sel_vector) {
-		Initialize(sel_vector);
-	}
-	explicit SelectionVector(buffer_ptr<SelectionData> data) {
-		Initialize(std::move(data));
 	}
 	SelectionVector &operator=(SelectionVector &&other) noexcept {
 		sel_vector = other.sel_vector;
 		other.sel_vector = nullptr;
-		selection_data = std::move(other.selection_data);
 		return *this;
 	}
 
@@ -67,19 +53,9 @@ public:
 	}
 
 	void Initialize(sel_t *sel) {
-		selection_data.reset();
 		sel_vector = sel;
 	}
-	void Initialize(idx_t count = STANDARD_VECTOR_SIZE) {
-		selection_data = make_shared_ptr<SelectionData>(count);
-		sel_vector = selection_data->owned_data.get();
-	}
-	void Initialize(buffer_ptr<SelectionData> data) {
-		selection_data = std::move(data);
-		sel_vector = selection_data->owned_data.get();
-	}
 	void Initialize(const SelectionVector &other) {
-		selection_data = other.selection_data;
 		sel_vector = other.sel_vector;
 	}
 
@@ -100,10 +76,6 @@ public:
 	const sel_t *data() const { // NOLINT: allow casing for legacy reasons
 		return sel_vector;
 	}
-	buffer_ptr<SelectionData> sel_data() { // NOLINT: allow casing for legacy reasons
-		return selection_data;
-	}
-	buffer_ptr<SelectionData> Slice(const SelectionVector &sel, idx_t count) const;
 
 	string ToString(idx_t count = 0) const;
 	void Print(idx_t count = 0) const;
@@ -118,13 +90,11 @@ public:
 
 private:
 	sel_t *sel_vector;
-	buffer_ptr<SelectionData> selection_data;
 };
 
 class OptionalSelection {
 public:
 	explicit OptionalSelection(SelectionVector *sel_p) {
-		Initialize(sel_p);
 	}
 	void Initialize(SelectionVector *sel_p) {
 		sel = sel_p;
@@ -165,8 +135,6 @@ public:
 		if (!initialized) {
 			return;
 		}
-		sel_vec.Initialize(size);
-		internal_opt_selvec.Initialize(&sel_vec);
 	}
 
 public:
@@ -174,11 +142,6 @@ public:
 		return initialized;
 	}
 	void Initialize(idx_t new_size) {
-		D_ASSERT(!initialized);
-		this->size = new_size;
-		sel_vec.Initialize(new_size);
-		internal_opt_selvec.Initialize(&sel_vec);
-		initialized = true;
 	}
 
 	inline idx_t operator[](idx_t index) const {

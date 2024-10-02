@@ -1,5 +1,4 @@
 add_subdirectory(exception)
-add_subdirectory(types)
 
 if(${EXIT_TIME_DESTRUCTORS_WARNING})
   set(CMAKE_CXX_FLAGS_DEBUG
@@ -14,16 +13,7 @@ add_library_unity(
   duckdb_common
   OBJECT
   allocator.cpp
-  assert.cpp
-  constants.cpp
-  checksum.cpp
   exception.cpp
-  exception_format_value.cpp
-  extra_type_info.cpp
-  printer.cpp
-  random_engine.cpp
-  string_util.cpp
-  types.cpp
   )
 set(ALL_OBJECT_FILES
     ${ALL_OBJECT_FILES} $<TARGET_OBJECTS:duckdb_common>

@@ -9,7 +9,6 @@
 #pragma once
 
 #include "duckdb/function/built_in_functions.hpp"
-#include "duckdb/function/function_set.hpp"
 #include "utf8proc_wrapper.hpp"
 
 namespace duckdb_re2 {

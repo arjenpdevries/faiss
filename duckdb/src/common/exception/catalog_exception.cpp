@@ -15,9 +15,6 @@ CatalogException::CatalogException(const string &msg, const unordered_map<string
 CatalogException CatalogException::MissingEntry(CatalogType type, const string &name, const string &suggestion,
                                                 QueryErrorContext context) {
 	string did_you_mean;
-	if (!suggestion.empty()) {
-		did_you_mean = "\nDid you mean \"" + suggestion + "\"?";
-	}
 
 	auto extra_info = Exception::InitializeExtraInfo("MISSING_ENTRY", context.query_location);
 
@@ -35,12 +32,7 @@ CatalogException CatalogException::MissingEntry(const string &type, const string
 	extra_info["error_subtype"] = "MISSING_ENTRY";
 	extra_info["name"] = name;
 	extra_info["type"] = type;
-	if (!suggestions.empty()) {
-		extra_info["candidates"] = StringUtil::Join(suggestions, ", ");
-	}
-	return CatalogException(StringUtil::Format("unrecognized %s \"%s\"\n%s", type, name,
-	                                           StringUtil::CandidatesErrorMessage(suggestions, name, "Did you mean")),
-	                        extra_info);
+	return CatalogException(StringUtil::Format("unrecognized %s \"%s\"\n%s", type, name), extra_info);
 }
 
 CatalogException CatalogException::EntryAlreadyExists(CatalogType type, const string &name, QueryErrorContext context) {

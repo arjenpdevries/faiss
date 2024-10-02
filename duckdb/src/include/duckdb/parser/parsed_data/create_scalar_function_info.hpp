@@ -8,7 +8,6 @@
 
 #pragma once
 
-#include "duckdb/function/function_set.hpp"
 #include "duckdb/function/scalar_function.hpp"
 #include "duckdb/parser/parsed_data/create_function_info.hpp"
 

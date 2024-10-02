@@ -68,10 +68,7 @@ struct CorrelatedColumnInfo {
 
 	// NOLINTNEXTLINE - work-around bug in clang-tidy
 	CorrelatedColumnInfo(ColumnBinding binding, LogicalType type_p, string name_p, idx_t depth)
-	    : binding(binding), type(std::move(type_p)), name(std::move(name_p)), depth(depth) {
-	}
-	explicit CorrelatedColumnInfo(BoundColumnRefExpression &expr)
-	    : CorrelatedColumnInfo(expr.binding, expr.return_type, expr.GetName(), expr.depth) {
+	    : binding(binding), name(std::move(name_p)), depth(depth) {
 	}
 
 	bool operator==(const CorrelatedColumnInfo &rhs) const {

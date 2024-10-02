@@ -95,8 +95,6 @@ public:
 
 public:
 	//! Returns the formatted string name(arg1, arg2, ...)
-	DUCKDB_API static string CallToString(const string &name, const vector<LogicalType> &arguments,
-	                                      const LogicalType &varargs = LogicalType::INVALID);
 	//! Returns the formatted string name(arg1, arg2..) -> return_type
 	DUCKDB_API static string CallToString(const string &name, const vector<LogicalType> &arguments,
 	                                      const LogicalType &varargs, const LogicalType &return_type);
@@ -135,11 +133,6 @@ public:
 
 class BaseScalarFunction : public SimpleFunction {
 public:
-	DUCKDB_API BaseScalarFunction(string name, vector<LogicalType> arguments, LogicalType return_type,
-	                              FunctionStability stability,
-	                              LogicalType varargs = LogicalType(LogicalTypeId::INVALID),
-	                              FunctionNullHandling null_handling = FunctionNullHandling::DEFAULT_NULL_HANDLING);
-
 	//! Return type of the function
 	LogicalType return_type;
 	//! The stability of the function (see FunctionStability enum for more info)

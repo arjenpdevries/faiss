@@ -164,33 +164,6 @@ private:
 // If this type is primarily stored in the catalog or not. Enums from Pandas/Factors are not in the catalog.
 enum EnumDictType : uint8_t { INVALID = 0, VECTOR_DICT = 1 };
 
-struct EnumTypeInfo : public ExtraTypeInfo {
-	explicit EnumTypeInfo(Vector &values_insert_order_p, idx_t dict_size_p);
-	EnumTypeInfo(const EnumTypeInfo &) = delete;
-	EnumTypeInfo &operator=(const EnumTypeInfo &) = delete;
-
-public:
-	const EnumDictType &GetEnumDictType() const;
-	const Vector &GetValuesInsertOrder() const;
-	const idx_t &GetDictSize() const;
-	static PhysicalType DictType(idx_t size);
-
-	static LogicalType CreateType(Vector &ordered_data, idx_t size);
-
-	static shared_ptr<ExtraTypeInfo> Deserialize(Deserializer &source);
-	shared_ptr<ExtraTypeInfo> Copy() const override;
-
-protected:
-	// Equalities are only used in enums with different catalog entries
-	bool EqualsInternal(ExtraTypeInfo *other_p) const override;
-
-	Vector values_insert_order;
-
-private:
-	EnumDictType dict_type;
-	idx_t dict_size;
-};
-
 struct ArrayTypeInfo : public ExtraTypeInfo {
 	LogicalType child_type;
 	uint32_t size;

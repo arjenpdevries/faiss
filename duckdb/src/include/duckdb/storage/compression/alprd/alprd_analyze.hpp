@@ -58,50 +58,6 @@ bool AlpRDAnalyze(AnalyzeState &state, Vector &input, idx_t count) {
 		return true;
 	}
 
-	UnifiedVectorFormat vdata;
-	input.ToUnifiedFormat(count, vdata);
-	auto data = UnifiedVectorFormat::GetData<T>(vdata);
-
-	alp::AlpSamplingParameters sampling_params = alp::AlpUtils::GetSamplingParameters(count);
-
-	vector<uint16_t> current_vector_null_positions(sampling_params.n_lookup_values, 0);
-	vector<EXACT_TYPE> current_vector_sample(sampling_params.n_sampled_values, 0);
-
-	// Storing the sample of that vector
-	idx_t sample_idx = 0;
-	idx_t nulls_idx = 0;
-	// We optimize by doing a different loop when there are no nulls
-	if (vdata.validity.AllValid()) {
-		for (idx_t i = 0; i < sampling_params.n_lookup_values; i += sampling_params.n_sampled_increments) {
-			auto idx = vdata.sel->get_index(i);
-			EXACT_TYPE value = Load<EXACT_TYPE>(const_data_ptr_cast(&data[idx]));
-			current_vector_sample[sample_idx] = value;
-			sample_idx++;
-		}
-	} else {
-		for (idx_t i = 0; i < sampling_params.n_lookup_values; i += sampling_params.n_sampled_increments) {
-			auto idx = vdata.sel->get_index(i);
-			EXACT_TYPE value = Load<EXACT_TYPE>(const_data_ptr_cast(&data[idx]));
-			current_vector_sample[sample_idx] = value;
-			//! We resolve null values with a predicated comparison
-			bool is_null = !vdata.validity.RowIsValid(idx);
-			current_vector_null_positions[nulls_idx] = UnsafeNumericCast<uint16_t>(sample_idx);
-			nulls_idx += is_null;
-			sample_idx++;
-		}
-		alp::AlpUtils::FindAndReplaceNullsInVector<EXACT_TYPE>(current_vector_sample.data(),
-		                                                       current_vector_null_positions.data(),
-		                                                       sampling_params.n_sampled_values, nulls_idx);
-	}
-
-	D_ASSERT(sample_idx == sampling_params.n_sampled_values);
-
-	// Pushing the sampled vector samples into the rowgroup samples
-	for (auto &value : current_vector_sample) {
-		analyze_state.rowgroup_sample.push_back(value);
-	}
-
-	analyze_state.vectors_sampled_count++;
 	return true;
 }
 

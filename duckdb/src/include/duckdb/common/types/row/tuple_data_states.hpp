@@ -37,7 +37,6 @@ struct CombinedListData {
 	CombinedListData() : combined_validity(STANDARD_VECTOR_SIZE) {
 	}
 	UnifiedVectorFormat combined_data;
-	buffer_ptr<SelectionData> selection_data;
 	list_entry_t combined_list_entries[STANDARD_VECTOR_SIZE];
 	ValidityMask combined_validity;
 };
@@ -63,7 +62,6 @@ struct TupleDataChunkState {
 	Vector heap_sizes = Vector(LogicalType::UBIGINT);
 
 	vector<unique_ptr<Vector>> cached_cast_vectors;
-	vector<unique_ptr<VectorCache>> cached_cast_vector_cache;
 };
 
 struct TupleDataAppendState {

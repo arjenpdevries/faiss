@@ -108,9 +108,6 @@ public:
 	template <class TO>
 	static vector<TO> ConvertStrings(const vector<string> &strings) {
 		vector<TO> result;
-		for (auto &string : strings) {
-			result.emplace_back(string);
-		}
 		return result;
 	}
 
@@ -157,9 +154,6 @@ public:
 	template <class T>
 	static string ToString(const vector<T> &input, const string &separator) {
 		vector<string> input_list;
-		for (auto &i : input) {
-			input_list.push_back(i.ToString());
-		}
 		return StringUtil::Join(input_list, separator);
 	}
 

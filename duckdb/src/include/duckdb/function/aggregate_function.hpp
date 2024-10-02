@@ -104,9 +104,7 @@ public:
 	                  aggregate_destructor_t destructor = nullptr, aggregate_statistics_t statistics = nullptr,
 	                  aggregate_window_t window = nullptr, aggregate_serialize_t serialize = nullptr,
 	                  aggregate_deserialize_t deserialize = nullptr)
-	    : BaseScalarFunction(name, arguments, return_type, FunctionStability::CONSISTENT,
-	                         LogicalType(LogicalTypeId::INVALID), null_handling),
-	      state_size(state_size), initialize(initialize), update(update), combine(combine), finalize(finalize),
+	    : state_size(state_size), initialize(initialize), update(update), combine(combine), finalize(finalize),
 	      simple_update(simple_update), window(window), bind(bind), destructor(destructor), statistics(statistics),
 	      serialize(serialize), deserialize(deserialize), order_dependent(AggregateOrderDependent::ORDER_DEPENDENT) {
 	}

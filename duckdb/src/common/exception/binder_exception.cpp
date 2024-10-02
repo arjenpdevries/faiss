@@ -1,7 +1,7 @@
 #include "duckdb/common/exception/binder_exception.hpp"
 
 #include "duckdb/common/string_util.hpp"
-#include "duckdb/function/function.hpp"
+// #include "duckdb/function/function.hpp"
 
 namespace duckdb {
 
@@ -15,13 +15,9 @@ BinderException::BinderException(const string &msg, const unordered_map<string, 
 BinderException BinderException::ColumnNotFound(const string &name, const vector<string> &similar_bindings,
                                                 QueryErrorContext context) {
 	auto extra_info = Exception::InitializeExtraInfo("COLUMN_NOT_FOUND", context.query_location);
-	string candidate_str = StringUtil::CandidatesMessage(similar_bindings, "Candidate bindings");
 	extra_info["name"] = name;
-	if (!similar_bindings.empty()) {
-		extra_info["candidates"] = StringUtil::Join(similar_bindings, ",");
-	}
-	return BinderException(
-	    StringUtil::Format("Referenced column \"%s\" not found in FROM clause!%s", name, candidate_str), extra_info);
+	return BinderException(StringUtil::Format("Referenced column \"%s\" not found in FROM clause!%s", name),
+	                       extra_info);
 }
 
 BinderException BinderException::NoMatchingFunction(const string &name, const vector<LogicalType> &arguments,
@@ -29,13 +25,7 @@ BinderException BinderException::NoMatchingFunction(const string &name, const ve
 	auto extra_info = Exception::InitializeExtraInfo("NO_MATCHING_FUNCTION", optional_idx());
 	// no matching function was found, throw an error
 	string candidate_str;
-	for (auto &candidate : candidates) {
-		candidate_str += "\t" + candidate + "\n";
-	}
 	extra_info["name"] = name;
-	if (!candidates.empty()) {
-		extra_info["candidates"] = StringUtil::Join(candidates, ",");
-	}
 	return BinderException(
 	    StringUtil::Format("No function matches the given name and argument types '%s'. You might need to add "
 	                       "explicit type casts.\n\tCandidate functions:\n%s",
@@ -44,7 +34,10 @@ BinderException BinderException::NoMatchingFunction(const string &name, const ve
 }
 
 BinderException BinderException::Unsupported(ParsedExpression &expr, const string &message) {
-	auto extra_info = Exception::InitializeExtraInfo("UNSUPPORTED", expr.query_location);
+	auto extra_info =
+	    StringUtil::Format("No function matches the given name and argument types '%s'. You might need to add "
+	                       "explicit type casts.\n\tCandidate functions:\n%s",
+	                       "j");
 	return BinderException(message, extra_info);
 }
 

@@ -8,11 +8,10 @@
 
 #pragma once
 
-#include <memory>
 #include "duckdb/common/string.hpp"
-#include "duckdb/common/winapi.hpp"
-#include "duckdb/common/unique_ptr.hpp"
 #include "duckdb/common/typedefs.hpp"
+#include "duckdb/common/unique_ptr.hpp"
+#include "duckdb/common/winapi.hpp"
 
 namespace duckdb {
 class Serializer;

@@ -83,7 +83,7 @@ public:
 
 	//! Returns whether or not any columns have been bound by the expression binder
 	bool HasBoundColumns() {
-		return !bound_columns.empty();
+		return false;
 	}
 	const vector<BoundColumnReferenceInfo> &GetBoundColumns() {
 		return bound_columns;

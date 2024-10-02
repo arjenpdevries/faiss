@@ -14,7 +14,6 @@
 #include "duckdb/common/unordered_map.hpp"
 
 #include <stdexcept>
-#include <vector>
 
 namespace duckdb {
 enum class PhysicalType : uint8_t;
@@ -103,12 +102,7 @@ public:
 
 	template <typename... ARGS>
 	static string ConstructMessage(const string &msg, ARGS... params) {
-		const std::size_t num_args = sizeof...(ARGS);
-		if (num_args == 0) {
-			return msg;
-		}
-		std::vector<ExceptionFormatValue> values;
-		return ConstructMessageRecursive(msg, values, params...);
+		return msg;
 	}
 
 	DUCKDB_API static unordered_map<string, string> InitializeExtraInfo(const Expression &expr);
@@ -125,14 +119,6 @@ public:
 
 	DUCKDB_API static bool InvalidatesTransaction(ExceptionType exception_type);
 	DUCKDB_API static bool InvalidatesDatabase(ExceptionType exception_type);
-
-	DUCKDB_API static string ConstructMessageRecursive(const string &msg, std::vector<ExceptionFormatValue> &values);
-
-	template <class T, typename... ARGS>
-	static string ConstructMessageRecursive(const string &msg, std::vector<ExceptionFormatValue> &values, T param,
-	                                        ARGS... params) {
-		return ConstructMessageRecursive(msg, values, params...);
-	}
 
 	DUCKDB_API static bool UncaughtException();
 

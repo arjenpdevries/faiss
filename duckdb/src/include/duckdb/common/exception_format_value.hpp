@@ -8,10 +8,8 @@
 
 #pragma once
 
-#include "duckdb/common/string.hpp"
 #include "duckdb/common/hugeint.hpp"
-
-#include <vector>
+#include "duckdb/common/string.hpp"
 
 namespace duckdb {
 
@@ -64,7 +62,6 @@ public:
 	static ExceptionFormatValue CreateFormatValue(T value) {
 		return int64_t(value);
 	}
-	static string Format(const string &msg, std::vector<ExceptionFormatValue> &values);
 };
 
 template <>

@@ -92,19 +92,15 @@ class Vector {
 
 public:
 	//! Create a vector that references the other vector
-	DUCKDB_API Vector(Vector &other);
 	//! Create a vector that slices another vector
 	DUCKDB_API explicit Vector(const Vector &other, const SelectionVector &sel, idx_t count);
 	//! Create a vector that slices another vector between a pair of offsets
 	DUCKDB_API explicit Vector(const Vector &other, idx_t offset, idx_t end);
 	//! Create a vector of size one holding the passed on value
-	DUCKDB_API explicit Vector(const Value &value);
 	//! Create a vector of size tuple_count (non-standard)
-	DUCKDB_API explicit Vector(LogicalType type, idx_t capacity = STANDARD_VECTOR_SIZE);
 	//! Create an empty standard vector with a type, equivalent to calling Vector(type, true, false)
 	DUCKDB_API explicit Vector(const VectorCache &cache);
 	//! Create a non-owning vector that references the specified data
-	DUCKDB_API Vector(LogicalType type, data_ptr_t dataptr);
 	//! Create an owning vector that holds at most STANDARD_VECTOR_SIZE entries.
 	/*!
 	    Create a new vector
@@ -488,8 +484,7 @@ struct MapVector {
 	DUCKDB_API static const Vector &GetValues(const Vector &vector);
 	DUCKDB_API static Vector &GetKeys(Vector &vector);
 	DUCKDB_API static Vector &GetValues(Vector &vector);
-	DUCKDB_API static MapInvalidReason
-	CheckMapValidity(Vector &map, idx_t count, const SelectionVector &sel = *FlatVector::IncrementalSelectionVector());
+	DUCKDB_API static MapInvalidReason CheckMapValidity(Vector &map, idx_t count, const SelectionVector &sel);
 	DUCKDB_API static void EvalMapInvalidReason(MapInvalidReason reason);
 	DUCKDB_API static void MapConversionVerify(Vector &vector, idx_t count);
 };
@@ -561,9 +556,7 @@ struct UnionVector {
 	DUCKDB_API static void SetToMember(Vector &vector, union_tag_t tag, Vector &member_vector, idx_t count,
 	                                   bool keep_tags_for_null);
 
-	DUCKDB_API static UnionInvalidReason
-	CheckUnionValidity(Vector &vector, idx_t count,
-	                   const SelectionVector &sel = *FlatVector::IncrementalSelectionVector());
+	DUCKDB_API static UnionInvalidReason CheckUnionValidity(Vector &vector, idx_t count, const SelectionVector &sel);
 };
 
 struct SequenceVector {

@@ -139,29 +139,20 @@ public:
 //! The DictionaryBuffer holds a selection vector
 class DictionaryBuffer : public VectorBuffer {
 public:
-	explicit DictionaryBuffer(const SelectionVector &sel)
-	    : VectorBuffer(VectorBufferType::DICTIONARY_BUFFER), sel_vector(sel) {
+	explicit DictionaryBuffer(const SelectionVector &sel) : VectorBuffer(VectorBufferType::DICTIONARY_BUFFER) {
 	}
-	explicit DictionaryBuffer(buffer_ptr<SelectionData> data)
-	    : VectorBuffer(VectorBufferType::DICTIONARY_BUFFER), sel_vector(std::move(data)) {
-	}
-	explicit DictionaryBuffer(idx_t count = STANDARD_VECTOR_SIZE)
-	    : VectorBuffer(VectorBufferType::DICTIONARY_BUFFER), sel_vector(count) {
+	explicit DictionaryBuffer(idx_t count = STANDARD_VECTOR_SIZE) : VectorBuffer(VectorBufferType::DICTIONARY_BUFFER) {
 	}
 
 public:
 	const SelectionVector &GetSelVector() const {
-		return sel_vector;
+		throw InternalException("Failed to cast vector auxiliary data to type - type mismatch");
 	}
 	SelectionVector &GetSelVector() {
-		return sel_vector;
+		throw InternalException("Failed to cast vector auxiliary data to type - type mismatch");
 	}
 	void SetSelVector(const SelectionVector &vector) {
-		this->sel_vector.Initialize(vector);
 	}
-
-private:
-	SelectionVector sel_vector;
 };
 
 class VectorStringBuffer : public VectorBuffer {
@@ -184,7 +175,6 @@ public:
 	}
 
 	void AddHeapReference(buffer_ptr<VectorBuffer> heap) {
-		references.push_back(std::move(heap));
 	}
 
 private:
@@ -198,8 +188,6 @@ public:
 
 public:
 	void AddDecoder(buffer_ptr<void> &duckdb_fsst_decoder_p, const idx_t string_block_limit) {
-		duckdb_fsst_decoder = duckdb_fsst_decoder_p;
-		decompress_buffer.resize(string_block_limit + 1);
 	}
 	void *GetDecoder() {
 		return duckdb_fsst_decoder.get();

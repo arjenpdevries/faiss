@@ -241,40 +241,6 @@ public:
 	}
 
 	void Append(UnifiedVectorFormat &vdata, idx_t count) {
-		auto data = UnifiedVectorFormat::GetData<T>(vdata);
-		idx_t values_left_in_data = count;
-		idx_t offset_in_data = 0;
-		while (values_left_in_data > 0) {
-			// We calculate until which value in data we must go to fill the input_vector
-			// to avoid checking if input_vector is filled in each iteration
-			auto values_to_fill_alp_input =
-			    MinValue<idx_t>(AlpConstants::ALP_VECTOR_SIZE - vector_idx, values_left_in_data);
-			if (vdata.validity.AllValid()) { //! We optimize a loop when there are no null
-				for (idx_t i = 0; i < values_to_fill_alp_input; i++) {
-					auto idx = vdata.sel->get_index(offset_in_data + i);
-					EXACT_TYPE value = Load<EXACT_TYPE>(const_data_ptr_cast(&data[idx]));
-					input_vector[vector_idx + i] = value;
-				}
-			} else {
-				for (idx_t i = 0; i < values_to_fill_alp_input; i++) {
-					auto idx = vdata.sel->get_index(offset_in_data + i);
-					EXACT_TYPE value = Load<EXACT_TYPE>(const_data_ptr_cast(&data[idx]));
-					bool is_null = !vdata.validity.RowIsValid(idx);
-					//! We resolve null values with a predicated comparison
-					vector_null_positions[nulls_idx] = UnsafeNumericCast<uint16_t>(vector_idx + i);
-					nulls_idx += is_null;
-					input_vector[vector_idx + i] = value;
-				}
-			}
-			offset_in_data += values_to_fill_alp_input;
-			values_left_in_data -= values_to_fill_alp_input;
-			vector_idx += values_to_fill_alp_input;
-			// We still need this check since we could have an incomplete input_vector at the end of data
-			if (vector_idx == AlpConstants::ALP_VECTOR_SIZE) {
-				CompressVector();
-				D_ASSERT(vector_idx == 0);
-			}
-		}
 	}
 };
 
@@ -287,9 +253,6 @@ unique_ptr<CompressionState> AlpRDInitCompression(ColumnDataCheckpointer &checkp
 template <class T>
 void AlpRDCompress(CompressionState &state_p, Vector &scan_vector, idx_t count) {
 	auto &state = (AlpRDCompressionState<T> &)state_p;
-	UnifiedVectorFormat vdata;
-	scan_vector.ToUnifiedFormat(count, vdata);
-	state.Append(vdata, count);
 }
 
 template <class T>

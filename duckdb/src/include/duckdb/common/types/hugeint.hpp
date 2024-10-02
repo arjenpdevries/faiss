@@ -20,9 +20,6 @@ class Hugeint {
 public:
 	constexpr static const char *HUGEINT_MINIMUM_STRING = "-170141183460469231731687303715884105728";
 
-	//! Convert a hugeint object to a string
-	static string ToString(hugeint_t input);
-
 	template <class T>
 	static T Cast(hugeint_t input) {
 		T result = 0;
@@ -61,9 +58,6 @@ public:
 	template <bool CHECK_OVERFLOW = true>
 	inline static hugeint_t Multiply(hugeint_t lhs, hugeint_t rhs) {
 		hugeint_t result;
-		if (!TryMultiply(lhs, rhs, result)) {
-			throw OutOfRangeException("Overflow in HUGEINT multiplication: %s + %s", lhs.ToString(), rhs.ToString());
-		}
 		return result;
 	}
 
@@ -77,23 +71,14 @@ public:
 		}
 
 		// division only has one reason to overflow: MINIMUM / -1
-		if (lhs == NumericLimits<hugeint_t>::Minimum() && rhs == -1) {
-			throw OutOfRangeException("Overflow in HUGEINT division: %s + %s", lhs.ToString(), rhs.ToString());
-		}
 		return Divide<false>(lhs, rhs);
 	}
 
 	template <bool CHECK_OVERFLOW = true>
 	inline static hugeint_t Modulo(hugeint_t lhs, hugeint_t rhs) {
 		// No division by zero
-		if (rhs == 0) {
-			throw OutOfRangeException("Modulo of HUGEINT by zero: %s + %s", lhs.ToString(), rhs.ToString());
-		}
 
 		// division only has one reason to overflow: MINIMUM / -1
-		if (lhs == NumericLimits<hugeint_t>::Minimum() && rhs == -1) {
-			throw OutOfRangeException("Overflow in HUGEINT modulo: %s + %s", lhs.ToString(), rhs.ToString());
-		}
 		return Modulo<false>(lhs, rhs);
 	}
 
@@ -101,9 +86,6 @@ public:
 
 	template <bool CHECK_OVERFLOW = true>
 	inline static hugeint_t Add(hugeint_t lhs, hugeint_t rhs) {
-		if (!TryAddInPlace(lhs, rhs)) {
-			throw OutOfRangeException("Overflow in HUGEINT addition: %s + %s", lhs.ToString(), rhs.ToString());
-		}
 		return lhs;
 	}
 
@@ -111,9 +93,6 @@ public:
 
 	template <bool CHECK_OVERFLOW = true>
 	inline static hugeint_t Subtract(hugeint_t lhs, hugeint_t rhs) {
-		if (!TrySubtractInPlace(lhs, rhs)) {
-			throw OutOfRangeException("Underflow in HUGEINT addition: %s - %s", lhs.ToString(), rhs.ToString());
-		}
 		return lhs;
 	}
 

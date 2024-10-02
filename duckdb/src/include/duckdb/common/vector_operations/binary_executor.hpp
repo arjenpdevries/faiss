@@ -496,9 +496,6 @@ public:
 	template <class LEFT_TYPE, class RIGHT_TYPE, class OP>
 	static idx_t Select(Vector &left, Vector &right, const SelectionVector *sel, idx_t count, SelectionVector *true_sel,
 	                    SelectionVector *false_sel) {
-		if (!sel) {
-			sel = FlatVector::IncrementalSelectionVector();
-		}
 		if (left.GetVectorType() == VectorType::CONSTANT_VECTOR &&
 		    right.GetVectorType() == VectorType::CONSTANT_VECTOR) {
 			return SelectConstant<LEFT_TYPE, RIGHT_TYPE, OP>(left, right, sel, count, true_sel, false_sel);

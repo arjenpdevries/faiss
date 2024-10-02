@@ -112,16 +112,7 @@ struct TableFunctionInitInput {
 	optional_ptr<TableFilterSet> filters;
 
 	bool CanRemoveFilterColumns() const {
-		if (projection_ids.empty()) {
-			// Not set, can't remove filter columns
-			return false;
-		} else if (projection_ids.size() == column_ids.size()) {
-			// Filter column is used in remainder of plan, can't remove
-			return false;
-		} else {
-			// Less columns need to be projected out than that we scan
-			return true;
-		}
+		return true;
 	}
 };
 
@@ -173,10 +164,6 @@ public:
 			throw InternalException("This option is not a list");
 		}
 		vector<T> result;
-		auto list_children = ListValue::GetChildren(option);
-		for (auto &child : list_children) {
-			result.emplace_back(child.GetValue<T>());
-		}
 		return result;
 	}
 };

@@ -193,9 +193,6 @@ public:
 	template <class A_TYPE, class B_TYPE, class C_TYPE, class OP>
 	static idx_t Select(Vector &a, Vector &b, Vector &c, const SelectionVector *sel, idx_t count,
 	                    SelectionVector *true_sel, SelectionVector *false_sel) {
-		if (!sel) {
-			sel = FlatVector::IncrementalSelectionVector();
-		}
 		UnifiedVectorFormat adata, bdata, cdata;
 		a.ToUnifiedFormat(count, adata);
 		b.ToUnifiedFormat(count, bdata);

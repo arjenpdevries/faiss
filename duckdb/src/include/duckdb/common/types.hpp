@@ -238,13 +238,6 @@ struct ExtraTypeInfo;
 struct aggregate_state_t; // NOLINT: mimic std casing
 
 struct LogicalType {
-	DUCKDB_API LogicalType();
-	DUCKDB_API LogicalType(LogicalTypeId id); // NOLINT: Allow implicit conversion from `LogicalTypeId`
-	DUCKDB_API LogicalType(LogicalTypeId id, shared_ptr<ExtraTypeInfo> type_info);
-	DUCKDB_API LogicalType(const LogicalType &other);
-	DUCKDB_API LogicalType(LogicalType &&other) noexcept;
-
-	DUCKDB_API ~LogicalType();
 
 	inline LogicalTypeId id() const { // NOLINT: mimic std casing
 		return id_;
@@ -535,8 +528,7 @@ struct aggregate_state_t {
 	}
 	// NOLINTNEXTLINE: work around bug in clang-tidy
 	aggregate_state_t(string function_name_p, LogicalType return_type_p, vector<LogicalType> bound_argument_types_p)
-	    : function_name(std::move(function_name_p)), return_type(std::move(return_type_p)),
-	      bound_argument_types(std::move(bound_argument_types_p)) {
+	    : function_name(std::move(function_name_p)), bound_argument_types(std::move(bound_argument_types_p)) {
 	}
 
 	string function_name;

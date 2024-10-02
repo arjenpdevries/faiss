@@ -32,7 +32,6 @@ public:
 	static hugeint_t FromUHugeint(uhugeint_t input);
 
 	//! Convert a hugeint object to a uuid style string
-	static hugeint_t GenerateRandomUUID(RandomEngine &engine);
 	static hugeint_t GenerateRandomUUID();
 
 	//! Convert a hugeint object to a uuid style string

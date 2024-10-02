@@ -36,8 +36,6 @@ class Value {
 	friend struct MapValue;
 
 public:
-	//! Create an empty NULL value of the specified type
-	DUCKDB_API explicit Value(LogicalType type = LogicalType::SQLNULL);
 	//! Create an INTEGER value
 	DUCKDB_API Value(int32_t val); // NOLINT: Allow implicit conversion from `int32_t`
 	//! Create a BOOLEAN value

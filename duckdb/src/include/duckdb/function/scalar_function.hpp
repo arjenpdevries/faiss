@@ -1,10 +1,3 @@
-//===----------------------------------------------------------------------===//
-//                         DuckDB
-//
-// duckdb/function/scalar_function.hpp
-//
-//
-//===----------------------------------------------------------------------===//
 
 #pragma once
 
@@ -113,23 +106,6 @@ typedef unique_ptr<Expression> (*function_bind_expression_t)(FunctionBindExpress
 
 class ScalarFunction : public BaseScalarFunction { // NOLINT: work-around bug in clang-tidy
 public:
-	DUCKDB_API ScalarFunction(string name, vector<LogicalType> arguments, LogicalType return_type,
-	                          scalar_function_t function, bind_scalar_function_t bind = nullptr,
-	                          dependency_function_t dependency = nullptr, function_statistics_t statistics = nullptr,
-	                          init_local_state_t init_local_state = nullptr,
-	                          LogicalType varargs = LogicalType(LogicalTypeId::INVALID),
-	                          FunctionStability stability = FunctionStability::CONSISTENT,
-	                          FunctionNullHandling null_handling = FunctionNullHandling::DEFAULT_NULL_HANDLING,
-	                          bind_lambda_function_t bind_lambda = nullptr);
-
-	DUCKDB_API ScalarFunction(vector<LogicalType> arguments, LogicalType return_type, scalar_function_t function,
-	                          bind_scalar_function_t bind = nullptr, dependency_function_t dependency = nullptr,
-	                          function_statistics_t statistics = nullptr, init_local_state_t init_local_state = nullptr,
-	                          LogicalType varargs = LogicalType(LogicalTypeId::INVALID),
-	                          FunctionStability stability = FunctionStability::CONSISTENT,
-	                          FunctionNullHandling null_handling = FunctionNullHandling::DEFAULT_NULL_HANDLING,
-	                          bind_lambda_function_t bind_lambda = nullptr);
-
 	//! The main scalar function to execute
 	scalar_function_t function;
 	//! The bind function (if any)
@@ -162,21 +138,14 @@ public:
 
 	template <class TA, class TR, class OP>
 	static void UnaryFunction(DataChunk &input, ExpressionState &state, Vector &result) {
-		D_ASSERT(input.ColumnCount() >= 1);
-		UnaryExecutor::Execute<TA, TR, OP>(input.data[0], result, input.size());
 	}
 
 	template <class TA, class TB, class TR, class OP>
 	static void BinaryFunction(DataChunk &input, ExpressionState &state, Vector &result) {
-		D_ASSERT(input.ColumnCount() == 2);
-		BinaryExecutor::ExecuteStandard<TA, TB, TR, OP>(input.data[0], input.data[1], result, input.size());
 	}
 
 	template <class TA, class TB, class TC, class TR, class OP>
 	static void TernaryFunction(DataChunk &input, ExpressionState &state, Vector &result) {
-		D_ASSERT(input.ColumnCount() == 3);
-		TernaryExecutor::ExecuteStandard<TA, TB, TC, TR, OP>(input.data[0], input.data[1], input.data[2], result,
-		                                                     input.size());
 	}
 
 public:
