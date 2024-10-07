@@ -21,7 +21,7 @@ jobs:
 
   windows:
     name: Windows
-    runs-on: windows-2019
+    runs-on: windows-latest
     env:
       BUILD_SHELL: '0'
       CC: 'gcc'
