@@ -8,9 +8,7 @@
 
 #pragma once
 
-#ifndef DUCKDB_NO_THREADS
 #include "concurrentqueue.h"
-#else
 
 #include <cstddef>
 #include <deque>

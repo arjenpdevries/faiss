@@ -1,8 +1,5 @@
 add_definitions(-DDUCKDB)
 
-if(${DISABLE_THREADS})
-  add_definitions(-DDUCKDB_NO_THREADS)
-endif()
 
 add_extension_definitions()
 
@@ -64,13 +61,8 @@ add_subdirectory(main)
 
 set(DUCKDB_LINK_LIBS
     ${DUCKDB_SYSTEM_LIBS}
-    duckdb_fsst
     duckdb_fmt
-    duckdb_re2
-    duckdb_miniz
     duckdb_utf8proc
-    duckdb_hyperloglog
-    duckdb_yyjson
     )
 
 add_library(duckdb SHARED ${ALL_OBJECT_FILES})

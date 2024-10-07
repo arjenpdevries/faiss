@@ -139,24 +139,7 @@ option(
   FORCE_SANITIZER
   "Forces building with sanitizers even if the Python and R modules are enabled."
   FALSE)
-if((BUILD_PYTHON)
-   AND (ENABLE_SANITIZER OR ENABLE_UBSAN)
-   AND ("${CMAKE_BUILD_TYPE}" STREQUAL "Debug"))
-  if(FORCE_SANITIZER)
-    message(
-      WARNING
-        "FORCE_SANITIZER is set and the Python/R/Node builds are enabled. Sanitizers will be linked as a shared library (-shared-libasan). You may need to do LD_PRELOAD tricks to load packages built in this way."
-    )
-    set(CXX_EXTRA_DEBUG "${CXX_EXTRA_DEBUG} -shared-libasan")
-  else()
-    message(
-      WARNING
-        "Sanitizers are enabled but will not be built because the Python/R builds are enabled. Use FORCE_SANITIZER to force building of the sanitizers even when building these packages."
-    )
-    set(ENABLE_SANITIZER FALSE)
-    set(ENABLE_UBSAN FALSE)
-  endif()
-endif()
+
 if(${ENABLE_THREAD_SANITIZER})
   if(${ENABLE_SANITIZER})
     message(
@@ -235,81 +218,6 @@ if (OSX_BUILD_UNIVERSAL)
   set(CMAKE_OSX_DEPLOYMENT_TARGET 11.0 CACHE STRING "Minimum OS X deployment version" FORCE)
 endif()
 
-if (OSX_BUILD_ARCH)
-  message(STATUS "building for OSX architecture: ${OSX_BUILD_ARCH}")
-  if (NOT APPLE)
-    error("This only makes sense on OSX")
-  endif()
-  SET(CMAKE_OSX_ARCHITECTURES "${OSX_BUILD_ARCH}" CACHE STRING "Build architectures for Mac OS X" FORCE)
-  set(CMAKE_OSX_DEPLOYMENT_TARGET 11.0 CACHE STRING "Minimum OS X deployment version" FORCE)
-endif()
-
-set(SUN FALSE)
-if(${CMAKE_SYSTEM_NAME} STREQUAL "SunOS")
-  set(CXX_EXTRA "${CXX_EXTRA} -mimpure-text")
-  add_definitions(-DSUN=1)
-  set(SUN TRUE)
-endif()
-
-
-if (OVERRIDE_GIT_DESCRIBE)
-  if (OVERRIDE_GIT_DESCRIBE MATCHES "^v[0-9]+\.[0-9]+\.[0-9]+\-[0-9]+\-g[a-f0-9]+$")
-    set(GIT_DESCRIBE "${OVERRIDE_GIT_DESCRIBE}")
-  elseif(OVERRIDE_GIT_DESCRIBE MATCHES "^v[0-9]+\.[0-9]+\.[0-9]+$")
-    find_package(Git)
-    if(Git_FOUND)
-      execute_process(
-            COMMAND ${GIT_EXECUTABLE} log -1 --format=%h
-            WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-            RESULT_VARIABLE GIT_RESULT
-            OUTPUT_VARIABLE GIT_COMMIT_HASH
-            OUTPUT_STRIP_TRAILING_WHITESPACE)
-        set(GIT_DESCRIBE "${OVERRIDE_GIT_DESCRIBE}-0-g${GIT_COMMIT_HASH}")
-        if (GIT_RESULT)
-          message(WARNING "git is available (at ${GIT_EXECUTABLE}) but has failed to execute 'log -1 --format=%h'. Consider providing explicit GIT_COMMIT_HASH")
-          set(GIT_DESCRIBE "${OVERRIDE_GIT_DESCRIBE}-0-g0123456789")
-    endif()
-    else()
-      set(GIT_DESCRIBE "${OVERRIDE_GIT_DESCRIBE}-0-g0123456789")
-    endif()
-  else()
-    message(FATAL_ERROR "Provided OVERRIDE_GIT_DESCRIBE '${OVERRIDE_GIT_DESCRIBE}' do not match supported versions, either fully specified 'vX.Y.Z-N-gGITHASH123' or version only 'vX.Y.Z'")
-  endif()
-else()
-  find_package(Git)
-  if(Git_FOUND)
-     if (NOT DEFINED GIT_COMMIT_HASH)
-     execute_process(
-            COMMAND ${GIT_EXECUTABLE} log -1 --format=%h
-            WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-            RESULT_VARIABLE GIT_RESULT
-            OUTPUT_VARIABLE GIT_COMMIT_HASH
-            OUTPUT_STRIP_TRAILING_WHITESPACE)
-        if (GIT_RESULT)
-          message(WARNING "git is available (at ${GIT_EXECUTABLE}) but has failed to execute 'log -1 --format=%h'. Consider providing explicit GIT_COMMIT_HASH or OVERRIDE_GIT_DESCRIBE")
-          set(GIT_COMMIT_HASH "0123456789")
-    endif()
-    endif()
-    execute_process(
-          COMMAND ${GIT_EXECUTABLE} describe --tags --long
-          WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-          RESULT_VARIABLE GIT_RESULT
-          OUTPUT_VARIABLE GIT_DESCRIBE
-          OUTPUT_STRIP_TRAILING_WHITESPACE)
-    if (GIT_RESULT)
-      message(WARNING "git is available (at ${GIT_EXECUTABLE}) but has failed to execute 'describe --tags --long', likely due to shallow clone. Consider providing explicit OVERRIDE_GIT_DESCRIBE or clone with tags. Continuing with dummy version v0.0.1")
-      set(GIT_DESCRIBE "v0.0.1-0-g${GIT_COMMIT_HASH}")
-    endif()
-  else()
-    message(WARNING "Git NOT FOUND and EXTERNAL_GIT_DESCRIBE not provided, continuing with dummy version v0.0.1")
-    set(GIT_DESCRIBE "v0.0.1-0-g0123456789")
-  endif()
-endif()
-
-if (NOT GIT_DESCRIBE MATCHES "^v[0-9]+\.[0-9]+\.[0-9]+\-[0-9]+\-g[a-f0-9]+$")
-  message(FATAL_ERROR "Computed GIT_DESCRIBE '${GIT_DESCRIBE}' is not in the expected form 'vX.Y.Z-N-gGITHASH123'. Consider providing OVERRIDE_GIT_DESCRIBE explicitly to CMake")
-endif()
-
 string(REGEX REPLACE "v([0-9]+)\.[0-9]+\.[0-9]+\-.*" "\\1" DUCKDB_MAJOR_VERSION "${GIT_DESCRIBE}")
 string(REGEX REPLACE "v[0-9]+\.([0-9]+)\.[0-9]+\-.*" "\\1" DUCKDB_MINOR_VERSION "${GIT_DESCRIBE}")
 string(REGEX REPLACE "v[0-9]+\.[0-9]+\.([0-9]+)\-.*" "\\1" DUCKDB_PATCH_VERSION "${GIT_DESCRIBE}")
@@ -372,11 +280,9 @@ option(BUILD_CORE_FUNCTIONS_EXTENSION "Build the core functions." TRUE)
 option(BUILD_BENCHMARKS "Enable building of the benchmark suite." FALSE)
 option(BUILD_TPCE "Enable building of the TPC-E tool." FALSE)
 option(DISABLE_BUILTIN_EXTENSIONS "Disable linking extensions." FALSE)
-option(BUILD_PYTHON "Build the DuckDB Python extension" FALSE)
 option(USER_SPACE "Build the DuckDB Python in the user space" FALSE)
 option(FORCE_QUERY_LOG "If enabled, all queries will be logged to the specified path" OFF)
 option(BUILD_SHELL "Build the DuckDB Shell and SQLite API Wrappers" TRUE)
-option(DISABLE_THREADS "Disable support for multi-threading" FALSE)
 option(DISABLE_EXTENSION_LOAD "Disable support for loading and installing extensions" FALSE)
 option(DISABLE_STR_INLINE "Debug setting: disable inlining of strings" FALSE)
 option(DISABLE_MEMORY_SAFETY "Debug setting: disable memory access checks at runtime" FALSE)
@@ -616,7 +522,7 @@ include_directories(third_party/pcg)
 include_directories(third_party/tdigest)
 include_directories(third_party/mbedtls/include)
 include_directories(third_party/jaro_winkler)
-include_directories(third_party/yyjson/include)
+# include_directories(third_party/yyjson/include)
 
 # todo only regenerate ub file if one of the input files changed hack alert
 function(enable_unity_build UB_SUFFIX SOURCE_VARIABLE_NAME)
@@ -1160,14 +1066,6 @@ if(${EXPORT_DLL_SYMBOLS})
   add_definitions(-DDUCKDB_BUILD_LIBRARY)
 endif()
 
-# Log extensions that are built by directly passing cmake variables
-foreach(EXT IN LISTS DUCKDB_EXTENSION_NAMES)
-  if (NOT "${EXT}" STREQUAL "")
-    string(TOUPPER ${EXT} EXTENSION_NAME_UPPERCASE)
-    message(STATUS "Load extension '${EXT}' from '${DUCKDB_EXTENSION_${EXTENSION_NAME_UPPERCASE}_PATH}'")
-  endif()
-endforeach()
-
 # Load extensions passed through cmake config var
 foreach(EXT IN LISTS BUILD_EXTENSIONS)
   if(NOT "${EXT}" STREQUAL "")
@@ -1195,14 +1093,6 @@ endforeach()
 if (EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/extension/extension_config_local.cmake)
   include(${CMAKE_CURRENT_SOURCE_DIR}/extension/extension_config_local.cmake)
 endif()
-
-# Load client specific config
-if(BUILD_PYTHON)
-  include(${CMAKE_CURRENT_SOURCE_DIR}/tools/pythonpkg/duckdb_extension_config.cmake)
-endif()
-
-# Load base extension config
-include(${CMAKE_CURRENT_SOURCE_DIR}/extension/extension_config.cmake)
 
 # For extensions whose tests were loaded, but not linked into duckdb, we need to ensure they are registered to have
 # the sqllogictest "require" statement load the loadable extensions instead of the baked in static one
@@ -1317,48 +1207,6 @@ if(${EXTENSION_CONFIG_BUILD})
   return()
 endif()
 
-if(BUILD_PYTHON)
-  if(CMAKE_BUILD_TYPE STREQUAL "Debug")
-    set(ALL_COMPILE_FLAGS "${CMAKE_CXX_FLAGS} ${CMAKE_CXX_FLAGS_DEBUG}")
-  elseif(CMAKE_BUILD_TYPE STREQUAL "Release")
-    set(ALL_COMPILE_FLAGS "${CMAKE_CXX_FLAGS} ${CMAKE_CXX_FLAGS_RELEASE}")
-  elseif(CMAKE_BUILD_TYPE STREQUAL "RelWithDebInfo")
-    set(ALL_COMPILE_FLAGS
-            "${CMAKE_CXX_FLAGS} ${CMAKE_CXX_FLAGS_RELWITHDEBINFO}")
-  else()
-    set(ALL_COMPILE_FLAGS "${CMAKE_CXX_FLAGS}")
-  endif()
-
-  get_target_property(duckdb_libs duckdb LINK_LIBRARIES)
-
-  set(PIP_COMMAND
-      cmake
-      -E
-      env
-      DUCKDB_BINARY_DIR=${PROJECT_BINARY_DIR}
-      DUCKDB_COMPILE_FLAGS=${ALL_COMPILE_FLAGS}
-      DUCKDB_LIBS="${duckdb_libs}"
-    )
-
-  if(PYTHON_EDITABLE_BUILD)
-    set(PIP_COMMAND ${PIP_COMMAND} python3 -m pip install --editable .)
-  else()
-    set(PIP_COMMAND ${PIP_COMMAND} python3 -m pip install .)
-  endif()
-
-  if(USER_SPACE)
-    set(PIP_COMMAND ${PIP_COMMAND} --user)
-  endif()
-  add_custom_target(
-    duckdb_python ALL
-    COMMAND ${PIP_COMMAND}
-    DEPENDS duckdb duckdb_static
-    WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/tools/pythonpkg
-    COMMENT Build
-    Python package)
-  add_extension_dependencies(duckdb_python)
-endif()
-
 if(NOT DUCKDB_EXPLICIT_PLATFORM)
   set(VERSION_SOURCES tools/utils/test_platform.cpp)
 
@@ -1382,18 +1230,7 @@ else()
           )
 endif()
 
-if(NOT CLANG_TIDY)
-  if(${BUILD_UNITTESTS})
-    if(NOT WIN32
-      AND NOT SUN
-      AND ${BUILD_BENCHMARKS})
-      add_subdirectory(benchmark)
-    endif()
-  endif()
-  if (NOT EXTENSION_CONFIG_BUILD)
-    add_subdirectory(third_party)
-  endif()
-endif()
+add_subdirectory(third_party)
 
 # Write the export set for build and install tree
 install(EXPORT "${DUCKDB_EXPORT_SET}" DESTINATION "${INSTALL_CMAKE_DIR}")
